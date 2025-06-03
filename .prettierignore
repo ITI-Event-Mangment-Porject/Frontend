@@ -20,3 +20,5 @@ coverage
 .vscode
 .idea
 .DS_Store
+
+eslint.config.js
