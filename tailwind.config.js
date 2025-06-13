@@ -1,3 +1,6 @@
+import forms from '@tailwindcss/forms';
+import typography from '@tailwindcss/typography';
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [
@@ -7,21 +10,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: {
-          50: '#eff6ff',
-          500: '#3b82f6',
-          600: '#2563eb',
-          700: '#1d4ed8',
-        },
-        secondary: {
-          50: '#f0f9ff',
-          500: '#0ea5e9',
-        }
-      }
+        primary: '#901b20',
+        secondary: '#203947',
+        'accent-1': '#ad565a',
+        'accent-2': '#cc9598',
+        light: '#ebebeb',
+      },
     },
   },
   plugins: [
-    require('@tailwindcss/forms'),
-    require('@tailwindcss/typography'),
+    forms,
+    typography,
   ],
 }
