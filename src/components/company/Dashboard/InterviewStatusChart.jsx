@@ -18,7 +18,13 @@ const InterviewStatusChart = () => {
   };
 
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-md">
+    <div
+      className="
+        bg-white rounded-2xl p-4 shadow-md 
+        hover:shadow-lg hover:scale-[1.02] transition-all duration-300 
+        cursor-pointer
+      "
+    >
       <h3 className="font-semibold text-[#203947] mb-2">Interview Status</h3>
       <Doughnut data={data} />
     </div>

@@ -11,7 +11,6 @@ const InterviewTable = ({ title, data, showActions = false }) => {
   const [openMenuIndex, setOpenMenuIndex] = useState(null);
   const menuRef = useRef(null);
 
-  // Close dropdown if clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -23,8 +22,13 @@ const InterviewTable = ({ title, data, showActions = false }) => {
   }, []);
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4">
-      <h2 className="text-lg font-semibold mb-4">{title}</h2>
+    <div
+      className="
+        bg-white rounded-2xl shadow-md p-4 
+        hover:shadow-lg hover:scale-[1.01] transition-all duration-300
+      "
+    >
+      <h2 className="text-lg font-semibold mb-4 text-[#203947]">{title}</h2>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
           <thead className="border-b">
@@ -39,54 +43,64 @@ const InterviewTable = ({ title, data, showActions = false }) => {
           </thead>
           <tbody>
             {data.map((interview, idx) => (
-              <tr key={idx} className="border-b hover:bg-gray-50">
+              <tr
+                key={idx}
+                className="border-b hover:bg-gray-50 transition-colors duration-200"
+              >
                 <td className="py-2 px-3">{interview.name}</td>
                 <td className="py-2 px-3">{interview.role}</td>
                 <td className="py-2 px-3">{interview.fair}</td>
                 <td className="py-2 px-3">
                   <span
                     className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      statusStyles[interview.status] || "bg-gray-100 text-gray-800"
+                      statusStyles[interview.status] ||
+                      "bg-gray-100 text-gray-800"
                     }`}
                   >
                     {interview.status}
                   </span>
                 </td>
                 <td className="py-2 px-3">{interview.date}</td>
+
                 {showActions && (
                   <td className="py-2 px-3 relative" ref={menuRef}>
-  <button
-    onClick={() =>
-      setOpenMenuIndex(openMenuIndex === idx ? null : idx)
-    }
-    className="p-2 rounded-full hover:bg-gray-100 transition"
-    aria-label="More options"
-  >
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      className="h-5 w-5 text-gray-600"
-      fill="currentColor"
-      viewBox="0 0 24 24"
-    >
-      <circle cx="12" cy="5" r="1.5" />
-      <circle cx="12" cy="12" r="1.5" />
-      <circle cx="12" cy="19" r="1.5" />
-    </svg>
-  </button>
+                    <button
+                      onClick={() =>
+                        setOpenMenuIndex(openMenuIndex === idx ? null : idx)
+                      }
+                      className="p-2 rounded-full hover:bg-gray-100 transition duration-200"
+                      aria-label="More options"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 text-gray-600"
+                        fill="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle cx="12" cy="5" r="1.5" />
+                        <circle cx="12" cy="12" r="1.5" />
+                        <circle cx="12" cy="19" r="1.5" />
+                      </svg>
+                    </button>
 
-  {openMenuIndex === idx && (
-    <div className="absolute right-0 mt-2 w-44 bg-white border border-gray-200 rounded-md shadow-lg z-20">
-      <button className="flex items-center gap-2 px-4 py-2 w-full text-sm text-green-700 hover:bg-gray-100 transition">
-         View
-      </button>
-      <button className="flex items-center gap-2 px-4 py-2 w-full text-sm text-blue-600 hover:bg-blue-50 transition">
-         Reschedule
-      </button>
-      <button className="flex items-center gap-2 px-4 py-2 w-full text-sm text-red-600 hover:bg-red-50 transition">
-         Cancel
-      </button>
-    </div>
-  )}
+                    {openMenuIndex === idx && (
+                      <div
+                        className="
+                          absolute right-0 mt-2 w-44 bg-white border border-gray-200 
+                          rounded-md shadow-lg z-20 animate-fade-in
+                        "
+                      >
+                        <button className="flex items-center gap-2 px-4 py-2 w-full text-sm text-green-700 hover:bg-gray-100 transition">
+                          View
+                        </button>
+                        <button className="flex items-center gap-2 px-4 py-2 w-full text-sm text-blue-600 hover:bg-blue-50 transition">
+                          Reschedule
+                        </button>
+                        <button className="flex items-center gap-2 px-4 py-2 w-full text-sm text-red-600 hover:bg-red-50 transition">
+                          Cancel
+                        </button>
+                      </div>
+                    )}
                   </td>
                 )}
               </tr>

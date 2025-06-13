@@ -19,13 +19,22 @@ const InterviewPerformanceChart = () => {
         label: "Interviews Done",
         data: [5, 8, 6, 4, 7],
         backgroundColor: "#203947",
+        borderRadius: 8, // Optional: Rounded bar edges
       },
     ],
   };
 
   return (
-    <div className="bg-white rounded-2xl p-4 shadow-md">
-      <h3 className="font-semibold text-[#203947] mb-2">Weekly Interview Performance</h3>
+    <div
+      className="
+        bg-white rounded-2xl p-4 shadow-md 
+        hover:shadow-lg hover:scale-[1.02] transition-all duration-300 
+        cursor-pointer
+      "
+    >
+      <h3 className="font-semibold text-[#203947] mb-2">
+        Weekly Interview Performance
+      </h3>
       <Bar data={data} />
     </div>
   );

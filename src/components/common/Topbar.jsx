@@ -12,8 +12,8 @@ const Topbar = () => {
 
       <nav className="hidden md:flex gap-6 text-sm font-medium">
         {[
-          { label: "Dashboard", to: "/company" },
-          { label: "Setup Form", to: "/company/setup-form" },
+          { label: "Dashboard", to: "/company/dashboard" },
+          { label: "Setup Form", to: "/company/setup" },
           { label: "Requests", to: "/company/manage-requests" },
           { label: "Tracking", to: "/company/interview-tracking" },
           { label: "Profile", to: "/company/profile" },

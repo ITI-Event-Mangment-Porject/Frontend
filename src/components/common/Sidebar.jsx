@@ -6,7 +6,7 @@ const Sidebar = () => {
 <aside className="fixed top-[4rem] text-gray-600 left-0 h-full w-64 bg-white shadow-lg z-40">
   <nav className="flex flex-col mt-6 px-4 space-y-2">
     <NavLink
-      to="/company"
+      to="/company/dashboard"
       className={({ isActive }) =>
         `flex items-center gap-3 px-4 py-2 rounded-lg transition ease-in-out duration-200 ${
           isActive ? 'bg-gray-700 text-white' : 'hover:bg-[#a72b2b] hover:text-white'
@@ -17,7 +17,7 @@ const Sidebar = () => {
     </NavLink>
 
     <NavLink
-      to="/company/setup-form"
+      to="/company/setup"
       className={({ isActive }) =>
         `flex items-center gap-3 px-4 py-2 rounded-lg transition ease-in-out duration-200 ${
           isActive ? 'bg-gray-700 text-white' : 'hover:bg-[#a72b2b] hover:text-white'

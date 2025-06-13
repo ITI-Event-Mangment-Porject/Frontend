@@ -13,6 +13,7 @@ export default function AppRoutes() {
     <Routes>
       <Route path="/company" element={<Layout />}>
         <Route index element={<Dashboard />} />
+        <Route path="dashboard" element={<Dashboard />} />
         <Route path="setup" element={<SetupForm />} />
         <Route path="requests" element={<ManageRequests />} />
         <Route path="tracking" element={<InterviewTracking />} />
