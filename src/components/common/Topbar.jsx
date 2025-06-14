@@ -14,8 +14,8 @@ const Topbar = () => {
         {[
           { label: "Dashboard", to: "/company/dashboard" },
           { label: "Setup Form", to: "/company/setup" },
-          { label: "Requests", to: "/company/manage-requests" },
-          { label: "Tracking", to: "/company/interview-tracking" },
+          { label: "Requests", to: "/company/requests" },
+          { label: "Tracking", to: "/company/tracking" },
           { label: "Profile", to: "/company/profile" },
         ].map(({ label, to }) => (
           <NavLink
