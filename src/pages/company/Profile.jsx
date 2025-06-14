@@ -66,13 +66,11 @@ const CompanyProfilePage = () => {
 
   const handleSave = () => {
     setIsEditing(false);
-    // Here you would typically save to backend
     console.log("Saving company data:", companyData);
   };
 
   const handleCancel = () => {
     setIsEditing(false);
-    // Here you would typically revert changes
   };
 
   const handleAddMember = () => {
@@ -92,7 +90,6 @@ const CompanyProfilePage = () => {
   };
 
   const handleImageUpload = (field) => {
-    // Simulate image upload
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = 'image/*';
@@ -110,37 +107,46 @@ const CompanyProfilePage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto p-6">
+    <div className="min-h-screen">
+      <div className="max-w-6xl mx-auto p-4 sm:p-6">
         {/* Header */}
-        <div className="bg-white rounded-lg shadow-sm mb-6">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+        <div className="bg-white rounded-xl shadow-sm mb-6 overflow-hidden transition-all duration-300 hover:shadow-lg">
+          <div className="p-4 sm:p-6 border-b" style={{ borderColor: '#ebebeb' }}>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Company Profile</h1>
-                <p className="text-gray-600 mt-1">Manage your company's public information, team members, and branding assets.</p>
+                <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: '#203947' }}>Company Profile</h1>
+                <p className="text-gray-600 mt-1 text-sm sm:text-base">Manage your company's public information, team members, and branding assets.</p>
               </div>
-              <div className="mt-4 sm:mt-0">
+              <div className="flex flex-col sm:flex-row gap-2">
                 {!isEditing ? (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="inline-flex items-center justify-center px-4 py-2 text-white rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg font-medium"
+                    style={{ backgroundColor: '#901b20' }}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = '#ad565a'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = '#901b20'}
                   >
                     <Edit3 className="w-4 h-4 mr-2" />
                     Edit Profile
                   </button>
                 ) : (
-                  <div className="flex space-x-2">
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <button
                       onClick={handleSave}
-                      className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      className="inline-flex items-center justify-center px-4 py-2 text-white rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg font-medium"
+                      style={{ backgroundColor: '#203947' }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#2a4a5a'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#203947'}
                     >
                       <Save className="w-4 h-4 mr-2" />
                       Save Changes
                     </button>
                     <button
                       onClick={handleCancel}
-                      className="inline-flex items-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                      className="inline-flex items-center justify-center px-4 py-2 text-white rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg font-medium"
+                      style={{ backgroundColor: '#cc9598' }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#d4a5a8'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#cc9598'}
                     >
                       <X className="w-4 h-4 mr-2" />
                       Cancel
@@ -156,72 +162,88 @@ const CompanyProfilePage = () => {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
             {/* Company Details */}
-            <div className="bg-white rounded-lg shadow-sm">
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Company Details</h2>
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg">
+              <div className="p-4 sm:p-6 border-b" style={{ borderColor: '#ebebeb' }}>
+                <h2 className="text-lg font-semibold" style={{ color: '#203947' }}>Company Details</h2>
                 <p className="text-gray-600 text-sm">Manage your basic company information and contact details.</p>
               </div>
               
-              <div className="p-6 space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Company Name</label>
+              <div className="p-4 sm:p-6 space-y-6">
+                <div className="group">
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#203947' }}>Company Name</label>
                   {isEditing ? (
                     <input
                       type="text"
                       value={companyData.name}
                       onChange={(e) => handleInputChange('name', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border rounded-lg transition-all duration-300 focus:ring-2 focus:border-transparent group-hover:border-gray-400"
+                      style={{ borderColor: '#ebebeb', '--tw-ring-color': '#901b20' }}
+                      onFocus={(e) => e.target.style.borderColor = '#901b20'}
+                      onBlur={(e) => e.target.style.borderColor = '#ebebeb'}
                     />
                   ) : (
-                    <p className="text-gray-900">{companyData.name}</p>
+                    <p className="text-gray-900 p-2 rounded-lg hover:bg-gray-50 transition-colors duration-200">{companyData.name}</p>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Description</label>
+                <div className="group">
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#203947' }}>Description</label>
                   {isEditing ? (
                     <textarea
                       value={companyData.description}
                       onChange={(e) => handleInputChange('description', e.target.value)}
                       rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border rounded-lg transition-all duration-300 focus:ring-2 focus:border-transparent resize-none"
+                      style={{ borderColor: '#ebebeb', '--tw-ring-color': '#901b20' }}
+                      onFocus={(e) => e.target.style.borderColor = '#901b20'}
+                      onBlur={(e) => e.target.style.borderColor = '#ebebeb'}
                     />
                   ) : (
-                    <p className="text-gray-700">{companyData.description}</p>
+                    <p className="text-gray-700 p-2 rounded-lg hover:bg-gray-50 transition-colors duration-200">{companyData.description}</p>
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+                  <div className="group">
+                    <label className="block text-sm font-medium mb-2" style={{ color: '#203947' }}>Email</label>
                     {isEditing ? (
                       <input
                         type="email"
                         value={companyData.email}
                         onChange={(e) => handleInputChange('email', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border rounded-lg transition-all duration-300 focus:ring-2 focus:border-transparent"
+                        style={{ borderColor: '#ebebeb', '--tw-ring-color': '#901b20' }}
+                        onFocus={(e) => e.target.style.borderColor = '#901b20'}
+                        onBlur={(e) => e.target.style.borderColor = '#ebebeb'}
                       />
                     ) : (
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors duration-200">
                         <Mail className="w-4 h-4 text-gray-500" />
-                        <a href={`mailto:${companyData.email}`} className="text-blue-600 hover:underline">
+                        <a 
+                          href={`mailto:${companyData.email}`} 
+                          className="transition-colors duration-200 hover:underline"
+                          style={{ color: '#901b20' }}
+                        >
                           {companyData.email}
                         </a>
                       </div>
                     )}
                   </div>
 
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                  <div className="group">
+                    <label className="block text-sm font-medium mb-2" style={{ color: '#203947' }}>Phone</label>
                     {isEditing ? (
                       <input
                         type="tel"
                         value={companyData.phone}
                         onChange={(e) => handleInputChange('phone', e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-3 py-2 border rounded-lg transition-all duration-300 focus:ring-2 focus:border-transparent"
+                        style={{ borderColor: '#ebebeb', '--tw-ring-color': '#901b20' }}
+                        onFocus={(e) => e.target.style.borderColor = '#901b20'}
+                        onBlur={(e) => e.target.style.borderColor = '#ebebeb'}
                       />
                     ) : (
-                      <div className="flex items-center space-x-2">
+                      <div className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors duration-200">
                         <Phone className="w-4 h-4 text-gray-500" />
                         <span className="text-gray-900">{companyData.phone}</span>
                       </div>
@@ -229,36 +251,48 @@ const CompanyProfilePage = () => {
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                <div className="group">
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#203947' }}>Website</label>
                   {isEditing ? (
                     <input
                       type="url"
                       value={companyData.website}
                       onChange={(e) => handleInputChange('website', e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border rounded-lg transition-all duration-300 focus:ring-2 focus:border-transparent"
+                      style={{ borderColor: '#ebebeb', '--tw-ring-color': '#901b20' }}
+                      onFocus={(e) => e.target.style.borderColor = '#901b20'}
+                      onBlur={(e) => e.target.style.borderColor = '#ebebeb'}
                     />
                   ) : (
-                    <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors duration-200">
                       <Globe className="w-4 h-4 text-gray-500" />
-                      <a href={companyData.website} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                      <a 
+                        href={companyData.website} 
+                        target="_blank" 
+                        rel="noopener noreferrer" 
+                        className="transition-colors duration-200 hover:underline"
+                        style={{ color: '#901b20' }}
+                      >
                         {companyData.website}
                       </a>
                     </div>
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                <div className="group">
+                  <label className="block text-sm font-medium mb-2" style={{ color: '#203947' }}>Address</label>
                   {isEditing ? (
                     <textarea
                       value={companyData.address}
                       onChange={(e) => handleInputChange('address', e.target.value)}
                       rows={2}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border rounded-lg transition-all duration-300 focus:ring-2 focus:border-transparent resize-none"
+                      style={{ borderColor: '#ebebeb', '--tw-ring-color': '#901b20' }}
+                      onFocus={(e) => e.target.style.borderColor = '#901b20'}
+                      onBlur={(e) => e.target.style.borderColor = '#ebebeb'}
                     />
                   ) : (
-                    <div className="flex items-start space-x-2">
+                    <div className="flex items-start space-x-2 p-2 rounded-lg hover:bg-gray-50 transition-colors duration-200">
                       <MapPin className="w-4 h-4 text-gray-500 mt-1" />
                       <span className="text-gray-900">{companyData.address}</span>
                     </div>
@@ -268,17 +302,20 @@ const CompanyProfilePage = () => {
             </div>
 
             {/* Team Members */}
-            <div className="bg-white rounded-lg shadow-sm">
-              <div className="p-6 border-b border-gray-200">
-                <div className="flex items-center justify-between">
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg">
+              <div className="p-4 sm:p-6 border-b" style={{ borderColor: '#ebebeb' }}>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900">Team Members</h2>
+                    <h2 className="text-lg font-semibold" style={{ color: '#203947' }}>Team Members</h2>
                     <p className="text-gray-600 text-sm">Manage team members with access to your company's HR account.</p>
                   </div>
                   {isEditing && (
                     <button
                       onClick={() => setNewMember({ name: "", role: "", email: "" })}
-                      className="inline-flex items-center px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className="inline-flex items-center px-3 py-2 text-sm text-white rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-md"
+                      style={{ backgroundColor: '#901b20' }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#ad565a'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#901b20'}
                     >
                       <Plus className="w-4 h-4 mr-1" />
                       Add Member
@@ -287,10 +324,16 @@ const CompanyProfilePage = () => {
                 </div>
               </div>
 
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 sm:p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {teamMembers.map((member) => (
-                    <div key={member.id} className="flex items-center space-x-3 p-3 border border-gray-200 rounded-lg">
+                    <div 
+                      key={member.id} 
+                      className="flex items-center space-x-3 p-4 border rounded-xl transition-all duration-300 hover:shadow-md hover:scale-105 cursor-pointer"
+                      style={{ borderColor: '#ebebeb' }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#f9f9f9'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+                    >
                       <div className="text-2xl">{member.avatar}</div>
                       <div className="flex-1 min-w-0">
                         <h3 className="font-medium text-gray-900 truncate">{member.name}</h3>
@@ -302,7 +345,7 @@ const CompanyProfilePage = () => {
                       {isEditing && (
                         <button
                           onClick={() => handleRemoveMember(member.id)}
-                          className="text-red-500 hover:text-red-700 transition-colors"
+                          className="text-red-500 hover:text-red-700 transition-all duration-300 transform hover:scale-110 p-1 rounded-full hover:bg-red-50"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -313,34 +356,46 @@ const CompanyProfilePage = () => {
 
                 {/* Add New Member Form */}
                 {isEditing && (
-                  <div className="mt-6 p-4 border-2 border-dashed border-gray-300 rounded-lg">
-                    <h3 className="font-medium text-gray-900 mb-3">Add New Member</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="mt-6 p-4 border-2 border-dashed rounded-xl transition-all duration-300 hover:border-solid" style={{ borderColor: '#cc9598' }}>
+                    <h3 className="font-medium mb-3" style={{ color: '#203947' }}>Add New Member</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <input
                         type="text"
                         placeholder="Name"
                         value={newMember.name}
                         onChange={(e) => setNewMember(prev => ({ ...prev, name: e.target.value }))}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="px-3 py-2 border rounded-lg transition-all duration-300 focus:ring-2 focus:border-transparent"
+                        style={{ borderColor: '#ebebeb', '--tw-ring-color': '#901b20' }}
+                        onFocus={(e) => e.target.style.borderColor = '#901b20'}
+                        onBlur={(e) => e.target.style.borderColor = '#ebebeb'}
                       />
                       <input
                         type="text"
                         placeholder="Role"
                         value={newMember.role}
                         onChange={(e) => setNewMember(prev => ({ ...prev, role: e.target.value }))}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="px-3 py-2 border rounded-lg transition-all duration-300 focus:ring-2 focus:border-transparent"
+                        style={{ borderColor: '#ebebeb', '--tw-ring-color': '#901b20' }}
+                        onFocus={(e) => e.target.style.borderColor = '#901b20'}
+                        onBlur={(e) => e.target.style.borderColor = '#ebebeb'}
                       />
                       <input
                         type="email"
                         placeholder="Email (optional)"
                         value={newMember.email}
                         onChange={(e) => setNewMember(prev => ({ ...prev, email: e.target.value }))}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="px-3 py-2 border rounded-lg transition-all duration-300 focus:ring-2 focus:border-transparent"
+                        style={{ borderColor: '#ebebeb', '--tw-ring-color': '#901b20' }}
+                        onFocus={(e) => e.target.style.borderColor = '#901b20'}
+                        onBlur={(e) => e.target.style.borderColor = '#ebebeb'}
                       />
                     </div>
                     <button
                       onClick={handleAddMember}
-                      className="mt-3 inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      className="mt-3 inline-flex items-center px-4 py-2 text-white rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-lg font-medium"
+                      style={{ backgroundColor: '#203947' }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#2a4a5a'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#203947'}
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Add Member
@@ -351,27 +406,33 @@ const CompanyProfilePage = () => {
             </div>
 
             {/* Branding Assets */}
-            <div className="bg-white rounded-lg shadow-sm">
-              <div className="p-6 border-b border-gray-200">
-                <h2 className="text-lg font-semibold text-gray-900">Branding Assets</h2>
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg">
+              <div className="p-4 sm:p-6 border-b" style={{ borderColor: '#ebebeb' }}>
+                <h2 className="text-lg font-semibold" style={{ color: '#203947' }}>Branding Assets</h2>
                 <p className="text-gray-600 text-sm">Upload and manage your company's logo and visual elements.</p>
               </div>
 
-              <div className="p-6 space-y-6">
+              <div className="p-4 sm:p-6 space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">Main Company Logo</label>
+                  <label className="block text-sm font-medium mb-3" style={{ color: '#203947' }}>Main Company Logo</label>
                   <div className="flex items-center space-x-4">
-                    <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <div 
+                      className="w-16 h-16 rounded-lg flex items-center justify-center transition-all duration-300 hover:scale-105"
+                      style={{ backgroundColor: '#ebebeb' }}
+                    >
                       {companyData.logo ? (
                         <img src={companyData.logo} alt="Company Logo" className="w-full h-full object-contain rounded-lg" />
                       ) : (
-                        <Briefcase className="w-8 h-8 text-blue-600" />
+                        <Briefcase className="w-8 h-8" style={{ color: '#901b20' }} />
                       )}
                     </div>
                     {isEditing && (
                       <button
                         onClick={() => handleImageUpload('logo')}
-                        className="inline-flex items-center px-3 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                        className="inline-flex items-center px-3 py-2 text-sm rounded-lg transition-all duration-300 transform hover:scale-105 hover:shadow-md"
+                        style={{ backgroundColor: '#ebebeb', color: '#203947' }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#dcdcdc'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = '#ebebeb'}
                       >
                         <Upload className="w-4 h-4 mr-2" />
                         Change Logo
@@ -381,17 +442,17 @@ const CompanyProfilePage = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">Job Fair Banner Image</label>
-                  <div className="relative">
+                  <label className="block text-sm font-medium mb-3" style={{ color: '#203947' }}>Job Fair Banner Image</label>
+                  <div className="relative overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg">
                     <img
                       src={companyData.bannerImage}
                       alt="Banner"
-                      className="w-full h-48 object-cover rounded-lg"
+                      className="w-full h-48 object-cover transition-transform duration-500 hover:scale-105"
                     />
                     {isEditing && (
                       <button
                         onClick={() => handleImageUpload('bannerImage')}
-                        className="absolute top-2 right-2 inline-flex items-center px-3 py-2 text-sm bg-black bg-opacity-50 text-white rounded-lg hover:bg-opacity-70 transition-colors"
+                        className="absolute top-2 right-2 inline-flex items-center px-3 py-2 text-sm bg-black bg-opacity-50 text-white rounded-lg transition-all duration-300 hover:bg-opacity-70 transform hover:scale-105"
                       >
                         <Upload className="w-4 h-4 mr-2" />
                         Change Image
@@ -406,51 +467,51 @@ const CompanyProfilePage = () => {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Job Fair Statistics */}
-            <div className="bg-white rounded-lg shadow-sm">
-              <div className="p-6 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Job Fair Statistics</h3>
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg">
+              <div className="p-4 sm:p-6 border-b" style={{ borderColor: '#ebebeb' }}>
+                <h3 className="text-lg font-semibold" style={{ color: '#203947' }}>Job Fair Statistics</h3>
                 <p className="text-gray-600 text-sm">Key metrics from your participation in job fairs.</p>
               </div>
               
-              <div className="p-6 space-y-6">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600">{jobFairStats.totalFairs}</div>
+              <div className="p-4 sm:p-6 space-y-6">
+                <div className="text-center p-4 rounded-lg transition-all duration-300 hover:scale-105 cursor-pointer" style={{ backgroundColor: '#f8f9fa' }}>
+                  <div className="text-3xl font-bold transition-colors duration-300" style={{ color: '#901b20' }}>{jobFairStats.totalFairs}</div>
                   <div className="text-sm text-gray-600">Available Job Fairs</div>
                 </div>
                 
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600">{jobFairStats.fairsParticipated}</div>
+                <div className="text-center p-4 rounded-lg transition-all duration-300 hover:scale-105 cursor-pointer" style={{ backgroundColor: '#f8f9fa' }}>
+                  <div className="text-3xl font-bold transition-colors duration-300" style={{ color: '#203947' }}>{jobFairStats.fairsParticipated}</div>
                   <div className="text-sm text-gray-600">Fairs Participated</div>
                 </div>
                 
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-purple-600">{jobFairStats.totalViews}</div>
+                <div className="text-center p-4 rounded-lg transition-all duration-300 hover:scale-105 cursor-pointer" style={{ backgroundColor: '#f8f9fa' }}>
+                  <div className="text-3xl font-bold transition-colors duration-300" style={{ color: '#ad565a' }}>{jobFairStats.totalViews}</div>
                   <div className="text-sm text-gray-600">Total Profile Views</div>
                 </div>
               </div>
             </div>
 
             {/* Quick Stats */}
-            <div className="bg-white rounded-lg shadow-sm">
-              <div className="p-6 border-b border-gray-200">
-                <h3 className="text-lg font-semibold text-gray-900">Quick Overview</h3>
+            <div className="bg-white rounded-xl shadow-sm overflow-hidden transition-all duration-300 hover:shadow-lg">
+              <div className="p-4 sm:p-6 border-b" style={{ borderColor: '#ebebeb' }}>
+                <h3 className="text-lg font-semibold" style={{ color: '#203947' }}>Quick Overview</h3>
               </div>
               
-              <div className="p-6 space-y-4">
-                <div className="flex items-center justify-between">
+              <div className="p-4 sm:p-6 space-y-4">
+                <div className="flex items-center justify-between p-3 rounded-lg transition-all duration-300 hover:scale-105 cursor-pointer" style={{ backgroundColor: '#f8f9fa' }}>
                   <div className="flex items-center space-x-2">
                     <Users className="w-4 h-4 text-gray-500" />
                     <span className="text-sm text-gray-600">Team Size</span>
                   </div>
-                  <span className="font-medium text-gray-900">{teamMembers.length}</span>
+                  <span className="font-medium" style={{ color: '#203947' }}>{teamMembers.length}</span>
                 </div>
                 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between p-3 rounded-lg transition-all duration-300 hover:scale-105 cursor-pointer" style={{ backgroundColor: '#f8f9fa' }}>
                   <div className="flex items-center space-x-2">
                     <Briefcase className="w-4 h-4 text-gray-500" />
                     <span className="text-sm text-gray-600">Active Jobs</span>
                   </div>
-                  <span className="font-medium text-gray-900">7</span>
+                  <span className="font-medium" style={{ color: '#203947' }}>7</span>
                 </div>
               </div>
             </div>
