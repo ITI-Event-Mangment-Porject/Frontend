@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Calendar, Clock, MapPin, Users, Building, Phone, Mail, Globe, Plus, X, Check } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, Building, Phone, Mail, Globe, Plus, X, Check, CheckCircle, ArrowLeft } from 'lucide-react';
 
 export default function SetupForm() {
   const [formData, setFormData] = useState({
@@ -25,6 +25,8 @@ export default function SetupForm() {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+  const [showSubmittedData, setShowSubmittedData] = useState(false);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -60,9 +62,267 @@ export default function SetupForm() {
     console.log('Form submitted:', { ...formData, interviewDates });
     setIsSubmitting(false);
     setSubmitted(true);
+    setShowSuccessPopup(true);
+    setShowSubmittedData(true);
     
-    setTimeout(() => setSubmitted(false), 3000);
+    // Hide success popup after 4 seconds
+    setTimeout(() => setShowSuccessPopup(false), 4000);
   };
+
+  const handleBackToForm = () => {
+    setShowSubmittedData(false);
+    setSubmitted(false);
+    // Reset form data if needed
+    // setFormData({...initialState});
+    // setInterviewDates([{ date: '', startTime: '', endTime: '' }]);
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Not specified';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { 
+      weekday: 'long', 
+      year: 'numeric', 
+      month: 'long', 
+      day: 'numeric' 
+    });
+  };
+
+  const formatTime = (timeString) => {
+    if (!timeString) return 'Not specified';
+    const [hours, minutes] = timeString.split(':');
+    const date = new Date();
+    date.setHours(parseInt(hours), parseInt(minutes));
+    return date.toLocaleTimeString('en-US', { 
+      hour: 'numeric', 
+      minute: '2-digit',
+      hour12: true 
+    });
+  };
+
+// Success Popup Component
+const SuccessPopup = () => (
+  <div className={`fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 transition-opacity duration-300 ${showSuccessPopup ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
+    <div className={`bg-white rounded-2xl p-8 max-w-md mx-4 transform transition-all duration-300 ${showSuccessPopup ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'}`}>
+      <div className="text-center">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <CheckCircle className="w-8 h-8 text-green-500" />
+        </div>
+        <h3 className="text-2xl font-bold text-gray-800 mb-2">Registration Successful!</h3>
+        <p className="text-gray-600 mb-4">
+          Your job fair registration has been submitted successfully. You will receive a confirmation email shortly.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setShowSuccessPopup(false)}
+            className="flex-1 bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors duration-200"
+          >
+            Continue
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+// Submitted Data View Component
+const SubmittedDataView = () => (
+  <div className="max-w-5xl mx-auto">
+    <div className="bg-gradient-to-r from-green-600 via-green-700 to-green-800 text-white rounded-t-2xl shadow-2xl overflow-hidden relative">
+      <div className="absolute inset-0 bg-black opacity-10"></div>
+      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-yellow-400 via-green-300 to-blue-400"></div>
+      
+      <div className="relative p-6 sm:p-8">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="p-3 bg-white bg-opacity-20 rounded-xl backdrop-blur-sm">
+            <CheckCircle className="w-8 h-8 text-white" />
+          </div>
+          <div className="flex-1">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">
+              Registration Submitted Successfully
+            </h1>
+            <p className="text-green-100 text-sm sm:text-base opacity-90">
+              Your job fair registration details have been recorded
+            </p>
+          </div>
+          <button
+            onClick={handleBackToForm}
+            className="flex items-center gap-2 bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg transition-all duration-200"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Form
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div className="bg-white rounded-b-2xl shadow-2xl overflow-hidden">
+      <div className="p-6 sm:p-8 space-y-8">
+        
+        {/* Company Information */}
+        <section>
+          <div className="flex items-center gap-3 mb-6 pb-3 border-b-2 border-gray-100">
+            <div className="p-2 bg-green-50 rounded-lg">
+              <Building className="w-6 h-6 text-green-600" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Company Information</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <label className="block text-sm font-semibold text-gray-600 mb-1">Company Name</label>
+              <p className="text-lg font-medium text-gray-800">{formData.companyName || 'Not provided'}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <label className="block text-sm font-semibold text-gray-600 mb-1">Industry</label>
+              <p className="text-lg font-medium text-gray-800">{formData.industry || 'Not provided'}</p>
+            </div>
+          </div>
+          
+          <div className="mt-4 bg-gray-50 p-4 rounded-lg">
+            <label className="block text-sm font-semibold text-gray-600 mb-1">Company Address</label>
+            <p className="text-lg font-medium text-gray-800">{formData.companyAddress || 'Not provided'}</p>
+          </div>
+          
+          {formData.businessSummary && (
+            <div className="mt-4 bg-gray-50 p-4 rounded-lg">
+              <label className="block text-sm font-semibold text-gray-600 mb-1">Business Summary</label>
+              <p className="text-gray-800">{formData.businessSummary}</p>
+            </div>
+          )}
+        </section>
+
+        {/* Job Information */}
+        <section>
+          <div className="flex items-center gap-3 mb-6 pb-3 border-b-2 border-gray-100">
+            <div className="p-2 bg-green-50 rounded-lg">
+              <Users className="w-6 h-6 text-green-600" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Job Information</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <label className="block text-sm font-semibold text-gray-600 mb-1">Job Title</label>
+              <p className="text-lg font-medium text-gray-800">{formData.jobTitle || 'Not provided'}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <label className="block text-sm font-semibold text-gray-600 mb-1">Employment Type</label>
+              <p className="text-lg font-medium text-gray-800">{formData.jobType || 'Not provided'}</p>
+            </div>
+          </div>
+          
+          <div className="mt-4 bg-gray-50 p-4 rounded-lg">
+            <label className="block text-sm font-semibold text-gray-600 mb-1">Experience Level</label>
+            <p className="text-lg font-medium text-gray-800">{formData.experienceLevel || 'Not provided'}</p>
+          </div>
+          
+          {formData.jobDescription && (
+            <div className="mt-4 bg-gray-50 p-4 rounded-lg">
+              <label className="block text-sm font-semibold text-gray-600 mb-1">Job Description</label>
+              <p className="text-gray-800">{formData.jobDescription}</p>
+            </div>
+          )}
+          
+          {formData.requiredSkills && (
+            <div className="mt-4 bg-gray-50 p-4 rounded-lg">
+              <label className="block text-sm font-semibold text-gray-600 mb-1">Required Skills</label>
+              <p className="text-gray-800">{formData.requiredSkills}</p>
+            </div>
+          )}
+        </section>
+
+        {/* Interview Schedule */}
+        <section>
+          <div className="flex items-center gap-3 mb-6 pb-3 border-b-2 border-gray-100">
+            <div className="p-2 bg-green-50 rounded-lg">
+              <Calendar className="w-6 h-6 text-green-600" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Interview Schedule</h2>
+          </div>
+          
+          <div className="mb-4 bg-gray-50 p-4 rounded-lg">
+            <label className="block text-sm font-semibold text-gray-600 mb-1">Interview Format</label>
+            <p className="text-lg font-medium text-gray-800">{formData.interviewFormat || 'Not provided'}</p>
+          </div>
+          
+          <div className="space-y-4">
+            <label className="block text-sm font-semibold text-gray-600 mb-2">Available Time Slots</label>
+            {interviewDates.map((slot, index) => (
+              <div key={index} className="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-lg border border-green-200">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Date</label>
+                    <p className="text-sm font-medium text-gray-800">{formatDate(slot.date)}</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">Start Time</label>
+                    <p className="text-sm font-medium text-gray-800">{formatTime(slot.startTime)}</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-600 mb-1">End Time</label>
+                    <p className="text-sm font-medium text-gray-800">{formatTime(slot.endTime)}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* Contact Information */}
+        <section>
+          <div className="flex items-center gap-3 mb-6 pb-3 border-b-2 border-gray-100">
+            <div className="p-2 bg-green-50 rounded-lg">
+              <Phone className="w-6 h-6 text-green-600" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800">Contact Information</h2>
+          </div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <label className="block text-sm font-semibold text-gray-600 mb-1">Contact Person</label>
+              <p className="text-lg font-medium text-gray-800">{formData.contactPerson || 'Not provided'}</p>
+            </div>
+            <div className="bg-gray-50 p-4 rounded-lg">
+              <label className="block text-sm font-semibold text-gray-600 mb-1">Email</label>
+              <p className="text-lg font-medium text-gray-800">{formData.email || 'Not provided'}</p>
+            </div>
+          </div>
+          
+          <div className="mt-4 bg-gray-50 p-4 rounded-lg">
+            <label className="block text-sm font-semibold text-gray-600 mb-1">Phone Number</label>
+            <p className="text-lg font-medium text-gray-800">{formData.phoneNumber || 'Not provided'}</p>
+          </div>
+        </section>
+
+        {/* Action Buttons */}
+        <div className="pt-8 border-t-2 border-gray-100 flex gap-4">
+          <button
+            onClick={handleBackToForm}
+            className="flex-1 py-3 px-6 bg-gray-500 text-white rounded-xl hover:bg-gray-600 transition-colors duration-200 font-medium"
+          >
+            Edit Registration
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="flex-1 py-3 px-6 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-colors duration-200 font-medium"
+          >
+            Print Registration
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
+if (showSubmittedData) {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-green-50 to-gray-100 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
+      <SubmittedDataView />
+      <SuccessPopup />
+    </div>
+  );
+}
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-red-50 to-gray-100 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
@@ -91,7 +351,7 @@ export default function SetupForm() {
 
         {/* Main Form */}
         <div className="bg-white rounded-b-2xl shadow-2xl overflow-hidden">
-          <div className="p-6 sm:p-8 space-y-8 sm:space-y-12">
+          <form onSubmit={handleSubmit} className="p-6 sm:p-8 space-y-8 sm:space-y-12">
             
             {/* Company Information */}
             <section className="group">
@@ -437,19 +697,12 @@ export default function SetupForm() {
                 type="submit"
                 disabled={isSubmitting}
                 className={`w-full py-4 px-8 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-2xl flex items-center justify-center gap-3 ${
-                  submitted 
-                    ? 'bg-green-500 text-white' 
-                    : isSubmitting 
-                      ? 'bg-gray-400 text-white cursor-not-allowed' 
-                      : 'bg-gradient-to-r from-[#a72b2b] via-red-700 to-[#8b2323] text-white hover:from-red-800 hover:via-red-900 hover:to-red-800'
+                  isSubmitting 
+                    ? 'bg-gray-400 text-white cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-[#a72b2b] via-red-700 to-[#8b2323] text-white hover:from-red-800 hover:via-red-900 hover:to-red-800'
                 }`}
               >
-                {submitted ? (
-                  <>
-                    <Check className="w-6 h-6" />
-                    Registration Submitted Successfully!
-                  </>
-                ) : isSubmitting ? (
+                {isSubmitting ? (
                   <>
                     <div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Submitting Registration...
@@ -462,9 +715,12 @@ export default function SetupForm() {
                 )}
               </button>
             </div>
-          </div>
+          </form>
         </div>
       </div>
+
+      {/* Success Popup */}
+      <SuccessPopup />
 
       <style jsx>{`
         @keyframes fade-in {
@@ -474,7 +730,7 @@ export default function SetupForm() {
         .animate-fade-in {
           animation: fade-in 0.8s ease-out;
         }
-      `}</style>
-    </div>
-  );
-}
+        `}</style>
+      </div>
+    );
+  }
