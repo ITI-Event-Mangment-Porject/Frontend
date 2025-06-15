@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom';
+import { Home, Calendar, Briefcase, Clock, User } from 'lucide-react';
 
 function Sidebar() {
   const linkStyle = ({ isActive }) =>
@@ -14,27 +15,32 @@ function Sidebar() {
         <ul className="space-y-2 w-full">
           <li>
             <NavLink to="/" className={linkStyle}>
-              <i className="fa-solid fa-house mr-3 text-xl"></i>Dashboard
+              <Home className="mr-3 w-5 h-5" />
+              Dashboard
             </NavLink>
           </li>
           <li>
             <NavLink to="/event-details" className={linkStyle}>
-              <i className="fa-solid fa-calendar mr-3 text-xl"></i>Event Details
+              <Calendar className="mr-3 w-5 h-5" />
+              Event Details
             </NavLink>
           </li>
           <li>
             <NavLink to="/company-directory" className={linkStyle}>
-              <i className="fa-solid fa-suitcase mr-3 text-xl"></i>Directory
+              <Briefcase className="mr-3 w-5 h-5" />
+              Directory
             </NavLink>
           </li>
           <li>
             <NavLink to="/interview-queue" className={linkStyle}>
-              <i className="fa-solid fa-clock mr-3 text-xl"></i>Queue Status
+              <Clock className="mr-3 w-5 h-5" />
+              Queue Status
             </NavLink>
           </li>
           <li>
             <NavLink to="/profile" className={linkStyle}>
-              <i className="fa-solid fa-user mr-3 text-xl"></i>Profile
+              <User className="mr-3 w-5 h-5" />
+              Profile
             </NavLink>
           </li>
         </ul>
