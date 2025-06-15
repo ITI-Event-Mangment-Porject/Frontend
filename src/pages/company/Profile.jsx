@@ -108,7 +108,7 @@ const CompanyProfilePage = () => {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-6xl mx-auto p-4 sm:p-6">
+      <div className="mx-auto p-4 sm:p-6">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-sm mb-6 overflow-hidden transition-all duration-300 hover:shadow-lg">
           <div className="p-4 sm:p-6 border-b" style={{ borderColor: '#ebebeb' }}>
