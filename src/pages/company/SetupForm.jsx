@@ -326,7 +326,7 @@ if (showSubmittedData) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-red-50 to-gray-100 py-4 sm:py-8 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
+      <div className="mx-auto">
         {/* Animated Header */}
         <div className="bg-gradient-to-r from-[#a72b2b] via-red-700 to-[#8b2323] text-white rounded-t-2xl shadow-2xl overflow-hidden relative">
           <div className="absolute inset-0 bg-black opacity-10"></div>
