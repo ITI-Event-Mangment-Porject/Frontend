@@ -272,7 +272,7 @@ const UserForm = ({
           required
           disabled={trackLoading}
         >
-          <option value="">
+          <option value="" disabled>
             {trackLoading ? 'Loading tracks...' : 'Select a track'}
           </option>
           {tracks.map(track => (

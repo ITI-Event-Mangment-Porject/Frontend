@@ -51,8 +51,8 @@ const Pagination = ({ pagination, onPageChange }) => {
             onClick={() => onPageChange(number)}
             className={`relative inline-flex items-center px-4 py-2 text-sm font-medium ${
               number === pagination.currentPage
-                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
-                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                ? 'z-10 bg-[#901B20FF] border-[#901B20FF] text-white'
+                : 'bg-white border-gray-300 text-gray-500 hover:bg-[#901B20FF] hover:text-white'
             }`}
           >
             {number}
