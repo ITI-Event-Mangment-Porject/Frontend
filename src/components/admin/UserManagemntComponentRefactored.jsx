@@ -231,7 +231,7 @@ const UserManagementComponent = () => {
 
         {/* Track Filter */}
         <select
-          className="w-full sm:w-auto lg:w-32 xl:w-40 border border-[var(--gray-300)] rounded-md px-3 py-2 text-sm sm:text-base focus:outline-none focus:border-0 hover:shadow-md focus:border-[var(--primary-500)] transition-all duration-200 ease-out hover:border-[var(--gray-500)] focus:shadow-md"
+          className="w-full sm:w-auto lg:w-32 xl:w-50 border border-[var(--gray-300)] rounded-md px-3 py-2 text-sm sm:text-base focus:outline-none focus:border-0 hover:shadow-md focus:border-[var(--primary-500)] transition-all duration-200 ease-out hover:border-[var(--gray-500)] focus:shadow-md"
           value={selectedTrack}
           onChange={e => setSelectedTrack(e.target.value)}
           disabled={trackLoading}
@@ -258,7 +258,7 @@ const UserManagementComponent = () => {
         {/* Clear Filters Button */}
         <button
           onClick={clearFilters}
-          className="px-3 sm:px-4 py-2 text-sm sm:text-base text-gray-600 border border-[var(--gray-300)] rounded-md focus:border-0 hover:shadow-md transform hover:scale-105 active:scale-95 whitespace-nowrap"
+          className="px-3 sm:px-4 py-2 text-sm sm:text-base text-gray-600 border border-[var(--gray-300)] rounded-md focus:border-0 hover:shadow-md transform hover:scale-103 active:scale-95 whitespace-nowrap"
         >
           <span className="hidden sm:inline">Clear Filters</span>
           <span className="sm:hidden">Clear</span>
