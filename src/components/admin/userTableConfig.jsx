@@ -105,7 +105,7 @@ export const getUserTableColumns = (handleEditClick, handleDeleteUser) => [
             e.stopPropagation();
             handleEditClick(user);
           }}
-          className="px-3 py-1 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700 flex items-center"
+          className="px-3 py-1 text-sm rounded-md bg-[var(--info-500)] text-white hover:bg-blue-700 flex items-center"
           title="Edit User"
         >
           <FaEdit className="w-3 h-3 mr-1" />

@@ -193,31 +193,30 @@ const UserManagementComponent = () => {
   };
   const columns = getUserTableColumns(handleEditClick, handleDeleteUser);
   return (
-    <div className="p-2 m-1 sm:p-4 md:p-6 w-full min-h-screen bg-white flex flex-col animate-fade-in border border-[var(--gray-200)] rounded-lg shadow-md transition-all duration-300 ease-out ">
+    <div className="p-4 m-1 sm:p-4 md:p-6 w-full min-h-screen bg-white flex flex-col animate-fade-in border border-[var(--gray-200)] rounded-lg shadow-md transition-all duration-300 ease-out">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-6 w-full transform transition-all duration-300 ease-out">
-        <h1 className="text-xl sm:text-2xl font-bold font-['Archivo'] leading-6 sm:leading-8 text-[var(--gray-900)] w-full sm:w-auto text-left">
+        <h1 className="text-xl sm:text-2xl  font-bold font-['Archivo'] leading-6 sm:leading-8 text-[var(--gray-900)] w-full sm:w-auto text-left">
           User Management
         </h1>
         <div className="w-full sm:w-auto flex justify-stretch sm:justify-end">
-          {' '}
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="button w-full sm:w-auto hover:shadow-md text-sm sm:text-base px-3 sm:px-4 py-2"
           >
             <FaUser className="w-3 h-3 sm:w-4 sm:h-4 mr-2 transition-transform duration-200 ease-out" />
             <span className="hidden sm:inline">Add New User</span>
-            <span className="sm:hidden">Add New User</span>
+            <span className="sm:hidden w-100 text-start">Add New User</span>
           </button>
         </div>
-      </div>{' '}
+      </div>
       {/* Filters */}
       <div
         className="flex flex-col sm:grid sm:grid-cols-2 lg:flex lg:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6 w-full animate-fade-in"
         style={{ animationDelay: '0.1s' }}
       >
         {/* Search Input */}
-        <div className="w-full lg:flex-1 min-w-0 lg:min-w-[250px] xl:min-w-[300px] transform transition-all duration-300 ease-out hover:scale-[1.01]">
+        <div className="w-full lg:flex-1 min-w-0 lg:min-w-[15rem] xl:min-w-[18rem] transform transition-all duration-300 ease-out hover:scale-[1.01]">
           <div className="relative">
             <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 transition-colors duration-200 w-3 h-3 sm:w-4 sm:h-4" />
             <input
@@ -232,7 +231,7 @@ const UserManagementComponent = () => {
 
         {/* Track Filter */}
         <select
-          className="w-full sm:w-auto lg:w-40 xl:w-48 border border-[var(--gray-300)] rounded-md px-3 py-2 text-sm sm:text-base focus:outline-none focus:border-0 hover:shadow-md focus:border-[var(--primary-500)] transition-all duration-200 ease-out hover:border-[var(--gray-500)] focus:shadow-md"
+          className="w-full sm:w-auto lg:w-32 xl:w-40 border border-[var(--gray-300)] rounded-md px-3 py-2 text-sm sm:text-base focus:outline-none focus:border-0 hover:shadow-md focus:border-[var(--primary-500)] transition-all duration-200 ease-out hover:border-[var(--gray-500)] focus:shadow-md"
           value={selectedTrack}
           onChange={e => setSelectedTrack(e.target.value)}
           disabled={trackLoading}
@@ -247,7 +246,7 @@ const UserManagementComponent = () => {
 
         {/* Status Filter */}
         <select
-          className="w-full sm:w-auto lg:w-32 xl:w-36 border border-[var(--gray-300)] rounded-md px-3 py-2 text-sm sm:text-base focus:outline-none hover:shadow-md transition-all duration-200 ease-out hover:border-[var(--gray-500)] focus:border-[var(--primary-500)] focus:border-0 focus:shadow-md"
+          className="w-full sm:w-auto lg:w-28 xl:w-32 border border-[var(--gray-300)] rounded-md px-3 py-2 text-sm sm:text-base focus:outline-none hover:shadow-md transition-all duration-200 ease-out hover:border-[var(--gray-500)] focus:border-[var(--primary-500)] focus:border-0 focus:shadow-md"
           value={selectedStatus}
           onChange={e => setSelectedStatus(e.target.value)}
         >
@@ -336,18 +335,20 @@ const UserManagementComponent = () => {
                       />
                     ) : (
                       <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                        <FaUser className="w-4 h-4 text-gray-600" />
+                        <FaUser className="w-1/2 h-1/2 text-gray-600" />
                       </div>
                     )}
-                    <div>
-                      <h3 className="font-semibold text-gray-900 text-sm">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-gray-900 text-sm truncate">
                         {user.first_name} {user.last_name}
                       </h3>
-                      <p className="text-xs text-gray-500">{user.email}</p>
+                      <p className="text-xs text-gray-500 truncate">
+                        {user.email}
+                      </p>
                     </div>
                   </div>
                   <span
-                    className={`px-2 py-1 text-xs rounded-full ${
+                    className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${
                       user.is_active
                         ? 'bg-green-100 text-green-800'
                         : 'bg-red-100 text-red-800'
@@ -357,13 +358,13 @@ const UserManagementComponent = () => {
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-3">
-                  <div>
+                  <div className="truncate">
                     <span className="font-medium">Intake Year:</span>{' '}
                     {user.intake_year ? user.intake_year : 'N/A'}
                   </div>
-                  <div>
+                  <div className="flex justify-end">
                     <span
-                      className="px-2 py-1 rounded-full text-xs"
+                      className="px-2 py-1 rounded-full text-xs whitespace-nowrap"
                       style={{
                         backgroundColor: `${user.track.color}20`,
                         color: user.track.color,
@@ -372,19 +373,19 @@ const UserManagementComponent = () => {
                       {user.track.name}
                     </span>
                   </div>
-                  <div>
+                  <div className="truncate">
                     <span className="font-medium">Email:</span>{' '}
                     {user.email || 'N/A'}
                   </div>
-                  <div>
+                  <div className="truncate text-right">
                     <span className="font-medium">ID:</span>{' '}
                     {user.portal_user_id || 'N/A'}
                   </div>
                 </div>
-                <div className="flex space-x-2">
+                <div className="flex gap-2">
                   <button
                     onClick={() => handleEditClick(user)}
-                    className="flex-1 px-3 py-1 bg-blue-500 text-white rounded text-xs hover:bg-blue-600 transition-colors"
+                    className="flex-1 py-2 bg-[var(--info-500)] text-white rounded text-xs hover:bg-blue-600 transition-colors min-h-[2rem]"
                   >
                     Edit
                   </button>
@@ -393,7 +394,7 @@ const UserManagementComponent = () => {
                       setSelectedUser(user);
                       setIsActionModalOpen(true);
                     }}
-                    className="flex-1 px-3 py-1 bg-gray-500 text-white rounded text-xs hover:bg-gray-600 transition-colors"
+                    className="flex-1 py-2 bg-gray-500 text-white rounded text-xs hover:bg-gray-600 transition-colors min-h-[2rem]"
                   >
                     Actions
                   </button>

@@ -26,14 +26,12 @@ const Navbar = () => {
     },
   ];
   return (
-    <nav className="bg-white shadow-sm">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo */}
-          <div className="flex-shrink-0 flex items-center">
-            <span className="text-xl font-semibold text-red-600">
-              CommuNITI
-            </span>
+          <div className="flex-shrink-0 flex ">
+            <img src="/logo.png" alt="" className="h-20 w-auto ms-5" />
           </div>
 
           {/* Right side buttons */}

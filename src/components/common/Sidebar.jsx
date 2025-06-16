@@ -31,15 +31,15 @@ const Sidebar = () => {
     { path: '/admin/queue', icon: FaListAlt, label: 'Queue Management' },
   ];
   return (
-    <aside className="w-14 sm:w-20 md:w-20 lg:w-64 bg-white shadow-lg min-h-screen transition-all duration-300 ease-in-out">
-      <div className="p-1.5 sm:p-2.5 lg:p-4">
+    <aside className="fixed left-0 top-16 z-40 mt-3 w-14 sm:w-20 md:w-20 lg:w-60 bg-white shadow-lg h-[calc(100vh-4rem)] transition-all duration-300 ease-in-out border-r border-gray-200 rounded-lg overflow-hidden">
+      <div className="sm:p-2.5 h-full flex flex-col">
         {/* Header - Hide text on small screens */}
-        <div className="mb-2 sm:mb-4 lg:mb-6">
+        <div className="mb-2 sm:mb-4 lg:mb-6 flex-shrink-0">
           <div className="lg:hidden flex justify-center"></div>
         </div>
 
         {/* Navigation */}
-        <nav className="space-y-0.5 sm:space-y-1">
+        <nav className="space-y-0.5 sm:space-y-1 flex-1 overflow-y-auto">
           {navItems.map(item => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -55,7 +55,6 @@ const Sidebar = () => {
                 }`}
                 title={item.label} // Fallback tooltip
               >
-                {' '}
                 <Icon
                   className={`h-5 w-5 sm:h-6 sm:w-6 md:h-6 md:w-6 lg:h-5 lg:w-5 flex-shrink-0 ${
                     isActive
