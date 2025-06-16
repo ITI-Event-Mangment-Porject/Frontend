@@ -5,7 +5,7 @@ import Layout from '../../components/common/Layout';
 const UserManagement = () => {
   return (
     <Layout>
-      <div className="flex justify-center min-h-screen py-6">
+      <div className="min-h-screen py-6">
         <UserManagementComponent />
       </div>
     </Layout>

@@ -49,16 +49,16 @@ const UserForm = ({
         </div>
       )}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-sm font-medium text-[var(--gray-700)]">
           Profile Image
         </label>
-        <div className="mt-1 flex items-center space-x-4">
+        <div className="mt-4 flex items-center space-x-4">
           {profileImagePreview ? (
             <div className="relative">
               <img
                 src={profileImagePreview}
                 alt="Profile preview"
-                className="h-20 w-20 rounded-full object-cover border-2 border-gray-300"
+                className="h-15 w-15 rounded-full object-cover border-2 border-[var(--gray-300)]"
               />
               <button
                 type="button"
@@ -73,7 +73,7 @@ const UserForm = ({
               <img
                 src={user.profile_image}
                 alt="Current profile"
-                className="h-20 w-20 rounded-full object-cover border-2 border-gray-300"
+                className="h-15 w-15 rounded-full object-cover border-2 border-[var(--gray-300)]"
               />
               <button
                 type="button"
@@ -84,7 +84,7 @@ const UserForm = ({
               </button>
             </div>
           ) : (
-            <div className="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center">
+            <div className="h-15 w-15 rounded-full bg-gray-200 flex items-center justify-center">
               <FaUser className="h-8 w-8 text-gray-400" />
             </div>
           )}
@@ -281,13 +281,16 @@ const UserForm = ({
             </option>
           ))}
         </select>
-      </div>
+      </div>{' '}
       <div className="mt-5 sm:mt-6">
         <button
           type="submit"
-          className="inline-flex w-full justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:text-sm"
+          className="inline-flex w-full justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={submitLoading}
         >
+          {submitLoading && (
+            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+          )}
           {submitLoading
             ? isEdit
               ? 'Updating...'

@@ -43,7 +43,7 @@ const Modal = ({
 
   const modalSize = sizeClasses[size] || sizeClasses.md;
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto">
+    <div className="fixed inset-0 z-50 overflow-y-auto ">
       {/* Background overlay with blur only */}
       <div
         className="fixed inset-0 backdrop-blur-md transition-all duration-300"
@@ -51,7 +51,7 @@ const Modal = ({
       ></div>
 
       {/* Modal container */}
-      <div className="flex items-center justify-center min-h-screen p-4">
+      <div className="flex items-center justify-center min-h-screen p-4 ">
         {/* Modal panel */}
         <div
           className={`relative bg-white rounded-2xl shadow-2xl ${modalSize} w-full max-h-[90vh] overflow-hidden`}
@@ -89,7 +89,7 @@ const Modal = ({
                 </button>
                 <button
                   type="button"
-                  className={`px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors ${
+                  className={`px-4 py-2 text-sm font-medium text-[var(--gray-900)] bg-[var(--secondary-500)] border border-transparent rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors ${
                     isSubmitting ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                   onClick={onPrimaryAction}
