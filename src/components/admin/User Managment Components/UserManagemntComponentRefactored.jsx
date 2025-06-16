@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
 import { FaSearch, FaUser } from 'react-icons/fa';
-import Table from '../common/Table';
-import Modal from '../common/Modal';
-import Pagination from '../common/Pagination';
-import LoadingSpinner from '../common/LoadingSpinner';
-import TableSkeleton from '../common/TableSkeleton';
-import UserForm from './UserForm';
-import { userAPI } from '../../services/api';
-import { useUserManagement } from '../../hooks/useUserManagement';
+import Table from '../../common/Table.jsx';
+import Modal from '../../common/Modal.jsx';
+import Pagination from '../../common/Pagination.jsx';
+import LoadingSpinner from '../../common/LoadingSpinner.jsx';
+import TableSkeleton from '../../common/TableSkeleton.jsx';
+import UserForm from './UserForm.jsx';
+import { userAPI } from '../../../services/api.js';
+import { useUserManagement } from '../../../hooks/useUserManagement.js';
 import { getUserTableColumns } from './userTableConfig.jsx';
-import { cleanUserData, getInitialUserState } from '../../utils/userUtils';
+import {
+  cleanUserData,
+  getInitialUserState,
+} from '../../../utils/userUtils.js';
 
 const UserManagementComponent = () => {
   // Custom hook for user management logic
@@ -78,13 +81,37 @@ const UserManagementComponent = () => {
         setProfileImagePreview(null);
         loadUsers();
       } else {
-        setAddError(result.message || 'Failed to add user');
+        // Handle validation errors in API response
+        if (result.errors && typeof result.errors === 'object') {
+          const errorMessages = Object.entries(result.errors)
+            .map(
+              ([field, messages]) =>
+                `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`
+            )
+            .join('\n');
+          setAddError(errorMessages || result.message || 'Validation failed');
+        } else {
+          setAddError(result.message || 'Failed to add user');
+        }
       }
     } catch (error) {
       console.error('Add user error:', error);
-      if (error.response) {
-        console.error('Error response:', error.response.data);
-        setAddError(error.response.data.message || 'Server validation error');
+      if (error.response && error.response.data) {
+        const responseData = error.response.data;
+        console.error('Error response:', responseData);
+
+        // Handle validation errors specifically
+        if (responseData.errors && typeof responseData.errors === 'object') {
+          // Format validation errors
+          const errorMessages = Object.entries(responseData.errors)
+            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+            .join('\n');
+          setAddError(
+            errorMessages || responseData.message || 'Validation failed'
+          );
+        } else {
+          setAddError(responseData.message || 'Server validation error');
+        }
       } else {
         setAddError(error.message || 'An error occurred while adding the user');
       }
@@ -123,10 +150,42 @@ const UserManagementComponent = () => {
         setEditProfileImagePreview(null);
         loadUsers();
       } else {
-        setAddError(result.message || 'Failed to update user');
+        // Handle validation errors in API response
+        if (result.errors && typeof result.errors === 'object') {
+          const errorMessages = Object.entries(result.errors)
+            .map(
+              ([field, messages]) =>
+                `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`
+            )
+            .join('\n');
+          setAddError(errorMessages || result.message || 'Validation failed');
+        } else {
+          setAddError(result.message || 'Failed to update user');
+        }
       }
     } catch (error) {
-      setAddError(error.message || 'An error occurred while updating the user');
+      console.error('Edit user error:', error);
+      if (error.response && error.response.data) {
+        const responseData = error.response.data;
+        console.error('Error response:', responseData);
+
+        // Handle validation errors specifically
+        if (responseData.errors && typeof responseData.errors === 'object') {
+          // Format validation errors
+          const errorMessages = Object.entries(responseData.errors)
+            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+            .join('\n');
+          setAddError(
+            errorMessages || responseData.message || 'Validation failed'
+          );
+        } else {
+          setAddError(responseData.message || 'Server validation error');
+        }
+      } else {
+        setAddError(
+          error.message || 'An error occurred while updating the user'
+        );
+      }
     }
   };
 

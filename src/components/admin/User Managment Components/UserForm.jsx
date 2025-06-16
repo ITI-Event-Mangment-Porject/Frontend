@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { FaUser } from 'react-icons/fa';
 
 // Reusable input style for consistency
@@ -8,6 +8,24 @@ const inputClass =
 // Reusable select style for consistency
 const selectClass =
   'mt-2 block w-full px-4 py-3 rounded-md border border-gray-300 shadow-sm focus:border-[var(--primary-500)]  focus:outline-none focus:bg-[var(--primary-50)] sm:text-sm transition-all duration-200 hover:border-[var(--primary-500)] hover:shadow-md cursor-pointer appearance-none bg-white bg-no-repeat bg-[url(\'data:image/svg+xml;charset=utf-8,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20"%3E%3Cpath stroke="%236B7280" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m6 8 4 4 4-4"/%3E%3C/svg%3E\')] bg-[length:1.25em_1.25em] bg-[right_0.5rem_center] pr-10 transform focus:scale-[1.01]';
+
+// Helper component for required field indicator
+const RequiredStar = () => (
+  <span className="text-red-600 ml-1 text-lg font-bold" title="Required field">
+    *
+  </span>
+);
+
+// Helper function to parse and extract field-specific errors
+const getFieldError = (error, fieldName) => {
+  if (!error) return null;
+
+  // Check if the error contains field-specific errors
+  const regex = new RegExp(`${fieldName}:\\s*([^\\n]+)`, 'i');
+  const match = error.match(regex);
+
+  return match ? match[1] : null;
+};
 
 const UserForm = ({
   user,
@@ -21,6 +39,66 @@ const UserForm = ({
   setProfileImagePreview,
   isEdit = false,
 }) => {
+  // Create a ref for the form
+  const formRef = useRef(null);
+
+  // Effect to scroll to top when there's an error
+  useEffect(() => {
+    if (error && formRef.current) {
+      // Scroll to top of form with a slight delay to ensure DOM is updated
+      setTimeout(() => {
+        // Try multiple scroll methods for better compatibility
+        // 1. Using scrollIntoView
+        formRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+
+        // 2. Using window.scrollTo as a fallback
+        const formTop = formRef.current.getBoundingClientRect().top;
+        const scrollTop =
+          window.pageYOffset || document.documentElement.scrollTop;
+        window.scrollTo({
+          top: formTop + scrollTop - 100, // Offset by 100px to show some context
+          behavior: 'smooth',
+        });
+
+        // Add a flash animation to highlight the error message
+        const errorDiv = formRef.current.querySelector('.error-message');
+        if (errorDiv) {
+          errorDiv.classList.add('animate-shake');
+          // Remove the animation class after it completes
+          setTimeout(() => {
+            errorDiv.classList.remove('animate-shake');
+          }, 1000);
+        }
+
+        // Try to focus the first input that has an error
+        if (error.includes('email:')) {
+          const emailInput = formRef.current.querySelector(
+            'input[type="email"]'
+          );
+          if (emailInput) emailInput.focus();
+        } else if (error.includes('first_name:')) {
+          const firstNameInput = formRef.current.querySelector(
+            'input[name="first_name"]'
+          );
+          if (firstNameInput) firstNameInput.focus();
+        } else if (error.includes('last_name:')) {
+          const lastNameInput = formRef.current.querySelector(
+            'input[name="last_name"]'
+          );
+          if (lastNameInput) lastNameInput.focus();
+        } else if (error.includes('portal_user_id:')) {
+          const portalInput = formRef.current.querySelector(
+            'input[name="portal_user_id"]'
+          );
+          if (portalInput) portalInput.focus();
+        }
+      }, 100);
+    }
+  }, [error]);
+
   // File handling functions
   const handleProfileImageChange = e => {
     const file = e.target.files[0];
@@ -50,10 +128,18 @@ const UserForm = ({
   };
 
   return (
-    <form onSubmit={onSubmit} className="space-y-6">
+    <form ref={formRef} onSubmit={onSubmit} className="space-y-6">
       {error && (
-        <div className="p-3 text-red-600 bg-red-50 rounded-md text-sm border border-red-200">
-          {error}
+        <div className="p-4 text-red-600 bg-red-50 rounded-md text-sm border border-red-200 shadow-sm error-message animate-shake">
+          <h3 className="font-semibold mb-2">
+            Please fix the following issues:
+          </h3>
+          {error.split('\n').map((line, index) => (
+            <div key={index} className="mb-1 last:mb-0 flex items-start">
+              <span className="mr-2">•</span>
+              <span>{line}</span>
+            </div>
+          ))}
         </div>
       )}
       <div>
@@ -113,55 +199,129 @@ const UserForm = ({
         <div>
           <label className="block text-base font-semibold text-gray-700 mb-1">
             Portal User ID
+            <RequiredStar />
           </label>
           <input
             type="text"
+            name="portal_user_id"
             value={user.portal_user_id}
             onChange={e =>
               setUser(prev => ({ ...prev, portal_user_id: e.target.value }))
             }
-            className={inputClass}
-            required
+            className={`${inputClass} ${getFieldError(error, 'portal_user_id') ? 'border-red-500' : ''}`}
           />
+          {getFieldError(error, 'portal_user_id') && (
+            <p className="mt-1 text-sm text-red-600 flex items-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="w-4 h-4 mr-1 inline-block"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              {getFieldError(error, 'portal_user_id')}
+            </p>
+          )}
         </div>
       )}
       <div>
         <label className="block text-base font-semibold text-gray-700 mb-1">
           First Name
+          <RequiredStar />
         </label>
         <input
           type="text"
+          name="first_name"
           value={user.first_name}
           onChange={e =>
             setUser(prev => ({ ...prev, first_name: e.target.value }))
           }
-          className={inputClass}
-          required
+          className={`${inputClass} ${getFieldError(error, 'first_name') ? 'border-red-500' : ''}`}
         />
+        {getFieldError(error, 'first_name') && (
+          <p className="mt-1 text-sm text-red-600 flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="w-4 h-4 mr-1 inline-block"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                clipRule="evenodd"
+              />
+            </svg>
+            {getFieldError(error, 'first_name')}
+          </p>
+        )}
       </div>
       <div>
         <label className="block text-base font-semibold text-gray-700 mb-1">
           Last Name
+          <RequiredStar />
         </label>
         <input
           type="text"
+          name="last_name"
           value={user.last_name}
           onChange={e =>
             setUser(prev => ({ ...prev, last_name: e.target.value }))
           }
-          className={inputClass}
-          required
+          className={`${inputClass} ${getFieldError(error, 'last_name') ? 'border-red-500' : ''}`}
         />
+        {getFieldError(error, 'last_name') && (
+          <p className="mt-1 text-sm text-red-600 flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="w-4 h-4 mr-1 inline-block"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                clipRule="evenodd"
+              />
+            </svg>
+            {getFieldError(error, 'last_name')}
+          </p>
+        )}
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">Email</label>
+        <label className="block text-base font-semibold text-gray-700 mb-1">
+          Email
+          <RequiredStar />
+        </label>
         <input
           type="email"
+          name="email"
           value={user.email}
           onChange={e => setUser(prev => ({ ...prev, email: e.target.value }))}
-          className={inputClass}
-          required
+          className={`${inputClass} ${getFieldError(error, 'email') ? 'border-red-500' : ''}`}
         />
+        {getFieldError(error, 'email') && (
+          <p className="mt-1 text-sm text-red-600 flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="w-4 h-4 mr-1 inline-block"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                clipRule="evenodd"
+              />
+            </svg>
+            {getFieldError(error, 'email')}
+          </p>
+        )}
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">Phone</label>
@@ -271,7 +431,10 @@ const UserForm = ({
         </select>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">Track</label>
+        <label className="block text-sm font-medium text-gray-700">
+          Track
+          <RequiredStar />
+        </label>
         <select
           value={user.track_id}
           onChange={e =>

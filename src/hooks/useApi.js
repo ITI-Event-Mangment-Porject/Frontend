@@ -43,13 +43,20 @@ const useApi = () => {
       const errorMessage =
         err.response?.data?.message || err.message || 'An error occurred';
 
-      setError(errorMessage);
+      // Handle validation errors
+      const errorData = err.response?.data || {};
 
+      setError(errorMessage);
       if (onError) {
-        onError(errorMessage);
+        onError(errorMessage, errorData);
       }
 
-      throw err;
+      // Return both the message and validation errors if available
+      return {
+        success: false,
+        message: errorMessage,
+        errors: errorData.errors || null,
+      };
     } finally {
       setLoading(false);
     }

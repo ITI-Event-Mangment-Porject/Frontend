@@ -1,5 +1,5 @@
 import React from 'react';
-import UserManagementComponent from '../../components/admin/UserManagemntComponentRefactored';
+import UserManagementComponent from '../../components/admin/User Managment Components/UserManagemntComponentRefactored';
 import Layout from '../../components/common/Layout';
 
 const UserManagement = () => {
