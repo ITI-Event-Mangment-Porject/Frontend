@@ -1,6 +1,14 @@
 import React from 'react';
 import { FaUser } from 'react-icons/fa';
 
+// Reusable input style for consistency
+const inputClass =
+  'mt-2 block w-full px-4 py-3 rounded-md border border-gray-300 shadow-sm focus:border-[var(--primary-500)]  focus:bg-[var(--primary-50)] sm:text-sm transition-all duration-200 hover:border-[var(--primary-500)] hover:shadow-lg transform focus:scale-[1.01]';
+
+// Reusable select style for consistency
+const selectClass =
+  'mt-2 block w-full px-4 py-3 rounded-md border border-gray-300 shadow-sm focus:border-[var(--primary-500)]  focus:outline-none focus:bg-[var(--primary-50)] sm:text-sm transition-all duration-200 hover:border-[var(--primary-500)] hover:shadow-md cursor-pointer appearance-none bg-white bg-no-repeat bg-[url(\'data:image/svg+xml;charset=utf-8,%3Csvg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20"%3E%3Cpath stroke="%236B7280" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="m6 8 4 4 4-4"/%3E%3C/svg%3E\')] bg-[length:1.25em_1.25em] bg-[right_0.5rem_center] pr-10 transform focus:scale-[1.01]';
+
 const UserForm = ({
   user,
   setUser,
@@ -42,14 +50,14 @@ const UserForm = ({
   };
 
   return (
-    <form onSubmit={onSubmit} className="space-y-4">
+    <form onSubmit={onSubmit} className="space-y-6">
       {error && (
-        <div className="p-2 text-red-600 bg-red-50 rounded-md text-sm">
+        <div className="p-3 text-red-600 bg-red-50 rounded-md text-sm border border-red-200">
           {error}
         </div>
       )}
       <div>
-        <label className="block text-sm font-medium text-[var(--gray-700)]">
+        <label className="block text-base font-semibold text-gray-700 mb-1">
           Profile Image
         </label>
         <div className="mt-4 flex items-center space-x-4">
@@ -58,12 +66,12 @@ const UserForm = ({
               <img
                 src={profileImagePreview}
                 alt="Profile preview"
-                className="h-15 w-15 rounded-full object-cover border-2 border-[var(--gray-300)]"
+                className="h-20 w-20 rounded-full object-cover border-2 border-[var(--gray-300)]"
               />
               <button
                 type="button"
                 onClick={removeProfileImage}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                className="absolute-top-2-right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
               >
                 ×
               </button>
@@ -73,27 +81,27 @@ const UserForm = ({
               <img
                 src={user.profile_image}
                 alt="Current profile"
-                className="h-15 w-15 rounded-full object-cover border-2 border-[var(--gray-300)]"
+                className="h-20 w-20 rounded-full object-cover border-2 border-[var(--gray-300)]"
               />
               <button
                 type="button"
                 onClick={removeProfileImage}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
+                className="absolute-top-2-right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs hover:bg-red-600"
               >
                 ×
               </button>
             </div>
           ) : (
-            <div className="h-15 w-15 rounded-full bg-gray-200 flex items-center justify-center">
-              <FaUser className="h-8 w-8 text-gray-400" />
+            <div className="h-20 w-20 rounded-full bg-gray-200 flex items-center justify-center">
+              <FaUser className="h-10 w-10 text-gray-400" />
             </div>
           )}
-          <div className="flex-1">
+          <div className="flex-1 ">
             <input
               type="file"
               accept="image/*"
               onChange={handleProfileImageChange}
-              className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+              className="block pl-2 w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-5 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-[var(--primary-500)] hover:file:bg-blue-100 hover:file:shadow-md focus:outline-none file:transition-all file:duration-200 cursor-pointer py-2 border border-gray-300 rounded-md hover:border-[var(--primary-500)]"
             />
             <p className="text-xs text-gray-500 mt-1">
               PNG, JPG, GIF up to 5MB
@@ -103,7 +111,7 @@ const UserForm = ({
       </div>{' '}
       {!isEdit && (
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-base font-semibold text-gray-700 mb-1">
             Portal User ID
           </label>
           <input
@@ -112,13 +120,13 @@ const UserForm = ({
             onChange={e =>
               setUser(prev => ({ ...prev, portal_user_id: e.target.value }))
             }
-            className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+            className={inputClass}
             required
           />
         </div>
       )}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-base font-semibold text-gray-700 mb-1">
           First Name
         </label>
         <input
@@ -127,12 +135,12 @@ const UserForm = ({
           onChange={e =>
             setUser(prev => ({ ...prev, first_name: e.target.value }))
           }
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className={inputClass}
           required
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        <label className="block text-base font-semibold text-gray-700 mb-1">
           Last Name
         </label>
         <input
@@ -141,7 +149,7 @@ const UserForm = ({
           onChange={e =>
             setUser(prev => ({ ...prev, last_name: e.target.value }))
           }
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className={inputClass}
           required
         />
       </div>
@@ -151,7 +159,7 @@ const UserForm = ({
           type="email"
           value={user.email}
           onChange={e => setUser(prev => ({ ...prev, email: e.target.value }))}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className={inputClass}
           required
         />
       </div>
@@ -161,7 +169,7 @@ const UserForm = ({
           type="tel"
           value={user.phone}
           onChange={e => setUser(prev => ({ ...prev, phone: e.target.value }))}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className={inputClass}
         />
       </div>
       <div>
@@ -169,8 +177,8 @@ const UserForm = ({
         <textarea
           value={user.bio}
           onChange={e => setUser(prev => ({ ...prev, bio: e.target.value }))}
-          rows={3}
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          rows={4}
+          className="mt-2 block w-full px-4 py-3 rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-300 focus:outline-none sm:text-sm transition-all duration-200 hover:border-blue-400 hover:shadow-md"
           placeholder="Brief description about the user"
         />
       </div>
@@ -184,7 +192,7 @@ const UserForm = ({
           onChange={e =>
             setUser(prev => ({ ...prev, linkedin_url: e.target.value }))
           }
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className={inputClass}
           placeholder="https://linkedin.com/in/username"
         />
       </div>
@@ -198,7 +206,7 @@ const UserForm = ({
           onChange={e =>
             setUser(prev => ({ ...prev, github_url: e.target.value }))
           }
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className={inputClass}
           placeholder="https://github.com/username"
         />
       </div>
@@ -212,7 +220,7 @@ const UserForm = ({
           onChange={e =>
             setUser(prev => ({ ...prev, portfolio_url: e.target.value }))
           }
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className={inputClass}
           placeholder="https://your-portfolio.com"
         />
       </div>
@@ -226,7 +234,7 @@ const UserForm = ({
           onChange={e =>
             setUser(prev => ({ ...prev, intake_year: e.target.value }))
           }
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className={inputClass}
           min="2020"
           max="2030"
         />
@@ -241,13 +249,14 @@ const UserForm = ({
           onChange={e =>
             setUser(prev => ({ ...prev, graduation_year: e.target.value }))
           }
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className={inputClass}
           min="2020"
           max="2035"
         />
       </div>{' '}
       <div>
-        <label className="block text-sm font-medium text-gray-700">
+        {' '}
+        <label className="block text-base font-semibold text-gray-700 mb-1">
           Status
         </label>
         <select
@@ -255,7 +264,7 @@ const UserForm = ({
           onChange={e =>
             setUser(prev => ({ ...prev, is_active: e.target.value === '1' }))
           }
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className={selectClass}
         >
           <option value="1">Active</option>
           <option value="0">Inactive</option>
@@ -268,7 +277,7 @@ const UserForm = ({
           onChange={e =>
             setUser(prev => ({ ...prev, track_id: e.target.value }))
           }
-          className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+          className={selectClass}
           required
           disabled={trackLoading}
         >
@@ -285,7 +294,7 @@ const UserForm = ({
       <div className="mt-5 sm:mt-6">
         <button
           type="submit"
-          className="inline-flex w-full justify-center items-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          className="inline-flex w-full justify-center items-center rounded-md border border-transparent bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-md hover:shadow-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0"
           disabled={submitLoading}
         >
           {submitLoading && (
