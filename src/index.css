@@ -1,12 +1,52 @@
+/* ========================================
+   TAILWIND CSS & EXTERNAL IMPORTS
+   ======================================== */
 @import 'tailwindcss';
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
-/* Font Icons */
+/* ========================================
+   CSS CUSTOM PROPERTIES (ROOT VARIABLES)
+   ======================================== */
+:root {
+  /* Primary Color Palette */
+  --primary-200: #ebebebff; /* primary light variant */
+  --primary-300: #cc9598ff; /* Primary pressed state */
+  --primary-400: #ad565aff; /* Main primary color */
+  --primary-500: #901b20ff; /* Primary dark variant */
+  --primary-600: #7a171cff; /* Primary hover state */
+
+  /* Secondary Color Palette */
+  --secondary-500: #203947ff; /* Main secondary color */
+
+  /* Additional semantic colors can be added here */
+  --success-500: #10b981; /* Success green */
+  --error-500: #ef4444; /* Error red */
+  --warning-500: #f59e0b; /* Warning yellow */
+  --info-500: #3b82f6; /* Info blue */
+
+  /* Neutral colors */
+  --gray-50: #f9fafb; /* Lightest gray for backgrounds */
+  --gray-100: #f3f4f6; /* Light gray for borders and backgrounds */
+  --gray-200: #e5e7eb; /* Gray for borders and backgrounds */
+  --gray-300: #d1d5db; /* Medium gray for borders and backgrounds */
+  --gray-400: #9ca3af; /* Dark gray for borders and backgrounds */
+  --gray-500: #6b7280; /* Darker gray for borders and backgrounds */
+  --gray-600: #4b5563; /* Even darker gray for borders and backgrounds */
+  --gray-700: #374151; /* Very dark gray for borders and backgrounds */
+  --gray-800: #1f2937; /* Almost black gray for borders and backgrounds */
+  --gray-900: #111827; /* Fonts */
+}
+/* ========================================
+   ICON SYSTEM
+   ======================================== */
+
+/* Base Icon Styles */
 .icon {
   display: inline-block;
   line-height: 1;
 }
 
+/* Icon Sizes */
 .icon-sm {
   font-size: 16px;
 }
@@ -19,9 +59,9 @@
   font-size: 32px;
 }
 
-/* Icon colors */
+/* Icon Color Variants */
 .icon-primary {
-  color: #901b20ff;
+  color: var(--primary-500);
 }
 
 .icon-white {
@@ -29,50 +69,508 @@
 }
 
 .icon-gray {
-  color: #6b7280;
+  color: var(--gray-500);
 }
 
+/* ========================================
+   BUTTON COMPONENT SYSTEM
+   ======================================== */
+
+/* Primary Button */
 .button {
+  /* Layout & Dimensions */
   width: 160.328125px;
   height: 40px;
   padding: 0 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: Inter;
+  gap: 8px;
+
+  /* Typography */
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    sans-serif;
   font-size: 14px;
   line-height: 22px;
   font-weight: 500;
-  color: #ffffffff; /* white */
-  background: #901b20ff; /* primary-500 */
-  opacity: 1;
+
+  /* Colors & Appearance */
+  color: #ffffff;
+  background: var(--primary-500);
   border: none;
   border-radius: 6px;
-  gap: 8px;
+  opacity: 1;
+
+  /* Interactions */
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
 }
 
+/* Button Icon Styles */
 .button .icon {
   width: 16px;
   height: 16px;
-  fill: #ffffffff; /* white */
+  fill: #ffffff;
 }
 
-/* Hover */
+/* Button States */
 .button:hover {
-  color: #ffffffff; /* white */
-  background: #7a171cff; /* primary-600 */
+  color: #ffffff;
+  background: var(--primary-600); /* Calculated hover color */
+  transform: translateY(-1px);
 }
 
-/* Pressed */
-.button:hover:active {
-  color: #ffffffff; /* white */
-  background: #631317ff; /* primary-700 */
+.button:active {
+  color: #ffffff;
+  background: var(--primary-700); /* Calculated pressed color */
+  transform: translateY(0);
 }
 
-/* Disabled */
 .button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+  transform: none;
+}
+
+.button:focus {
+  outline: 2px solid var(--primary-500);
+  outline-offset: 2px;
+}
+
+/* ========================================
+   GLOBAL RESET & BASE STYLES
+   ======================================== */
+
+/* Smooth scrolling for the entire page */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Base body styles */
+body {
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  line-height: 1.5;
+  color: var(--gray-800);
+  background-color: #ffffff;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Remove default button styles */
+button {
+  font-family: inherit;
+}
+
+/* Focus styles for accessibility */
+*:focus {
+  outline: 2px solid var(--primary-500);
+  outline-offset: 2px;
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+
+/* Text utilities */
+.text-primary {
+  color: var(--primary-500);
+}
+
+.text-secondary {
+  color: var(--secondary-500);
+}
+
+.text-success {
+  color: var(--success-500);
+}
+
+.text-error {
+  color: var(--error-500);
+}
+
+.text-warning {
+  color: var(--warning-500);
+}
+
+.text-info {
+  color: var(--info-500);
+}
+
+/* Background utilities */
+.bg-primary {
+  background-color: var(--primary-500);
+}
+
+.bg-secondary {
+  background-color: var(--secondary-500);
+}
+
+.bg-success {
+  background-color: var(--success-500);
+}
+
+.bg-error {
+  background-color: var(--error-500);
+}
+
+.bg-warning {
+  background-color: var(--warning-500);
+}
+
+.bg-info {
+  background-color: var(--info-500);
+}
+
+/* Border utilities */
+.border-primary {
+  border-color: var(--primary-500);
+}
+
+.border-secondary {
+  border-color: var(--secondary-500);
+}
+
+/* ========================================
+   ANIMATION UTILITIES
+   ======================================== */
+
+/* Loading spinner animation */
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Fade in animation */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Pulse animation for loading states */
+.animate-pulse {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Bounce animation for attention-grabbing elements */
+.animate-bounce {
+  animation: bounce 1s infinite;
+}
+
+@keyframes bounce {
+  0%,
+  20%,
+  53%,
+  80%,
+  100% {
+    animation-timing-function: cubic-bezier(0.215, 0.61, 0.355, 1);
+    transform: translate3d(0, 0, 0);
+  }
+  40%,
+  43% {
+    animation-timing-function: cubic-bezier(0.755, 0.05, 0.855, 0.06);
+    transform: translate3d(0, -8px, 0);
+  }
+  70% {
+    animation-timing-function: cubic-bezier(0.755, 0.05, 0.855, 0.06);
+    transform: translate3d(0, -4px, 0);
+  }
+  90% {
+    transform: translate3d(0, -2px, 0);
+  }
+}
+
+/* Shake animation for errors */
+.animate-shake {
+  animation: shake 0.6s ease-in-out;
+}
+
+@keyframes shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  10%,
+  30%,
+  50%,
+  70%,
+  90% {
+    transform: translateX(-4px);
+  }
+  20%,
+  40%,
+  60%,
+  80% {
+    transform: translateX(4px);
+  }
+}
+
+/* Flash animation for highlighting errors */
+.animate-flash {
+  animation: flash 0.8s ease-in-out;
+}
+
+@keyframes flash {
+  0%,
+  50%,
+  100% {
+    opacity: 1;
+  }
+  25%,
+  75% {
+    opacity: 0.5;
+    background-color: var(--error-500);
+    color: white;
+  }
+}
+
+/* Slide in from right animation */
+.animate-slide-in-right {
+  animation: slideInRight 0.4s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Slide in from left animation */
+.animate-slide-in-left {
+  animation: slideInLeft 0.4s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Scale up animation */
+.animate-scale-up {
+  animation: scaleUp 0.3s ease-out;
+}
+
+@keyframes scaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Floating animation for icons */
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* ========================================
+   RESPONSIVE UTILITIES
+   ======================================== */
+
+/* Responsive Button Adjustments */
+@media (max-width: 640px) {
+  .button {
+    width: auto;
+    min-width: 80px;
+    padding: 0 16px;
+    font-size: 14px;
+    height: 38px;
+    /* Better touch targets for mobile */
+    min-height: 44px;
+  }
+
+  .button .icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* Mobile Touch Optimizations */
+@media (max-width: 768px) {
+  /* Improve touch targets */
+  button,
+  .button,
+  input[type='button'],
+  input[type='submit'] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Larger tap areas for mobile */
+  .table-action-button {
+    padding: 8px 12px;
+    min-height: 36px;
+  }
+}
+
+/* Hide on mobile */
+@media (max-width: 768px) {
+  .hidden-mobile {
+    display: none !important;
+  }
+}
+
+/* Hide on desktop */
+@media (min-width: 769px) {
+  .hidden-desktop {
+    display: none !important;
+  }
+}
+
+/* ========================================
+   COMPONENT-SPECIFIC OVERRIDES
+   ======================================== */
+
+/* Custom scrollbar styling */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--gray-100);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--gray-300);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400);
+}
+
+/* ========================================
+   SIDEBAR RESPONSIVE STYLES
+   ======================================== */
+
+/* Sidebar tooltip for mobile/tablet view */
+.sidebar-tooltip {
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 8px;
+  padding: 4px 8px;
+  background-color: var(--gray-800);
+  color: white;
+  font-size: 12px;
+  border-radius: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease-in-out;
+  z-index: 50;
+}
+
+/* Show tooltip on hover for collapsed sidebar */
+@media (max-width: 1024px) {
+  .sidebar-link:hover .sidebar-tooltip {
+    opacity: 1;
+  }
+}
+
+/* Ensure sidebar is properly layered */
+.sidebar-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 40;
+}
+
+/* Main content responsive spacing */
+.main-content-responsive {
+  margin-left: 256px; /* Full sidebar width on large screens */
+  transition: margin-left 0.3s ease-in-out;
+}
+
+@media (max-width: 1024px) {
+  .main-content-responsive {
+    margin-left: 64px; /* Icon-only sidebar width on medium and small screens */
+  }
+}
+
+/* Mobile sidebar overlay (if needed for future mobile menu) */
+.sidebar-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 30;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease-in-out,
+    visibility 0.3s ease-in-out;
+}
+
+.sidebar-overlay.active {
+  opacity: 1;
+  visibility: visible;
 }
