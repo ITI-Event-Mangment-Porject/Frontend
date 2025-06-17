@@ -5,7 +5,7 @@ import Layout from '../../components/common/Layout';
 const UserManagement = () => {
   return (
     <Layout>
-      <div className="min-h-screen py-6">
+      <div className="min-h-screen ">
         <UserManagementComponent />
       </div>
     </Layout>
