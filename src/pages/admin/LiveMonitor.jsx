@@ -92,15 +92,7 @@ export default function LiveEventMonitor() {
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              Live Event Monitor
-            </h1>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="flex items-center space-x-1">
-              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-              <span className="text-sm text-gray-600">Live Updates</span>
-            </div>
+            <h1 className="text-3xl font-bold text-gray-900">Overview</h1>
           </div>
         </div>
 
@@ -165,6 +157,18 @@ export default function LiveEventMonitor() {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Live Event</h1>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1">
+              <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+              <span className="text-sm text-gray-600">Live Updates</span>
+            </div>
+          </div>
         </div>
       </div>
     </div>
