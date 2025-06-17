@@ -8,17 +8,19 @@ import AdminDashboard from '../pages/admin/Dashboard';
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Public routes
-      <Route path="/" element={<Navigate to="/admin/dashboard" replace />} /> */}
+      {/* Admin routes - using absolute paths */}
+      <Route path="/admin/dashboard" element={<AdminDashboard />} />
+      <Route path="/admin/users" element={<UserManagement />} />
 
-      {/* Admin routes */}
-      <Route path="/admin">
-        <Route path="dashboard" element={<AdminDashboard />} />
-        <Route path="users" element={<UserManagement />} />
-      </Route>
+      {/* Default redirect to admin dashboard */}
+      <Route
+        path="/admin"
+        element={<Navigate to="/admin/dashboard" replace />}
+      />
+      <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
 
       {/* Catch all route */}
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
     </Routes>
   );
 };
