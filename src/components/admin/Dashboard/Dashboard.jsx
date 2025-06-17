@@ -18,6 +18,7 @@ import {
 } from 'recharts';
 import { FaUsers, FaCalendarAlt, FaBuilding, FaClock } from 'react-icons/fa';
 import './Dashboard.css';
+import { useNavigate } from 'react-router-dom';
 
 // Sample data for charts
 const monthlyData = [
@@ -48,6 +49,9 @@ const userTypeData = [
 ];
 
 const Dashboard = () => {
+  // Initialize the navigate function
+  const navigate = useNavigate();
+
   // State for animated counters
   const [counters, setCounters] = useState({
     users: 0,
@@ -134,8 +138,9 @@ const Dashboard = () => {
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <div
-          className="bg-white rounded-lg shadow-sm p-6 transform transition-all duration-300 hover:shadow-md hover:scale-105 animate-fade-in stat-card"
+          className="bg-white rounded-lg border-primary hover:cursor-pointer shadow-sm p-6 transform transition-all duration-300 hover:shadow-md hover:scale-105 animate-fade-in stat-card"
           style={{ animationDelay: '0.1s' }}
+          onClick={() => navigate('/admin/users')}
         >
           <div className="flex items-center justify-between">
             <div>
@@ -156,7 +161,7 @@ const Dashboard = () => {
         </div>
 
         <div
-          className="bg-white rounded-lg shadow-sm p-6 transform transition-all duration-300 hover:shadow-md hover:scale-105 animate-fade-in stat-card"
+          className="bg-white rounded-lg shadow-sm p-6  border-primary transform transition-all duration-300 hover:shadow-md hover:scale-105 animate-fade-in stat-card"
           style={{ animationDelay: '0.2s' }}
         >
           <div className="flex items-center justify-between">
@@ -180,7 +185,7 @@ const Dashboard = () => {
         </div>
 
         <div
-          className="bg-white rounded-lg shadow-sm p-6 transform transition-all duration-300 hover:shadow-md hover:scale-105 animate-fade-in stat-card"
+          className="bg-white rounded-lg shadow-sm p-6  border-primary transform transition-all duration-300 hover:shadow-md hover:scale-105 animate-fade-in stat-card"
           style={{ animationDelay: '0.3s' }}
         >
           <div className="flex items-center justify-between">
@@ -202,7 +207,7 @@ const Dashboard = () => {
         </div>
 
         <div
-          className="bg-white rounded-lg shadow-sm p-6 transform transition-all duration-300 hover:shadow-md hover:scale-105 animate-fade-in stat-card"
+          className="bg-white rounded-lg shadow-sm p-6  border-primary transform transition-all duration-300 hover:shadow-md hover:scale-105 animate-fade-in stat-card"
           style={{ animationDelay: '0.4s' }}
         >
           <div className="flex items-center justify-between">
@@ -230,7 +235,7 @@ const Dashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Growth Trends */}
         <div
-          className="bg-white rounded-lg shadow-sm p-6 animate-fade-in chart-container"
+          className="bg-white rounded-lg shadow-sm p-6 animate-fade-in chart-container  border-primary"
           style={{ animationDelay: '0.5s' }}
         >
           <h2 className="text-lg font-medium text-gray-900 mb-4">
@@ -267,7 +272,7 @@ const Dashboard = () => {
 
         {/* Event & Company Statistics */}
         <div
-          className="bg-white rounded-lg shadow-sm p-6 animate-fade-in chart-container"
+          className="bg-white rounded-lg shadow-sm p-6 animate-fade-in chart-container  border-primary"
           style={{ animationDelay: '0.6s' }}
         >
           <h2 className="text-lg font-medium text-gray-900 mb-4">
@@ -303,10 +308,10 @@ const Dashboard = () => {
       </div>
 
       {/* Secondary Charts */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8  ">
         {/* Queue Time Distribution */}
         <div
-          className="bg-white rounded-lg shadow-sm p-6 animate-fade-in chart-container"
+          className="bg-white rounded-lg shadow-sm p-6 animate-fade-in chart-container border-primary"
           style={{ animationDelay: '0.7s' }}
         >
           <h2 className="text-lg font-medium text-gray-900 mb-4">
@@ -338,7 +343,7 @@ const Dashboard = () => {
 
         {/* User Type Distribution */}
         <div
-          className="bg-white rounded-lg shadow-sm p-6 animate-fade-in chart-container pie-chart-container"
+          className="bg-white rounded-lg shadow-sm p-6 animate-fade-in chart-container pie-chart-container  border-primary"
           style={{ animationDelay: '0.8s' }}
         >
           <h2 className="text-lg font-medium text-gray-900 mb-4">
@@ -375,13 +380,13 @@ const Dashboard = () => {
 
       {/* Recent Activity */}
       <div
-        className="bg-white rounded-lg shadow-sm p-6 mb-8 animate-fade-in"
+        className="bg-white rounded-lg shadow-sm p-6 mb-8 animate-fade-in border-primary"
         style={{ animationDelay: '0.9s' }}
       >
         <h2 className="text-lg font-medium text-gray-900 mb-4">
           Recent Activity
         </h2>
-        <div className="space-y-4">
+        <div className="space-y-4 ">
           {[
             {
               action: 'New user registration',
@@ -410,7 +415,7 @@ const Dashboard = () => {
           ].map((activity, index) => (
             <div
               key={index}
-              className="flex items-center p-3 border-b last:border-0 transition-colors duration-200 hover:bg-gray-50 rounded animate-slide-in-right"
+              className="flex items-center p-3 border-b last:border-0 transition-colors duration-200 hover:scale-101 rounded animate-slide-in-right"
               style={{ animationDelay: `${1.0 + index * 0.1}s` }}
             >
               <div className="mr-4">{activity.icon}</div>

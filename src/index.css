@@ -235,7 +235,7 @@ button {
 
 /* Border utilities */
 .border-primary {
-  border-color: var(--primary-500);
+  border: 1px solid var(--gray-200);
 }
 
 .border-secondary {
