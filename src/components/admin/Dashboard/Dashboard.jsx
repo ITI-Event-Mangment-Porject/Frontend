@@ -20,7 +20,7 @@ import { FaUsers, FaCalendarAlt, FaBuilding, FaClock } from 'react-icons/fa';
 import './Dashboard.css';
 import { useNavigate } from 'react-router-dom';
 import useApi from '../../../hooks/useApi';
-import { userAPI, eventAPI, companyAPI, queueAPI } from '../../../services/api';
+import { userAPI, eventAPI, companyAPI } from '../../../services/api';
 import StatCounterSkeleton from '../../common/StatCounterSkeleton';
 
 // Sample data for charts
@@ -53,13 +53,10 @@ const userTypeData = [
 
 const Dashboard = () => {
   // Initialize the navigate function
-  const navigate = useNavigate();
-
-  // API hooks for fetching data
+  const navigate = useNavigate(); // API hooks for fetching data
   const usersApi = useApi();
   const eventsApi = useApi();
   const companiesApi = useApi();
-  const queueApi = useApi();
 
   // State for actual data
   const [actualData, setActualData] = useState({
@@ -76,7 +73,6 @@ const Dashboard = () => {
     companies: 0,
     queueTime: 0,
   });
-
   // Refs for animation
   const counterRefs = {
     users: useRef(null),
@@ -88,20 +84,18 @@ const Dashboard = () => {
     const fetchDashboardData = async () => {
       try {
         // Fetch all data in parallel using Promise.all
-        const [usersResult, eventsResult, companiesResult, queueResult] =
-          await Promise.all([
-            usersApi.execute(() => userAPI.getAll()),
-            eventsApi.execute(() => eventAPI.getAll()),
-            companiesApi.execute(() => companyAPI.getAll()),
-            queueApi.execute(() => queueAPI.getCurrentWaitTime()),
-          ]);
+        const [usersResult, eventsResult, companiesResult] = await Promise.all([
+          usersApi.execute(() => userAPI.getAll()),
+          eventsApi.execute(() => eventAPI.getAll()),
+          companiesApi.execute(() => companyAPI.getAll()),
+        ]);
         // Update state with all results at once
         setActualData(prev => ({
           ...prev,
           totalUsers: (usersResult && usersResult.data?.pagination?.total) || 0,
           events: (eventsResult && eventsResult.data?.result?.total) || 0,
           companies: (companiesResult && companiesResult.length) || 0,
-          queueTime: (queueResult && queueResult.data?.averageWaitTime) || 0,
+          queueTime: 15, // Static value for now
         }));
 
         // Log any errors
@@ -113,9 +107,6 @@ const Dashboard = () => {
         }
         if (companiesResult && companiesResult.success === false) {
           console.error('Failed to fetch companies:', companiesResult.message);
-        }
-        if (queueResult && queueResult.success === false) {
-          console.error('Failed to fetch queue data:', queueResult.message);
         }
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -139,7 +130,7 @@ const Dashboard = () => {
       users: actualData.totalUsers,
       events: actualData.events,
       companies: actualData.companies,
-      queueTime: actualData.queueTime,
+      queueTime: 30,
     };
 
     const step = {
@@ -337,28 +328,15 @@ const Dashboard = () => {
               <h3 className="text-gray-500 text-sm font-medium">
                 Average Queue Time
               </h3>{' '}
-              {queueApi.loading ? (
-                <StatCounterSkeleton width="w-20" height="h-9" />
+              {queueData.length === 0 ? (
+                <StatCounterSkeleton width="w-32" height="h-9" />
               ) : (
                 <>
                   <p className="text-3xl font-semibold text-gray-900">
-                    {queueApi.error ? (
-                      <span className="text-red-500">
-                        <span className="text-xl">!</span> Error
-                      </span>
-                    ) : (
-                      <span
-                        ref={counterRefs.queueTime}
-                        className="counter-animation"
-                      >
-                        {counters.queueTime}m
-                      </span>
-                    )}
+                    {counters.queueTime} mins
                   </p>
-                  <div
-                    className={`text-sm mt-2 ${queueApi.error ? 'text-red-600' : 'text-red-600'}`}
-                  >
-                    {queueApi.error ? 'Failed to fetch' : '↓ 3% from last week'}
+                  <div className="text-sm mt-2 text-green-600">
+                    ↑ 10% from last week
                   </div>
                 </>
               )}

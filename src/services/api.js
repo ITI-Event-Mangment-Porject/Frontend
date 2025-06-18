@@ -53,4 +53,10 @@ export const companyAPI = {
   delete: id => api.delete(`/companies/${id}`),
 };
 
+// Queue API endpoints
+export const queueAPI = {
+  getStats: params => api.get('/queue/stats', { params }),
+  getCurrentWaitTime: () => api.get('/queue/wait-time'),
+};
+
 export default api;
