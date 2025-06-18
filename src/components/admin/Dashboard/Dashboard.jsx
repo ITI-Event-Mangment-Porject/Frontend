@@ -19,6 +19,9 @@ import {
 import { FaUsers, FaCalendarAlt, FaBuilding, FaClock } from 'react-icons/fa';
 import './Dashboard.css';
 import { useNavigate } from 'react-router-dom';
+import useApi from '../../../hooks/useApi';
+import { userAPI, eventAPI, companyAPI, queueAPI } from '../../../services/api';
+import StatCounterSkeleton from '../../common/StatCounterSkeleton';
 
 // Sample data for charts
 const monthlyData = [
@@ -52,6 +55,20 @@ const Dashboard = () => {
   // Initialize the navigate function
   const navigate = useNavigate();
 
+  // API hooks for fetching data
+  const usersApi = useApi();
+  const eventsApi = useApi();
+  const companiesApi = useApi();
+  const queueApi = useApi();
+
+  // State for actual data
+  const [actualData, setActualData] = useState({
+    totalUsers: 0,
+    events: 0,
+    companies: 0,
+    queueTime: 0,
+  });
+
   // State for animated counters
   const [counters, setCounters] = useState({
     users: 0,
@@ -66,15 +83,63 @@ const Dashboard = () => {
     events: useRef(null),
     companies: useRef(null),
     queueTime: useRef(null),
-  };
+  }; // Fetch dashboard data when component mounts
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        // Fetch all data in parallel using Promise.all
+        const [usersResult, eventsResult, companiesResult, queueResult] =
+          await Promise.all([
+            usersApi.execute(() => userAPI.getAll()),
+            eventsApi.execute(() => eventAPI.getAll()),
+            companiesApi.execute(() => companyAPI.getAll()),
+            queueApi.execute(() => queueAPI.getCurrentWaitTime()),
+          ]);
+        // Update state with all results at once
+        setActualData(prev => ({
+          ...prev,
+          totalUsers: (usersResult && usersResult.data?.pagination?.total) || 0,
+          events: (eventsResult && eventsResult.data?.result?.total) || 0,
+          companies: (companiesResult && companiesResult.length) || 0,
+          queueTime: (queueResult && queueResult.data?.averageWaitTime) || 0,
+        }));
 
-  // Animate the counters on component mount
+        // Log any errors
+        if (usersResult && usersResult.success === false) {
+          console.error('Failed to fetch users:', usersResult.message);
+        }
+        if (eventsResult && eventsResult.success === false) {
+          console.error('Failed to fetch events:', eventsResult.message);
+        }
+        if (companiesResult && companiesResult.success === false) {
+          console.error('Failed to fetch companies:', companiesResult.message);
+        }
+        if (queueResult && queueResult.success === false) {
+          console.error('Failed to fetch queue data:', queueResult.message);
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        // Set to 0 to avoid showing stale data
+        setActualData(prev => ({
+          ...prev,
+          totalUsers: 0,
+          events: 0,
+          companies: 0,
+          queueTime: 0,
+        }));
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
+  // Animate the counters on component mount and when actual data changes
   useEffect(() => {
     const targetValues = {
-      users: 1234,
-      events: 23,
-      companies: 45,
-      queueTime: 15,
+      users: actualData.totalUsers,
+      events: actualData.events,
+      companies: actualData.companies,
+      queueTime: actualData.queueTime,
     };
 
     const step = {
@@ -112,9 +177,8 @@ const Dashboard = () => {
         return newCounters;
       });
     }, 50);
-
     return () => clearInterval(interval);
-  }, []);
+  }, [actualData]);
 
   // Custom tooltip component
   const CustomTooltip = ({ active, payload, label }) => {
@@ -137,6 +201,7 @@ const Dashboard = () => {
     <div className="dashboard-container">
       {/* Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {' '}
         <div
           className="bg-white rounded-lg border-primary hover:cursor-pointer shadow-sm p-6 transform transition-all duration-300 hover:shadow-md hover:scale-105 animate-fade-in stat-card"
           style={{ animationDelay: '0.1s' }}
@@ -144,85 +209,159 @@ const Dashboard = () => {
         >
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-gray-500 text-sm font-medium">Total Users</h3>
-              <p className="text-3xl font-semibold text-gray-900">
-                <span ref={counterRefs.users} className="counter-animation">
-                  {counters.users.toLocaleString()}
-                </span>
-              </p>
-              <div className="text-green-600 text-sm mt-2">
-                ↑ 12% from last month
-              </div>
+              <h3 className="text-gray-500 text-sm font-medium">Total Users</h3>{' '}
+              {usersApi.loading ? (
+                <StatCounterSkeleton width="w-28" height="h-9" />
+              ) : (
+                <>
+                  <p className="text-3xl font-semibold text-gray-900">
+                    {usersApi.error ? (
+                      <span className="text-red-500">
+                        <span className="text-xl">!</span> Error
+                      </span>
+                    ) : (
+                      <span
+                        ref={counterRefs.users}
+                        className="counter-animation"
+                      >
+                        {counters.users.toLocaleString()}
+                      </span>
+                    )}
+                  </p>
+                  <div
+                    className={`text-sm mt-2 ${usersApi.error ? 'text-red-600' : 'text-green-600'}`}
+                  >
+                    {usersApi.error
+                      ? 'Failed to fetch'
+                      : '↑ 12% from last month'}
+                  </div>
+                </>
+              )}
             </div>
             <div className="bg-indigo-100 p-3 rounded-full animate-pulse">
               <FaUsers className="text-indigo-500 text-xl" />
             </div>
           </div>
-        </div>
-
+        </div>{' '}
         <div
-          className="bg-white rounded-lg shadow-sm p-6  border-primary transform transition-all duration-300 hover:shadow-md hover:scale-105 animate-fade-in stat-card"
+          className="bg-white rounded-lg shadow-sm p-6 hover:cursor-pointer border-primary transform transition-all duration-300 hover:shadow-md hover:scale-105 animate-fade-in stat-card"
           style={{ animationDelay: '0.2s' }}
+          onClick={() => navigate('/admin/events')}
         >
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-gray-500 text-sm font-medium">
                 Active Events
-              </h3>
-              <p className="text-3xl font-semibold text-gray-900">
-                <span ref={counterRefs.events} className="counter-animation">
-                  {counters.events}
-                </span>
-              </p>
-              <div className="text-green-600 text-sm mt-2">
-                ↑ 5% from last week
-              </div>
+              </h3>{' '}
+              {eventsApi.loading ? (
+                <StatCounterSkeleton width="w-20" height="h-9" />
+              ) : (
+                <>
+                  <p className="text-3xl font-semibold text-gray-900">
+                    {eventsApi.error ? (
+                      <span className="text-red-500">
+                        <span className="text-xl">!</span> Error
+                      </span>
+                    ) : (
+                      <span
+                        ref={counterRefs.events}
+                        className="counter-animation"
+                      >
+                        {counters.events}
+                      </span>
+                    )}
+                  </p>
+                  <div
+                    className={`text-sm mt-2 ${eventsApi.error ? 'text-red-600' : 'text-green-600'}`}
+                  >
+                    {eventsApi.error
+                      ? 'Failed to fetch'
+                      : '↑ 5% from last week'}
+                  </div>
+                </>
+              )}
             </div>
             <div className="bg-green-100 p-3 rounded-full animate-pulse">
               <FaCalendarAlt className="text-green-500 text-xl" />
             </div>
           </div>
-        </div>
-
+        </div>{' '}
         <div
-          className="bg-white rounded-lg shadow-sm p-6  border-primary transform transition-all duration-300 hover:shadow-md hover:scale-105 animate-fade-in stat-card"
+          className="bg-white rounded-lg shadow-sm p-6 border-primary transform transition-all duration-300 hover:shadow-md hover:scale-105 animate-fade-in stat-card hover:cursor-pointer"
           style={{ animationDelay: '0.3s' }}
+          onClick={() => navigate('/admin/companies')}
         >
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-gray-500 text-sm font-medium">Companies</h3>
-              <p className="text-3xl font-semibold text-gray-900">
-                <span ref={counterRefs.companies} className="counter-animation">
-                  {counters.companies}
-                </span>
-              </p>
-              <div className="text-green-600 text-sm mt-2">
-                ↑ 8% from last month
-              </div>
+              <h3 className="text-gray-500 text-sm font-medium">Companies</h3>{' '}
+              {companiesApi.loading ? (
+                <StatCounterSkeleton width="w-24" height="h-9" />
+              ) : (
+                <>
+                  <p className="text-3xl font-semibold text-gray-900">
+                    {companiesApi.error ? (
+                      <span className="text-red-500">
+                        <span className="text-xl">!</span> Error
+                      </span>
+                    ) : (
+                      <span
+                        ref={counterRefs.companies}
+                        className="counter-animation"
+                      >
+                        {counters.companies}
+                      </span>
+                    )}
+                  </p>
+                  <div
+                    className={`text-sm mt-2 ${companiesApi.error ? 'text-red-600' : 'text-green-600'}`}
+                  >
+                    {companiesApi.error
+                      ? 'Failed to fetch'
+                      : '↑ 8% from last month'}
+                  </div>
+                </>
+              )}
             </div>
             <div className="bg-blue-100 p-3 rounded-full animate-pulse">
               <FaBuilding className="text-blue-500 text-xl" />
             </div>
           </div>
-        </div>
-
+        </div>{' '}
         <div
-          className="bg-white rounded-lg shadow-sm p-6  border-primary transform transition-all duration-300 hover:shadow-md hover:scale-105 animate-fade-in stat-card"
+          className="bg-white rounded-lg shadow-sm p-6 border-primary transform transition-all duration-300 hover:shadow-md hover:scale-105 animate-fade-in stat-card hover:cursor-pointer"
           style={{ animationDelay: '0.4s' }}
+          onClick={() => navigate('/admin/queue')}
         >
           <div className="flex items-center justify-between">
             <div>
               <h3 className="text-gray-500 text-sm font-medium">
                 Average Queue Time
-              </h3>
-              <p className="text-3xl font-semibold text-gray-900">
-                <span ref={counterRefs.queueTime} className="counter-animation">
-                  {counters.queueTime}m
-                </span>
-              </p>
-              <div className="text-red-600 text-sm mt-2">
-                ↓ 3% from last week
-              </div>
+              </h3>{' '}
+              {queueApi.loading ? (
+                <StatCounterSkeleton width="w-20" height="h-9" />
+              ) : (
+                <>
+                  <p className="text-3xl font-semibold text-gray-900">
+                    {queueApi.error ? (
+                      <span className="text-red-500">
+                        <span className="text-xl">!</span> Error
+                      </span>
+                    ) : (
+                      <span
+                        ref={counterRefs.queueTime}
+                        className="counter-animation"
+                      >
+                        {counters.queueTime}m
+                      </span>
+                    )}
+                  </p>
+                  <div
+                    className={`text-sm mt-2 ${queueApi.error ? 'text-red-600' : 'text-red-600'}`}
+                  >
+                    {queueApi.error ? 'Failed to fetch' : '↓ 3% from last week'}
+                  </div>
+                </>
+              )}
             </div>
             <div className="bg-amber-100 p-3 rounded-full animate-pulse">
               <FaClock className="text-amber-500 text-xl" />

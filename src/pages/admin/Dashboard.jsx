@@ -2,9 +2,11 @@ import React from 'react';
 import Layout from '../../components/common/Layout';
 import DashboardComponent from '../../components/admin/Dashboard/Dashboard';
 import { useNavigate } from 'react-router-dom';
+import useScrollToTop from '../../hooks/useScrollToTop';
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  useScrollToTop();
 
   return (
     <Layout>
