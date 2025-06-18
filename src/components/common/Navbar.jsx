@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { FaBell, FaUserCircle, FaCog, FaSignOutAlt } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 const Navbar = () => {
+  const navigate = useNavigate();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
 
@@ -30,8 +32,11 @@ const Navbar = () => {
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           {/* Logo */}
-          <div className="flex-shrink-0 flex ">
-            <img src="/logo.png" alt="" className="h-20 w-auto ms-5" />
+          <div
+            className="flex-shrink-0 flex hover:cursor-pointer justify-content-center align-content-center "
+            onClick={() => navigate('/admin/dashboard')}
+          >
+            <img src="/logo.png" alt="" className="h-20 w-auto ms-4 " />
           </div>
 
           {/* Right side buttons */}
