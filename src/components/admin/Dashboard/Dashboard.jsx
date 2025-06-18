@@ -23,7 +23,7 @@ import useApi from '../../../hooks/useApi';
 import { userAPI, eventAPI, companyAPI } from '../../../services/api';
 import StatCounterSkeleton from '../../common/StatCounterSkeleton';
 
-// Sample data for charts
+// Sample data for charts - will be replaced with real data
 const monthlyData = [
   { name: 'Jan', users: 240, events: 30, companies: 12 },
   { name: 'Feb', users: 300, events: 40, companies: 15 },
@@ -51,6 +51,22 @@ const userTypeData = [
   { name: 'Admins', value: 10, color: '#ff8042' },
 ];
 
+// Month mapping for date processing
+const months = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+];
+
 const Dashboard = () => {
   // Initialize the navigate function
   const navigate = useNavigate(); // API hooks for fetching data
@@ -65,6 +81,9 @@ const Dashboard = () => {
     companies: 0,
     queueTime: 0,
   });
+
+  // State for event and company statistics by month
+  const [statisticsData, setStatisticsData] = useState([]);
 
   // State for animated counters
   const [counters, setCounters] = useState({
@@ -89,6 +108,9 @@ const Dashboard = () => {
           eventsApi.execute(() => eventAPI.getAll()),
           companiesApi.execute(() => companyAPI.getAll()),
         ]);
+        console.log('eventsResult', eventsResult);
+        console.log('companiesResult', companiesResult);
+
         // Update state with all results at once
         setActualData(prev => ({
           ...prev,
@@ -97,6 +119,69 @@ const Dashboard = () => {
           companies: (companiesResult && companiesResult.length) || 0,
           queueTime: 15, // Static value for now
         }));
+
+        // Process events and companies data for monthly statistics
+        if (eventsResult?.data?.result?.events && companiesResult) {
+          // Process events data by month
+          const eventsByMonth = {};
+          const events = eventsResult.data.result.events;
+
+          events.forEach(event => {
+            if (event.date) {
+              const date = new Date(event.date);
+              const monthIdx = date.getMonth();
+              const monthName = months[monthIdx];
+
+              if (!eventsByMonth[monthName]) {
+                eventsByMonth[monthName] = 0;
+              }
+              eventsByMonth[monthName]++;
+            }
+          });
+
+          // Process companies data by month
+          const companiesByMonth = {};
+          const companies = companiesResult;
+
+          companies.forEach(company => {
+            if (company.createdAt) {
+              const date = new Date(company.createdAt);
+              const monthIdx = date.getMonth();
+              const monthName = months[monthIdx];
+
+              if (!companiesByMonth[monthName]) {
+                companiesByMonth[monthName] = 0;
+              }
+              companiesByMonth[monthName]++;
+            }
+          });
+
+          // Create monthly statistics array for the chart
+          const chartData = months.map(month => ({
+            name: month,
+            events: eventsByMonth[month] || 0,
+            companies: companiesByMonth[month] || 0,
+          }));
+
+          // Filter to only include months with data
+          const filteredChartData = chartData.filter(
+            item => item.events > 0 || item.companies > 0
+          );
+
+          // If no filtered data, use at least the last 6 months
+          const dataToUse =
+            filteredChartData.length > 0
+              ? filteredChartData
+              : chartData.slice(
+                  Math.max(0, new Date().getMonth() - 5),
+                  new Date().getMonth() + 1
+                );
+
+          setStatisticsData(dataToUse);
+        } else {
+          // Fallback to sample data if API data is not available
+          setStatisticsData(monthlyData);
+        }
 
         // Log any errors
         if (usersResult && usersResult.success === false) {
@@ -118,6 +203,8 @@ const Dashboard = () => {
           companies: 0,
           queueTime: 0,
         }));
+        // Use sample data if there's an error
+        setStatisticsData(monthlyData);
       }
     };
 
@@ -358,33 +445,62 @@ const Dashboard = () => {
           <h2 className="text-lg font-medium text-gray-900 mb-4">
             Growth Trends
           </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart
-              data={monthlyData}
-              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-            >
-              <defs>
-                <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-                  <stop offset="95%" stopColor="#8884d8" stopOpacity={0.1} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="name" tick={{ fill: '#6b7280', fontSize: 12 }} />
-              <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend />
-              <Area
-                type="monotone"
-                dataKey="users"
-                stroke="#8884d8"
-                fillOpacity={1}
-                fill="url(#colorUsers)"
-                animationDuration={1500}
-                animationEasing="ease-in-out"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+          {usersApi.loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="w-full h-64 animate-pulse bg-gray-200 rounded"></div>
+            </div>
+          ) : usersApi.error ? (
+            <div className="flex flex-col items-center justify-center h-64 text-red-500">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-12 w-12 mb-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+              <p className="text-center">Error loading user data</p>
+              <p className="text-sm text-center mt-1">Please try again later</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart
+                data={statisticsData}
+                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              >
+                <defs>
+                  <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
+                    <stop offset="95%" stopColor="#8884d8" stopOpacity={0.1} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fill: '#6b7280', fontSize: 12 }}
+                />
+                <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Area
+                  type="monotone"
+                  dataKey="events"
+                  name="Events"
+                  stroke="#8884d8"
+                  fillOpacity={1}
+                  fill="url(#colorUsers)"
+                  animationDuration={1500}
+                  animationEasing="ease-in-out"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          )}
         </div>
 
         {/* Event & Company Statistics */}
@@ -395,32 +511,62 @@ const Dashboard = () => {
           <h2 className="text-lg font-medium text-gray-900 mb-4">
             Event & Company Statistics
           </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart
-              data={monthlyData}
-              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="name" tick={{ fill: '#6b7280', fontSize: 12 }} />
-              <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend />
-              <Bar
-                dataKey="events"
-                fill="#82ca9d"
-                radius={[4, 4, 0, 0]}
-                animationDuration={1500}
-                animationEasing="ease-in-out"
-              />
-              <Bar
-                dataKey="companies"
-                fill="#ffc658"
-                radius={[4, 4, 0, 0]}
-                animationDuration={1500}
-                animationEasing="ease-in-out"
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          {eventsApi.loading || companiesApi.loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="w-full h-64 animate-pulse bg-gray-200 rounded"></div>
+            </div>
+          ) : eventsApi.error || companiesApi.error ? (
+            <div className="flex flex-col items-center justify-center h-64 text-red-500">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-12 w-12 mb-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+              <p className="text-center">Error loading chart data</p>
+              <p className="text-sm text-center mt-1">Please try again later</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart
+                data={statisticsData}
+                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fill: '#6b7280', fontSize: 12 }}
+                />
+                <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Bar
+                  dataKey="events"
+                  fill="#82ca9d"
+                  name="Events"
+                  radius={[4, 4, 0, 0]}
+                  animationDuration={1500}
+                  animationEasing="ease-in-out"
+                />
+                <Bar
+                  dataKey="companies"
+                  fill="#ffc658"
+                  name="Companies"
+                  radius={[4, 4, 0, 0]}
+                  animationDuration={1500}
+                  animationEasing="ease-in-out"
+                />
+              </BarChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 
