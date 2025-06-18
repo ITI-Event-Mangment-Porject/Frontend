@@ -1,10 +1,10 @@
-import LiveMonitor from './pages/admin/LiveMonitor.jsx';
-import './App.css';
+import LiveEventMonitor from './components/live-event/live-event-monitor';
+import './index.css';
 
 function App() {
   return (
-    <div className="dashboard-container">
-      <LiveMonitor />
+    <div className="App">
+      <LiveEventMonitor />
     </div>
   );
 }
