@@ -99,13 +99,13 @@ export const getUserTableColumns = (handleEditClick, handleDeleteUser) => [
     header: 'Actions',
     accessor: 'actions',
     render: user => (
-      <div className="flex gap-2">
+      <div className="flex  gap-2">
         <button
           onClick={e => {
             e.stopPropagation();
             handleEditClick(user);
           }}
-          className="px-3 py-1 text-sm rounded-md bg-[var(--info-500)] text-white hover:bg-blue-700 flex items-center"
+          className="px-3 py-1 text-sm bg-[var(--secondary-400)] text-white rounded-md hover:bg-[var(--secondary-500)] flex items-center"
           title="Edit User"
         >
           <FaEdit className="w-3 h-3 mr-1" />
@@ -116,7 +116,7 @@ export const getUserTableColumns = (handleEditClick, handleDeleteUser) => [
             e.stopPropagation();
             handleDeleteUser(user);
           }}
-          className="px-3 py-1 text-sm rounded-md bg-red-600 text-white hover:bg-red-700 flex items-center"
+          className="px-3 py-1 text-sm rounded-md bg-[var(--primary-500)] text-white hover:bg-[var(--primary-600)] flex items-center"
           title="Delete User"
         >
           <FaTrash className="w-3 h-3 mr-1" />

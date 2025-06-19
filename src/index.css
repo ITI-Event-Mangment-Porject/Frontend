@@ -16,6 +16,7 @@
   --primary-600: #7a171cff; /* Primary hover state */
 
   /* Secondary Color Palette */
+  --secondary-400: rgb(39, 67, 83);
   --secondary-500: #203947ff; /* Main secondary color */
 
   /* Additional semantic colors can be added here */

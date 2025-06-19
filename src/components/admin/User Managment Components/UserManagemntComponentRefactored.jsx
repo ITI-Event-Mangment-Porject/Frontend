@@ -255,7 +255,7 @@ const UserManagementComponent = () => {
     <div className="p-4 m-1 sm:p-4 md:p-6 w-full min-h-screen bg-white flex flex-col animate-fade-in border border-[var(--gray-200)] rounded-lg shadow-md transition-all duration-300 ease-out">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-6 w-full transform transition-all duration-300 ease-out">
-        <h1 className="text-xl sm:text-2xl  font-bold font-['Archivo'] leading-6 sm:leading-8 text-[var(--gray-900)] w-full sm:w-auto text-left">
+        <h1 className="text-xl sm:text-2xl  font-bold  leading-6 sm:leading-8 text-[var(--gray-900)] w-full sm:w-auto text-left">
           User Management
         </h1>
         <div className="w-full sm:w-auto flex justify-stretch sm:justify-end">
@@ -347,7 +347,7 @@ const UserManagementComponent = () => {
           </p>
           <button
             onClick={loadUsers}
-            className="px-4 py-2 bg-[var(--secondary-500)] text-[var(--secondary-600)] rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 ease-out transform hover:scale-105 active:scale-95 animate-fade-in text-sm sm:text-base"
+            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700  focus:outline-none focus:ring-2  focus:ring-gray-500 transition-all duration-200 ease-out transform hover:scale-105 active:scale-95 animate-fade-in text-sm sm:text-base"
             style={{ animationDelay: '0.4s' }}
           >
             Retry
@@ -444,7 +444,7 @@ const UserManagementComponent = () => {
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleEditClick(user)}
-                    className="flex-1 py-2 bg-[var(--info-500)] text-white rounded text-xs hover:bg-blue-600 transition-colors min-h-[2rem]"
+                    className="flex-1 py-2 bg-gray-600 text-white rounded- hover:bg-gray-700  text-xs transition-colors min-h-[2rem]"
                   >
                     Edit
                   </button>
@@ -453,7 +453,7 @@ const UserManagementComponent = () => {
                       setSelectedUser(user);
                       setIsActionModalOpen(true);
                     }}
-                    className="flex-1 py-2 bg-gray-500 text-white rounded text-xs hover:bg-gray-600 transition-colors min-h-[2rem]"
+                    className="flex-1 py-2 bg-[var(--secondary-400)] text-white rounded text-xs hover:bg-[var(--secondary-500)] transition-colors min-h-[2rem]"
                   >
                     Actions
                   </button>
