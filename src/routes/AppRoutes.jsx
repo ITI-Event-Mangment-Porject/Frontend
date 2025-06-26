@@ -1,6 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import UserManagement from '../pages/admin/UserManagement';
+import Help from '../components/common/Help';
 
 // Admin Pages
 // import AdminDashboard from '../pages/admin/Dashboard';
@@ -21,6 +22,8 @@ const AppRoutes = () => {
 
       {/* Catch all route */}
       <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+
+      <Route path="/support" element={<Help />} />
     </Routes>
   );
 };
