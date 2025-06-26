@@ -11,6 +11,12 @@ import {
   Eye,
   ChevronLeft,
   ChevronRight,
+  Play,
+  Square,
+  User,
+  QrCode,
+  ExternalLink,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,9 +39,9 @@ const LiveEventMonitor = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalEvents, setTotalEvents] = useState(0);
-
-  totalPages;
-  totalEvents;
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -128,9 +134,91 @@ const LiveEventMonitor = () => {
     }
   };
 
+  const handleViewDetails = event => {
+    setSelectedEvent(event);
+    setIsModalOpen(true);
+  };
+
+  const handleStartEvent = async () => {
+    if (!selectedEvent) return;
+
+    setActionLoading(true);
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:8000/test/live/events/${selectedEvent.id}/start`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Update the event status in the local state
+        setEvents(prevEvents =>
+          prevEvents.map(event =>
+            event.id === selectedEvent.id
+              ? { ...event, status: 'ongoing' }
+              : event
+          )
+        );
+        setSelectedEvent(prev => ({ ...prev, status: 'ongoing' }));
+        alert('Event started successfully!');
+      } else {
+        alert('Failed to start event');
+      }
+    } catch (error) {
+      console.error('Error starting event:', error);
+      alert('Error starting event');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleEndEvent = async () => {
+    if (!selectedEvent) return;
+
+    setActionLoading(true);
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:8000/test/live/events/${selectedEvent.id}/end`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Remove the event from active events since it's now completed
+        setEvents(prevEvents =>
+          prevEvents.filter(event => event.id !== selectedEvent.id)
+        );
+        setIsModalOpen(false);
+        alert('Event ended successfully!');
+      } else {
+        alert('Failed to end event');
+      }
+    } catch (error) {
+      console.error('Error ending event:', error);
+      alert('Error ending event');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#ebebeb] p-6">
+        <p>Total Pages: {totalPages}</p>
+        <p>Total Events: {totalEvents}</p>
+
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse">
             <div className="h-8 bg-gray-300 rounded w-1/4 mb-6"></div>
@@ -360,10 +448,7 @@ const LiveEventMonitor = () => {
                   </CardHeader>
 
                   <CardContent className="pt-0">
-                    <p className="text-gray-600 text-sm mb-4 line-clamp-3">
-                      {event.description}
-                    </p>
-
+                    {/* <p className="text-gray-600 text-sm mb-4 line-clamp-3">{event.description}</p> */}
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center text-sm text-gray-600">
                         <MapPin className="w-4 h-4 mr-2 text-[#901b20]" />
@@ -397,6 +482,7 @@ const LiveEventMonitor = () => {
                       <Button
                         size="sm"
                         className="bg-[#901b20] hover:bg-[#7a1619] text-white"
+                        onClick={() => handleViewDetails(event)}
                       >
                         View Details
                       </Button>
@@ -480,9 +566,321 @@ const LiveEventMonitor = () => {
             )}
           </>
         )}
+
+        {/* Event Details Overlay */}
+        {isModalOpen && selectedEvent && (
+          <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="bg-white w-full max-w-5xl max-h-[95vh] rounded-3xl shadow-2xl overflow-hidden animate-in fade-in-0 zoom-in-95 duration-300">
+              {/* Header */}
+              <div className="relative bg-gradient-to-r from-[#901b20] to-[#ad565a] p-8 text-white">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="absolute top-6 right-6 w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+
+                <div className="max-w-4xl">
+                  <div className="flex items-center gap-3 mb-4">
+                    <span
+                      className={`px-4 py-2 rounded-full text-sm font-medium ${getTypeColor(selectedEvent.type)}`}
+                    >
+                      {selectedEvent.type}
+                    </span>
+                    <span className="px-4 py-2 bg-white/20 rounded-full text-sm font-medium flex items-center gap-2">
+                      {selectedEvent.status === 'ongoing' && (
+                        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                      )}
+                      {selectedEvent.status.charAt(0).toUpperCase() +
+                        selectedEvent.status.slice(1)}
+                    </span>
+                  </div>
+                  <h1 className="text-4xl font-bold mb-2">
+                    {selectedEvent.title}
+                  </h1>
+                  <p className="text-white/80 text-lg">
+                    Event ID: #{selectedEvent.id}
+                  </p>
+                </div>
+              </div>
+
+              {/* Content */}
+              <div className="overflow-y-auto max-h-[calc(95vh-200px)]">
+                <div className="p-8">
+                  {/* Quick Stats */}
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div className="text-center p-6 bg-gray-50 rounded-2xl">
+                      <MapPin className="w-8 h-8 text-[#901b20] mx-auto mb-3" />
+                      <h3 className="font-semibold text-gray-900 mb-1">
+                        Location
+                      </h3>
+                      <p className="text-gray-600 text-sm">
+                        {selectedEvent.location}
+                      </p>
+                    </div>
+
+                    <div className="text-center p-6 bg-gray-50 rounded-2xl">
+                      <Calendar className="w-8 h-8 text-[#203947] mx-auto mb-3" />
+                      <h3 className="font-semibold text-gray-900 mb-1">Date</h3>
+                      <p className="text-gray-600 text-sm">
+                        {formatDate(selectedEvent.start_date)}
+                        {selectedEvent.start_date !==
+                          selectedEvent.end_date && (
+                          <span className="block">
+                            to {formatDate(selectedEvent.end_date)}
+                          </span>
+                        )}
+                      </p>
+                    </div>
+
+                    <div className="text-center p-6 bg-gray-50 rounded-2xl">
+                      <Clock className="w-8 h-8 text-[#ad565a] mx-auto mb-3" />
+                      <h3 className="font-semibold text-gray-900 mb-1">Time</h3>
+                      <p className="text-gray-600 text-sm">
+                        {formatTime(selectedEvent.start_time)} -{' '}
+                        {formatTime(selectedEvent.end_time)}
+                      </p>
+                    </div>
+
+                    <div className="text-center p-6 bg-gray-50 rounded-2xl">
+                      <User className="w-8 h-8 text-[#cc9598] mx-auto mb-3" />
+                      <h3 className="font-semibold text-gray-900 mb-1">
+                        Created By
+                      </h3>
+                      <p className="text-gray-600 text-sm">
+                        {selectedEvent.creator.first_name}{' '}
+                        {selectedEvent.creator.last_name}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Main Content */}
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    {/* Description */}
+                    <div className="lg:col-span-2">
+                      <h2 className="text-2xl font-bold text-gray-900 mb-4">
+                        About This Event
+                      </h2>
+                      <div className="bg-gray-50 rounded-2xl p-6 mb-6">
+                        <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                          {selectedEvent.description}
+                        </p>
+                      </div>
+
+                      {/* Interactive Features */}
+                      {(selectedEvent.slido_qr_code ||
+                        selectedEvent.slido_embed_url) && (
+                        <div>
+                          <h3 className="text-xl font-bold text-gray-900 mb-4">
+                            Interactive Features
+                          </h3>
+                          <div className="space-y-4">
+                            {selectedEvent.slido_qr_code && (
+                              <div className="flex items-center justify-between p-4 bg-blue-50 rounded-xl border border-blue-200">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center">
+                                    <QrCode className="w-6 h-6 text-white" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-semibold text-gray-900">
+                                      QR Code Access
+                                    </h4>
+                                    <p className="text-sm text-gray-600">
+                                      Scan to join interactive session
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button
+                                  onClick={() =>
+                                    window.open(
+                                      selectedEvent.slido_qr_code,
+                                      '_blank'
+                                    )
+                                  }
+                                  className="bg-blue-500 hover:bg-blue-600 text-white"
+                                >
+                                  View QR
+                                </Button>
+                              </div>
+                            )}
+
+                            {selectedEvent.slido_embed_url && (
+                              <div className="flex items-center justify-between p-4 bg-green-50 rounded-xl border border-green-200">
+                                <div className="flex items-center gap-4">
+                                  <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
+                                    <ExternalLink className="w-6 h-6 text-white" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-semibold text-gray-900">
+                                      Slido Integration
+                                    </h4>
+                                    <p className="text-sm text-gray-600">
+                                      Join live Q&A and polls
+                                    </p>
+                                  </div>
+                                </div>
+                                <Button
+                                  onClick={() =>
+                                    window.open(
+                                      selectedEvent.slido_embed_url,
+                                      '_blank'
+                                    )
+                                  }
+                                  className="bg-green-500 hover:bg-green-600 text-white"
+                                >
+                                  Open Slido
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Sidebar */}
+                    <div className="space-y-6">
+                      {/* Event Settings */}
+                      <div className="bg-white border border-gray-200 rounded-2xl p-6">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">
+                          Event Settings
+                        </h3>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">
+                              Visibility
+                            </label>
+                            <p className="text-gray-900 capitalize">
+                              {selectedEvent.visibility_type.replace('_', ' ')}
+                            </p>
+                          </div>
+
+                          {selectedEvent.registration_deadline && (
+                            <div>
+                              <label className="text-sm font-medium text-gray-500">
+                                Registration Deadline
+                              </label>
+                              <p className="text-gray-900">
+                                {new Date(
+                                  selectedEvent.registration_deadline
+                                ).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                })}
+                              </p>
+                            </div>
+                          )}
+
+                          <div>
+                            <label className="text-sm font-medium text-gray-500">
+                              Event Slug
+                            </label>
+                            <p className="text-gray-900 font-mono text-sm bg-gray-100 px-2 py-1 rounded">
+                              {selectedEvent.slug}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Timeline */}
+                      <div className="bg-white border border-gray-200 rounded-2xl p-6">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">
+                          Timeline
+                        </h3>
+                        <div className="space-y-4">
+                          <div className="flex items-start gap-3">
+                            <div className="w-3 h-3 bg-green-500 rounded-full mt-1"></div>
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                Created
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {new Date(
+                                  selectedEvent.created_at
+                                ).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                })}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-start gap-3">
+                            <div className="w-3 h-3 bg-blue-500 rounded-full mt-1"></div>
+                            <div>
+                              <p className="font-medium text-gray-900">
+                                Last Updated
+                              </p>
+                              <p className="text-sm text-gray-600">
+                                {new Date(
+                                  selectedEvent.updated_at
+                                ).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: 'numeric',
+                                  minute: '2-digit',
+                                })}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Footer Actions */}
+              <div className="border-t border-gray-200 p-6 bg-gray-50">
+                <div className="flex justify-between items-center">
+                  <div className="text-sm text-gray-600">
+                    Manage your event with the controls on the right
+                  </div>
+
+                  <div className="flex gap-3">
+                    {selectedEvent.status === 'published' && (
+                      <Button
+                        onClick={handleStartEvent}
+                        disabled={actionLoading}
+                        className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 text-base font-medium"
+                      >
+                        {actionLoading ? (
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        ) : (
+                          <Play className="w-5 h-5 mr-2" />
+                        )}
+                        Start Event
+                      </Button>
+                    )}
+
+                    {selectedEvent.status === 'ongoing' && (
+                      <Button
+                        onClick={handleEndEvent}
+                        disabled={actionLoading}
+                        className="bg-red-600 hover:bg-red-700 text-white px-8 py-3 text-base font-medium"
+                      >
+                        {actionLoading ? (
+                          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                        ) : (
+                          <Square className="w-5 h-5 mr-2" />
+                        )}
+                        End Event
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
-
 export default LiveEventMonitor;
