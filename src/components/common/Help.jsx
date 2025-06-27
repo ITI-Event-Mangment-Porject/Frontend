@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import {
   FaQuestionCircle,
+  FaEnvelope,
+  FaPhone,
   FaSearch,
   FaChevronDown,
   FaChevronUp,
@@ -10,8 +12,6 @@ import {
   FaClipboardList,
 } from 'react-icons/fa';
 
-/* data */
-// FAQ data - you can move this to a separate file later
 const faqData = [
   {
     id: 1,
@@ -57,7 +57,21 @@ const faqData = [
   },
 ];
 
-// Quick help categories
+const contactInfo = [
+  {
+    icon: FaEnvelope,
+    title: 'Email Support',
+    value: 'ali.elgondy@gmail.com',
+    description: 'Get help via email within 24 hours',
+  },
+  {
+    icon: FaPhone,
+    title: 'Phone Support',
+    value: '+20 1014248145',
+    description: 'Available during business hours (9 AM - 5 PM)',
+  },
+];
+
 const helpCategories = [
   {
     icon: FaCalendarAlt,
@@ -84,8 +98,6 @@ const helpCategories = [
     color: 'var(--primary-300)',
   },
 ];
-
-/* functionalitiy */
 
 const Help = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -208,10 +220,48 @@ const Help = () => {
                   </div>
                 ))
               ) : (
-                <div className="bg-white rounded-lg p-6 shadow-sm text-center">
-                  <p className="text-xl text-gray-600">No results found.</p>
+                <div className="text-center py-8">
+                  <p className="text-gray-500">
+                    No FAQs found matching your search.
+                  </p>
                 </div>
               )}
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div className="bg-white rounded-lg shadow-sm p-8">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 text-center">
+              Still Need Help?
+            </h2>
+            <p className="text-gray-600 text-center mb-8">
+              Can't find what you're looking for? Our support team is here to
+              help.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {contactInfo.map((contact, index) => (
+                <div
+                  key={index}
+                  className="border border-gray-200 rounded-lg p-6 text-center hover:shadow-md transition-shadow duration-200"
+                >
+                  <contact.icon
+                    className="text-4xl mx-auto mb-4"
+                    style={{ color: 'var(--primary-500)' }}
+                  />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {contact.title}
+                  </h3>
+                  <p
+                    className="text-lg font-medium mb-2"
+                    style={{ color: 'var(--primary-500)' }}
+                  >
+                    {contact.value}
+                  </p>
+                  <p className="text-gray-600 text-sm">{contact.description}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>
