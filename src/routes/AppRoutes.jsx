@@ -4,6 +4,7 @@ import UserManagement from '../pages/admin/UserManagement';
 
 // Admin Pages
 import AdminDashboard from '../pages/admin/Dashboard';
+import ManageEvents from '../pages/admin/ManageEvents';
 
 const AppRoutes = () => {
   return (
@@ -11,6 +12,7 @@ const AppRoutes = () => {
       {/* Admin routes - using absolute paths */}
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/users" element={<UserManagement />} />
+      <Route path="/admin/events" element={<ManageEvents />} />
 
       {/* Default redirect to admin dashboard */}
       <Route
