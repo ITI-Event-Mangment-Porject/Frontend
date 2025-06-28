@@ -46,7 +46,7 @@ const Profile = () => {
       setLoading(true);
       setError(null);
       const token = localStorage.getItem('token');
-      const response = await fetch(`${API_BASE_URL}/api/user`, {
+      const response = await fetch(`${API_BASE_URL}/api/test/users/1`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (!response.ok)

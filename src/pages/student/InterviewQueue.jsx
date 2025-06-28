@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { RefreshCw } from 'lucide-react';
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '../../components/student/Navbar';
 import Sidebar from '../../components/student/Sidebar';
 import Footer from '../../components/student/Footer';
@@ -8,11 +9,12 @@ import Footer from '../../components/student/Footer';
 const JobFairDashboard = () => {
   const [queueData, setQueueData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const refreshQueue = () => {
     setLoading(true);
     axios
-      .get('{{base_url}}/job-fairs/1/queues/student/21')
+      .get('http://127.0.0.1:8000/api/job-fairs/1/queues/student/2')
       .then(res => {
         setQueueData(res.data);
         setLoading(false);
@@ -117,7 +119,10 @@ const JobFairDashboard = () => {
                   ))
                 )}
               </div>
-              <button className="w-full mt-4 text-orange-600 text-sm font-medium">
+              <button
+                className="w-full mt-4 text-orange-600 text-sm font-medium"
+                onClick={() => navigate('/company-directory')}
+              >
                 View All Companies →
               </button>
             </div>
