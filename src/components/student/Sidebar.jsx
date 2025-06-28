@@ -1,5 +1,13 @@
 import { NavLink } from 'react-router-dom';
-import { Home, Calendar, Briefcase, Clock, User } from 'lucide-react';
+import {
+  Home,
+  Calendar,
+  Briefcase,
+  Clock,
+  MessageCircle,
+  User,
+  List,
+} from 'lucide-react';
 
 function Sidebar() {
   const linkStyle = ({ isActive }) =>
@@ -20,6 +28,12 @@ function Sidebar() {
             </NavLink>
           </li>
           <li>
+            <NavLink to="/show-events" className={linkStyle}>
+              <List className="mr-3 w-5 h-5" />
+              Show Events
+            </NavLink>
+          </li>
+          <li>
             <NavLink to="/event-details" className={linkStyle}>
               <Calendar className="mr-3 w-5 h-5" />
               Event Details
@@ -35,6 +49,12 @@ function Sidebar() {
             <NavLink to="/interview-queue" className={linkStyle}>
               <Clock className="mr-3 w-5 h-5" />
               Queue Status
+            </NavLink>
+          </li>
+          <li>
+            <NavLink to="/feedback" className={linkStyle}>
+              <MessageCircle className="mr-3 w-5 h-5" />
+              Feedback Form
             </NavLink>
           </li>
           <li>

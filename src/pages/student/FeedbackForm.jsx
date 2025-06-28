@@ -50,13 +50,13 @@ const FeedbackForm = () => {
 
   return (
     <>
-      <div className="bg-gray-50 flex flex-col w-375">
+      <div className="bg-gray-50 flex flex-col min-h-screen w-full">
         <Navbar />
         <div className="flex flex-1 min-h-screen w-full">
           <Sidebar />
-          <main className="flex-1 p-6 flex flex-col items-center w-full">
+          <main className="flex-1 p-2 sm:p-6 flex flex-col items-center w-full">
             {/* Hero */}
-            <div className="w-full max-w-4xl bg-white rounded-lg shadow p-0 mb-6">
+            <div className="w-full max-w-2xl md:max-w-4xl bg-white rounded-lg shadow p-0 mb-6">
               <div
                 className="h-28 md:h-55 w-full rounded-t-lg bg-cover bg-center flex items-center justify-center"
                 style={{
@@ -65,17 +65,17 @@ const FeedbackForm = () => {
                 }}
               >
                 <div className="bg-opacity-20 w-full h-full flex flex-col justify-center items-center rounded-t-lg">
-                  <h1 className="text-2xl md:text-3xl font-bold text-gray-800 text-center">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 text-center px-2">
                     Your Voice Matters: Share Your Event Experience
                   </h1>
                 </div>
               </div>
-              <div className="p-6">
+              <div className="p-3 sm:p-6">
                 <form onSubmit={handleSubmit}>
-                  <h2 className="text-lg font-semibold text-gray-800 mb-2">
+                  <h2 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">
                     Event & Speaker Feedback Form
                   </h2>
-                  <p className="text-sm text-gray-600 mb-4">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-4">
                     Share your thoughts on the event's organization, quality,
                     and speakers to help us improve.
                   </p>
@@ -111,7 +111,7 @@ const FeedbackForm = () => {
                       Rate the Effectiveness of the Speakers:{' '}
                       <span className="text-red-500">*</span>
                     </label>
-                    <div className="flex gap-6 mt-1">
+                    <div className="flex gap-6 mt-1 flex-wrap">
                       <label className="flex items-center gap-1 text-gray-700 text-sm">
                         <input
                           type="radio"
@@ -167,7 +167,7 @@ const FeedbackForm = () => {
                       How would you rate the platform's usability?{' '}
                       <span className="text-red-500">*</span>
                     </label>
-                    <div className="flex flex-wrap gap-6 mt-2">
+                    <div className="flex flex-wrap gap-4 sm:gap-6 mt-2">
                       {[
                         'Excellent',
                         'Good',
@@ -194,7 +194,7 @@ const FeedbackForm = () => {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex justify-end gap-3 mt-6">
+                  <div className="flex flex-col sm:flex-row justify-end gap-3 mt-6">
                     <button
                       type="button"
                       className="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100"
@@ -216,7 +216,7 @@ const FeedbackForm = () => {
             {modalType && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
                 <div
-                  className={`w-full max-w-sm p-6 rounded-lg shadow-lg ${
+                  className={`w-full max-w-xs sm:max-w-sm p-6 rounded-lg shadow-lg ${
                     modalType === 'success'
                       ? 'bg-green-100 border-green-500'
                       : 'bg-red-100 border-red-500'
