@@ -125,7 +125,6 @@ const handleLogoUpload = async (e) => {
       }
     );
 
-    // console.log to check what's returned
     console.log("Upload response", response.data);
 
 const newLogoPath = response.data.logo_path;
