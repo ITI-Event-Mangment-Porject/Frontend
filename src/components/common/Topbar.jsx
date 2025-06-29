@@ -1,26 +1,28 @@
 import { Bell, Settings } from 'lucide-react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useParams } from 'react-router-dom';
 
 const Topbar = () => {
+  const { companyId } = useParams();
+
   return (
-    <header className="fixed w-full flex items-center justify-between bg-white shadow-sm px-6 py-3">
+    <header className="fixed w-full flex items-center justify-between bg-white shadow-sm px-6 py-3 z-50">
 
-    <div className="flex items-center justify-center h-10">
+      <div className="flex items-center justify-center h-10">
         <img src="/logo.png" alt="Company Logo" className="h-24" />
-    </div>
-
+      </div>
 
       <nav className="hidden md:flex gap-6 text-sm font-medium">
         {[
-          { label: "Dashboard", to: "/company/dashboard" },
-          { label: "Setup Form", to: "/company/setup" },
-          { label: "Requests", to: "/company/requests" },
-          { label: "Tracking", to: "/company/tracking" },
-          { label: "Profile", to: "/company/profile" },
-        ].map(({ label, to }) => (
+          { label: "Profile", path: "profile" },
+          // { label: "Dashboard", path: "dashboard" },
+          { label: "Setup Form", path: "setup" },
+          { label: "Requests", path: "requests" },
+          { label: "Tracking", path: "tracking" },
+
+        ].map(({ label, path }) => (
           <NavLink
-            key={to}
-            to={to}
+            key={path}
+            to={`/company/${companyId}/${path}`}
             end
             className={({ isActive }) =>
               `px-2 py-1 border-b-2 transition duration-300 ${

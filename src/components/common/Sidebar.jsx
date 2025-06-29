@@ -1,67 +1,59 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useParams } from 'react-router-dom';
 import { FaHome, FaClipboardList, FaUsers, FaUserCheck, FaUser } from 'react-icons/fa';
 
 const Sidebar = () => {
+  const { companyId } = useParams();
+
   return (
-<aside className="fixed top-[4rem] text-gray-600 left-0 h-full w-64 bg-white shadow-lg z-40">
-  <nav className="flex flex-col mt-6 px-4 space-y-2">
-    <NavLink
-      to="/company/dashboard"
-      className={({ isActive }) =>
-        `flex items-center gap-3 px-4 py-2 rounded-lg transition ease-in-out duration-200 ${
-          isActive ? 'bg-gray-700 text-white' : 'hover:bg-[#a72b2b] hover:text-white'
-        }`
-      }
-    >
-      <FaHome /> Dashboard
-    </NavLink>
+    <aside className="fixed top-[4rem] text-gray-600 left-0 h-full w-64 bg-white shadow-lg z-40">
+      <nav className="flex flex-col mt-6 px-4 space-y-2">
+        
+        <NavLink
+          to={`/company/${companyId}/profile`}
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-2 rounded-lg transition ease-in-out duration-200 ${
+              isActive ? 'bg-gray-700 text-white' : 'hover:bg-[#a72b2b] hover:text-white'
+            }`
+          }
+        >
+          <FaUser /> Company Profile
+        </NavLink>
 
-    <NavLink
-      to="/company/setup"
-      className={({ isActive }) =>
-        `flex items-center gap-3 px-4 py-2 rounded-lg transition ease-in-out duration-200 ${
-          isActive ? 'bg-gray-700 text-white' : 'hover:bg-[#a72b2b] hover:text-white'
-        }`
-      }
-    >
-      <FaClipboardList /> Setup Form
-    </NavLink>
+        <NavLink
+          to={`/company/${companyId}/setup`}
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-2 rounded-lg transition ease-in-out duration-200 ${
+              isActive ? 'bg-gray-700 text-white' : 'hover:bg-[#a72b2b] hover:text-white'
+            }`
+          }
+        >
+          <FaClipboardList /> Setup Form
+        </NavLink>
 
-    <NavLink
-      to="/company/requests"
-      className={({ isActive }) =>
-        `flex items-center gap-3 px-4 py-2 rounded-lg transition ease-in-out duration-200 ${
-          isActive ? 'bg-gray-700 text-white' : 'hover:bg-[#a72b2b] hover:text-white'
-        }`
-      }
-    >
-      <FaUsers /> Manage Requests
-    </NavLink>
+        <NavLink
+          to={`/company/${companyId}/requests`}
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-2 rounded-lg transition ease-in-out duration-200 ${
+              isActive ? 'bg-gray-700 text-white' : 'hover:bg-[#a72b2b] hover:text-white'
+            }`
+          }
+        >
+          <FaUsers /> Manage Requests
+        </NavLink>
 
-    <NavLink
-      to="/company/tracking"
-      className={({ isActive }) =>
-        `flex items-center gap-3 px-4 py-2 rounded-lg transition ease-in-out duration-200 ${
-          isActive ? 'bg-gray-700 text-white' : 'hover:bg-[#a72b2b] hover:text-white'
-        }`
-      }
-    >
-      <FaUserCheck /> Interview Tracking
-    </NavLink>
+        <NavLink
+          to={`/company/${companyId}/tracking`}
+          className={({ isActive }) =>
+            `flex items-center gap-3 px-4 py-2 rounded-lg transition ease-in-out duration-200 ${
+              isActive ? 'bg-gray-700 text-white' : 'hover:bg-[#a72b2b] hover:text-white'
+            }`
+          }
+        >
+          <FaUserCheck /> Interview Tracking
+        </NavLink>
 
-    <NavLink
-      to="/company/profile"
-      className={({ isActive }) =>
-        `flex items-center gap-3 px-4 py-2 rounded-lg transition ease-in-out duration-200 ${
-          isActive ? 'bg-gray-700 text-white' : 'hover:bg-[#a72b2b] hover:text-white'
-        }`
-      }
-    >
-      <FaUser /> Company Profile
-    </NavLink>
-  </nav>
-</aside>
-
+      </nav>
+    </aside>
   );
 };
 
