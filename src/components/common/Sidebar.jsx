@@ -27,7 +27,7 @@ const Sidebar = () => {
             }`
           }
         >
-          <FaClipboardList /> Setup Form
+          <FaClipboardList /> Participation Form
         </NavLink>
 
         <NavLink
