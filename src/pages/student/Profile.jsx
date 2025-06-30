@@ -30,14 +30,10 @@ const Profile = () => {
   const [error, setError] = useState(null);
   const [documents, setDocuments] = useState([]);
   const [messages, setMessages] = useState([]);
-  const [notifications, setNotifications] = useState({
-    eventUpdates: true,
-    interviewReminders: false,
-    newsletter: true,
-  });
   const [editMode, setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [saving, setSaving] = useState(false);
+  const [notificationsList, setNotificationsList] = useState([]);
 
   const API_BASE_URL = 'http://127.0.0.1:8000';
 
@@ -104,9 +100,27 @@ const Profile = () => {
     }
   };
 
+  // Fetch notifications from the new API
+  const fetchNotificationsList = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:8000/api/notifications', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok)
+        throw new Error(`HTTP error! status: ${response.status}`);
+      const data = await response.json();
+      setNotificationsList(Array.isArray(data.data) ? data.data : []);
+    } catch (err) {
+      console.error('Error fetching notifications:', err);
+      setNotificationsList([]);
+    }
+  };
+
   useEffect(() => {
     fetchProfile();
     fetchMessages();
+    fetchNotificationsList();
   }, []);
 
   const handleEdit = () => {
@@ -120,9 +134,11 @@ const Profile = () => {
       const token = localStorage.getItem('token');
 
       // Split name back to first_name and last_name
-      const nameParts = editForm.name ? editForm.name.split(' ') : ['', ''];
+      const nameParts = editForm.name
+        ? editForm.name.trim().split(' ')
+        : ['', ''];
       const firstName = nameParts[0] || '';
-      const lastName = nameParts.slice(1).join(' ') || '';
+      const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
 
       const updateData = {
         first_name: firstName,
@@ -194,8 +210,6 @@ const Profile = () => {
 
   const deleteDoc = idx =>
     setDocuments(docs => docs.filter((_, i) => i !== idx));
-  const toggleNotif = key =>
-    setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
   const markRead = id =>
     setMessages(msgs =>
       msgs.map(m => (m.id === id ? { ...m, unread: false } : m))
@@ -278,28 +292,30 @@ const Profile = () => {
                 ['phone', 'Phone', 'tel'],
                 ['intake_year', 'Intake Year', 'number'],
                 ['graduation_year', 'Graduation Year', 'number'],
-              ].map(([field, label, type, readonly = false]) => (
-                <div key={field}>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {label}
-                  </label>
-                  {editMode && !readonly ? (
-                    <input
-                      type={type}
-                      value={editForm[field] || ''}
-                      onChange={e => handleInputChange(field, e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-                      placeholder={`Enter ${label.toLowerCase()}`}
-                    />
-                  ) : (
-                    <div
-                      className={`p-3 rounded ${readonly ? 'bg-gray-50' : 'bg-gray-100'}`}
-                    >
-                      {profile[field] || 'Not provided'}
-                    </div>
-                  )}
-                </div>
-              ))}
+              ].map(([field, label, type, readonly = false]) => {
+                return (
+                  <div key={field}>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      {label}
+                    </label>
+                    {editMode && !readonly ? (
+                      <input
+                        type={type}
+                        value={editForm[field] || ''}
+                        onChange={e => handleInputChange(field, e.target.value)}
+                        className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+                        placeholder={`Enter ${label.toLowerCase()}`}
+                      />
+                    ) : (
+                      <div
+                        className={`p-3 rounded ${readonly ? 'bg-gray-50' : 'bg-gray-100'}`}
+                      >
+                        {profile[field] || 'Not provided'}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             <div className="mb-4">
@@ -517,48 +533,40 @@ const Profile = () => {
           </div>
 
           {/* Notifications */}
+          {/* Notification Preferences section removed */}
+
+          {/* Notifications List */}
           <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-xl font-bold mb-4">Notification Preferences</h3>
-            <div className="space-y-4">
-              {[
-                [
-                  'eventUpdates',
-                  'Event Updates',
-                  'Get notified about new events and updates',
-                ],
-                [
-                  'interviewReminders',
-                  'Interview Reminders',
-                  'Receive reminders for upcoming interviews',
-                ],
-                [
-                  'newsletter',
-                  'Newsletter',
-                  'Stay updated with our weekly newsletter',
-                ],
-              ].map(([key, label, description]) => (
-                <div key={key} className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <span className="font-medium">{label}</span>
-                    <p className="text-sm text-gray-500">{description}</p>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer ml-4">
-                    <input
-                      type="checkbox"
-                      checked={notifications[key]}
-                      onChange={() => toggleNotif(key)}
-                      className="sr-only"
-                    />
-                    <div
-                      className={`w-11 h-6 rounded-full transition-colors ${notifications[key] ? 'bg-orange-500' : 'bg-gray-300'}`}
-                    >
-                      <div
-                        className={`w-5 h-5 bg-white rounded-full shadow transform transition-transform ${notifications[key] ? 'translate-x-5' : 'translate-x-0.5'} mt-0.5`}
-                      ></div>
-                    </div>
-                  </label>
+            <h3 className="text-xl font-bold mb-4">Your Notifications</h3>
+            <div className="space-y-3">
+              {notificationsList.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p>No notifications yet</p>
                 </div>
-              ))}
+              ) : (
+                notificationsList.map((notif, idx) => (
+                  <div
+                    key={notif.id || idx}
+                    className="p-4 rounded border-l-4 border-orange-500 bg-orange-50"
+                  >
+                    <div className="flex justify-between">
+                      <div>
+                        <p className="font-medium">
+                          {notif.title || 'Notification'}
+                        </p>
+                        <p className="text-gray-600 mb-1">
+                          {notif.body || notif.message || ''}
+                        </p>
+                        <span className="text-sm text-gray-500">
+                          {notif.created_at
+                            ? new Date(notif.created_at).toLocaleString()
+                            : ''}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         </div>

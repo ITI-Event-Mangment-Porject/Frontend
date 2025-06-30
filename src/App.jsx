@@ -15,7 +15,7 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Dashboard />} />
         <Route path="/feedback" element={<FeedbackForm />} />
-        <Route path="/event-details" element={<EventDetails />} />
+        <Route path="/event-details/:id" element={<EventDetails />} />
         <Route path="/show-events" element={<ShowEvents />} />{' '}
         {/* <-- Add this route */}
         <Route path="/company-directory" element={<CompanyDirectory />} />

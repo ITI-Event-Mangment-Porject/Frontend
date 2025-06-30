@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../../components/student/Navbar';
 import Sidebar from '../../components/student/Sidebar';
 import Footer from '../../components/student/Footer';
@@ -19,22 +20,29 @@ const ShowEvents = () => {
   const [filterType, setFilterType] = useState('All');
   const [sortBy, setSortBy] = useState('date');
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchEvents = async () => {
       setLoading(true);
+      setError(null);
       try {
+        // Get access token from localStorage (should be saved after login)
         const token = localStorage.getItem('token');
         const res = await fetch(`${API_BASE_URL}/api/events`, {
           headers: {
-            Authorization: `Bearer ${token}`,
             'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
           },
         });
         const data = await res.json();
-        setEvents(data.data?.result?.events || []);
+        // Correct path for paginated data: data.data.result.data
+        setEvents(
+          Array.isArray(data?.data?.result?.data) ? data.data.result.data : []
+        );
       } catch {
         setEvents([]);
+        setError('Failed to load events.');
       }
       setLoading(false);
     };
@@ -42,6 +50,20 @@ const ShowEvents = () => {
   }, []);
 
   const eventTypes = ['All', ...Array.from(new Set(events.map(e => e.type)))];
+
+  // Helper function to format date
+  const formatDate = dateString => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+      });
+    } catch {
+      return dateString;
+    }
+  };
 
   const filteredEvents = events
     .filter(
@@ -105,10 +127,35 @@ const ShowEvents = () => {
             </div>
           </div>
 
+          {error && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              <strong>Error:</strong> {error}
+              {error.includes('401') && (
+                <div className="mt-2 text-sm">
+                  Please login to view events.{' '}
+                  <a href="/login" className="underline">
+                    Go to Login
+                  </a>
+                </div>
+              )}
+              {error.includes('500') && (
+                <div className="mt-2 text-sm">
+                  Server error. Please try again later or contact support.
+                </div>
+              )}
+            </div>
+          )}
+
           {loading ? (
             <div className="flex justify-center items-center py-20">
               <span className="text-orange-500 text-xl font-semibold animate-pulse">
                 Loading events...
+              </span>
+            </div>
+          ) : filteredEvents.length === 0 && events.length > 0 ? (
+            <div className="flex justify-center items-center py-20">
+              <span className="text-gray-400 text-lg">
+                No events match your search criteria.
               </span>
             </div>
           ) : filteredEvents.length === 0 ? (
@@ -144,7 +191,7 @@ const ShowEvents = () => {
                     <div className="text-sm text-gray-500 mb-2 flex flex-wrap gap-2">
                       <span>
                         <i className="fa-regular fa-calendar mr-1"></i>
-                        {event.start_date}
+                        {formatDate(event.start_date)}
                       </span>
                       <span>
                         <i className="fa-solid fa-location-dot mr-1"></i>
@@ -155,12 +202,23 @@ const ShowEvents = () => {
                       {event.description}
                     </p>
                     <div className="flex justify-end">
-                      <a
-                        href={`/student/event-details/${event.id}`}
-                        className="inline-block px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors text-sm font-medium"
+                      <Link
+                        to={`/event-details/${event.id}`}
+                        className="inline-block px-4 py-2 rounded-lg text-white transition-colors text-sm font-medium"
+                        style={{
+                          backgroundColor: '#901b20',
+                          color: '#fff',
+                          border: 'none',
+                        }}
+                        onMouseOver={e =>
+                          (e.currentTarget.style.backgroundColor = '#6e1417')
+                        }
+                        onMouseOut={e =>
+                          (e.currentTarget.style.backgroundColor = '#901b20')
+                        }
                       >
                         View Details
-                      </a>
+                      </Link>
                     </div>
                   </div>
                 </div>

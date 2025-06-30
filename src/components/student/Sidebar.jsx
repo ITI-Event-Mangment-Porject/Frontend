@@ -21,24 +21,24 @@ function Sidebar() {
     <div className="sidebar">
       <nav className="flex flex-col items-start p-4 border-r w-64 bg-white h-full">
         <ul className="space-y-2 w-full">
-          <li>
+          {/* <li>
             <NavLink to="/" className={linkStyle}>
               <Home className="mr-3 w-5 h-5" />
               Dashboard
             </NavLink>
-          </li>
+          </li> */}
           <li>
             <NavLink to="/show-events" className={linkStyle}>
               <List className="mr-3 w-5 h-5" />
               Show Events
             </NavLink>
           </li>
-          <li>
+          {/* <li>
             <NavLink to="/event-details" className={linkStyle}>
               <Calendar className="mr-3 w-5 h-5" />
               Event Details
             </NavLink>
-          </li>
+          </li> */}
           <li>
             <NavLink to="/company-directory" className={linkStyle}>
               <Briefcase className="mr-3 w-5 h-5" />

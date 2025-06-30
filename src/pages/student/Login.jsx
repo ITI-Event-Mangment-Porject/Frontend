@@ -66,7 +66,7 @@ const LoginPage = ({ onLogin }) => {
     setError('');
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/login`, {
+      const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -77,10 +77,10 @@ const LoginPage = ({ onLogin }) => {
         return;
       }
       const data = await response.json();
-      if (data && data.user && data.token) {
-        localStorage.setItem('user', JSON.stringify(data.user));
-        localStorage.setItem('token', data.token);
-        onLogin(data.user);
+      if (data && data.data && data.data.access_token && data.data.user) {
+        localStorage.setItem('user', JSON.stringify(data.data.user));
+        localStorage.setItem('token', data.data.access_token);
+        onLogin(data.data.user);
       } else {
         setError('حدث خطأ أثناء تسجيل الدخول');
       }
