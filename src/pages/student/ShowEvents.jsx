@@ -171,8 +171,10 @@ const ShowEvents = () => {
                 >
                   <img
                     src={
-                      event.banner_image ||
-                      'https://picsum.photos/400/200?random=' + event.id
+                      event.banner_image &&
+                      event.banner_image.startsWith('http')
+                        ? event.banner_image
+                        : 'https://via.placeholder.com/400x200?text=No+Image'
                     }
                     alt={event.title}
                     className="w-full h-40 object-cover"
