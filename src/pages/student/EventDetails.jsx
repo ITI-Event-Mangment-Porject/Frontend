@@ -172,19 +172,6 @@ const EventDetails = () => {
               </span>
             </div>
           )}
-
-          {/* Slido Embed */}
-          {event.slido_embed_url && (
-            <div className="bg-white rounded-2xl shadow-lg p-8 mb-10 border border-gray-100">
-              <h2 className="text-lg font-semibold mb-4">Live Q&A</h2>
-              <iframe
-                src={event.slido_embed_url}
-                title="Slido"
-                className="w-full h-96 border-0 rounded-lg shadow"
-                allowFullScreen
-              ></iframe>
-            </div>
-          )}
         </main>
       </div>
       <Footer />

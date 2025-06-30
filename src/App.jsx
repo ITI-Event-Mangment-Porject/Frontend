@@ -1,5 +1,4 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Dashboard from './pages/student/Dashboard';
 import FeedbackForm from './pages/student/FeedbackForm';
 import EventDetails from './pages/student/EventDetails';
 import CompanyDirectory from './pages/student/CompanyDirectory';
@@ -13,11 +12,9 @@ const App = () => {
     <Router>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/" element={<Dashboard />} />
         <Route path="/feedback" element={<FeedbackForm />} />
         <Route path="/event-details/:id" element={<EventDetails />} />
         <Route path="/show-events" element={<ShowEvents />} />{' '}
-        {/* <-- Add this route */}
         <Route path="/company-directory" element={<CompanyDirectory />} />
         <Route path="/interview-queue" element={<InterviewQueue />} />
         <Route path="/profile" element={<Profile />} />

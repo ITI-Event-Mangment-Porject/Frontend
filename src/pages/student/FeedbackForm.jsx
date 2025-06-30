@@ -3,49 +3,70 @@ import Navbar from '../../components/student/Navbar';
 import Sidebar from '../../components/student/Sidebar';
 import Footer from '../../components/student/Footer';
 
-const FeedbackForm = () => {
+const API_BASE_URL = 'http://127.0.0.1:8000';
+
+const FeedbackForm = ({ formId = 1, eventId = 2 }) => {
   const [orgRating, setOrgRating] = useState(0);
   const [speakerEffective, setSpeakerEffective] = useState(null);
   const [sessionFeedback, setSessionFeedback] = useState('');
   const [comments, setComments] = useState('');
   const [usability, setUsability] = useState('');
-  const [email, setEmail] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   // Modal states
   const [modalType, setModalType] = useState(null); // 'success' or 'error'
   const [modalMessage, setModalMessage] = useState('');
 
-  const handleSubmit = e => {
+  const handleSubmit = async e => {
     e.preventDefault();
-    if (!orgRating || !speakerEffective || !usability) {
+    if (!orgRating) {
       setModalType('error');
-      setModalMessage('⚠️ Please complete all required fields.');
+      setModalMessage('⚠️ Please rate the event.');
       return;
     }
 
     const feedbackData = {
-      orgRating,
-      speakerEffective,
-      sessionFeedback,
-      comments,
-      usability,
-      email,
+      responses: {
+        0: orgRating,
+        1: comments,
+      },
+      overall_rating: orgRating,
+      event_id: eventId,
     };
 
-    // Simulate API submission
-    console.log('Submitting Feedback:', feedbackData);
+    setSubmitting(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(
+        `${API_BASE_URL}/api/feedback/forms/${formId}/responses`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify(feedbackData),
+        }
+      );
+      if (!res.ok) {
+        throw new Error('Failed to submit feedback');
+      }
 
-    // Reset form
-    setOrgRating(0);
-    setSpeakerEffective(null);
-    setSessionFeedback('');
-    setComments('');
-    setUsability('');
-    setEmail('');
+      // Reset form
+      setOrgRating(0);
+      setSpeakerEffective(null);
+      setSessionFeedback('');
+      setComments('');
+      setUsability('');
 
-    // Show success modal
-    setModalType('success');
-    setModalMessage('✅ Thank you for your feedback!');
+      setModalType('success');
+      setModalMessage('✅ Thank you for your feedback!');
+    } catch {
+      setModalType('error');
+      setModalMessage('❌ Failed to submit feedback. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -64,8 +85,14 @@ const FeedbackForm = () => {
                     "url('https://www.investopedia.com/thmb/ejUMpcr5pOzEIkw5FekHv4E5-f0=/1500x0/filters:no_upscale():max_bytes(150000):strip_icc()/GettyImages-1210536688-f8aa4c9c1ace4e348e2bcd5e267fdbb3.jpg')",
                 }}
               >
-                <div className="bg-opacity-20 w-full h-full flex flex-col justify-center items-center rounded-t-lg">
-                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 text-center px-2">
+                <div className="bg-black/60 w-full h-full flex flex-col justify-center items-center rounded-t-lg">
+                  <h1
+                    className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-white text-center px-2 drop-shadow-lg tracking-wide"
+                    style={{
+                      textShadow: '0 2px 8px #000, 0 0 2px #000',
+                      letterSpacing: '1px',
+                    }}
+                  >
                     Your Voice Matters: Share Your Event Experience
                   </h1>
                 </div>
@@ -198,14 +225,16 @@ const FeedbackForm = () => {
                     <button
                       type="button"
                       className="px-4 py-2 rounded border border-gray-300 text-gray-700 bg-white hover:bg-gray-100"
+                      disabled={submitting}
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
                       className="px-4 py-2 rounded bg-orange-500 text-white font-semibold hover:bg-orange-600"
+                      disabled={submitting}
                     >
-                      Submit Feedback
+                      {submitting ? 'Submitting...' : 'Submit Feedback'}
                     </button>
                   </div>
                 </form>
