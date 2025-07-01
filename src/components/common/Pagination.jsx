@@ -5,8 +5,8 @@ const Pagination = ({ pagination, onPageChange }) => {
   const pageNumbers = [];
 
   // Dynamic max pages based on screen size
-  const maxPagesToShow = 5; // Desktop
-  const maxPagesToShowMobile = 3; // Mobile
+  const maxPagesToShow = 3; // Desktop
+  const maxPagesToShowMobile = 2; // Mobile
 
   let startPage = Math.max(
     1,
