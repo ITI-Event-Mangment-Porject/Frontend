@@ -2,7 +2,7 @@ import { Bell, Settings } from 'lucide-react';
 import { NavLink, useParams } from 'react-router-dom';
 
 const Topbar = () => {
-  const { companyId } = useParams();
+  const { companyId, jobFairId } = useParams();
 
   return (
     <header className="fixed w-full flex items-center justify-between bg-white shadow-sm px-6 py-3 z-50">
@@ -15,7 +15,7 @@ const Topbar = () => {
         {[
           { label: "Profile", path: "profile" },
           // { label: "Dashboard", path: "dashboard" },
-          { label: "Participation Form", path: "job-fairs/:jobFairId/setup" },
+          { label: "Participation Form", path: `job-fairs/${jobFairId}/setup` },
           { label: "Requests", path: "requests" },
           { label: "Tracking", path: "tracking" },
 

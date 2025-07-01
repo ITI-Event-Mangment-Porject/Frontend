@@ -2,7 +2,7 @@ import { NavLink, useParams } from 'react-router-dom';
 import { FaHome, FaClipboardList, FaUsers, FaUserCheck, FaUser } from 'react-icons/fa';
 
 const Sidebar = () => {
-  const { companyId } = useParams();
+  const { companyId,  jobFairId} = useParams();
 
   return (
     <aside className="fixed top-[4rem] text-gray-600 left-0 h-full w-64 bg-white shadow-lg z-40">
@@ -20,7 +20,7 @@ const Sidebar = () => {
         </NavLink>
 
         <NavLink
-          to={`/company/${companyId}/job-fairs/:jobFairId/setup`}
+          to={`/company/${companyId}/job-fairs/${jobFairId}/setup`}
           className={({ isActive }) =>
             `flex items-center gap-3 px-4 py-2 rounded-lg transition ease-in-out duration-200 ${
               isActive ? 'bg-gray-700 text-white' : 'hover:bg-[#a72b2b] hover:text-white'
