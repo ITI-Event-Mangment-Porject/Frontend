@@ -17,8 +17,9 @@ const MultiStepVerificationWithSetup = () => {
   location: '',
   positions_available: '',
   tracks: [],
-});
 
+  
+});
 
   const navigate = useNavigate();
 
@@ -40,27 +41,77 @@ const MultiStepVerificationWithSetup = () => {
   const [candidateSuccess, setCandidateSuccess] = useState('');
   const [candidateError, setCandidateError] = useState('');
 
-  const fetchParticipationStatus = async () => {
-    try {
-      const response = await api.get(`/job-fairs/${jobFairId}/participations/${companyId}`);
-      if (response.status === 200) {
+const fetchParticipationStatus = async () => {
+  const storedJobFairId = localStorage.getItem('jobFairId') || jobFairId;
+  console.log('Stored Job Fair ID:', storedJobFairId);
+
+  if (!storedJobFairId) {
+    console.log('Job fair ID not found');
+    setErrorMsg('Job fair ID is missing');
+    return false;
+  }
+
+  try {
+    const response = await api.get(`/job-fairs/${storedJobFairId}/companies`);
+
+    if (response.status === 200) {
+      const companies = response.data?.data?.result;
+      
+      console.log('Companies from API:', companies);
+      console.log('Looking for companyId:', companyId);
+      console.log('Type of companyId:', typeof companyId);
+      
+      if (!Array.isArray(companies)) {
+        console.warn("Expected array of companies but got:", companies);
+        setCurrentStep(1);
+        return false;
+      }
+
+      const currentCompany = companies.find(company => {
+        console.log(`Comparing ${company.companyId} (${typeof company.companyId}) with ${companyId} (${typeof companyId})`);
+        return company.companyId == companyId; 
+      });
+      
+      console.log('Found company:', currentCompany);
+      
+      if (!currentCompany) {
+        console.log("Company not found in job fair participants");
+        setCurrentStep(1);
+        return false;
+      }
+
+      const status = currentCompany.status;
+      const validStatuses = ['approved', 'pending', 'rejected'];
+
+      if (status === 'approved') {
         setCurrentStep(2);
         return true;
-      }
-      setCurrentStep(1);
-      return false;
-    } catch (error) {
-      if (error.response && error.response.status === 404) {
+      } else if (validStatuses.includes(status)) {
+        console.log("Participation found but status is not approved:", status);
         setCurrentStep(1);
         return false;
       } else {
-        console.error("Unexpected error:", error.response?.data || error);
-        setErrorMsg("Failed to check participation status");
+        console.warn("Unexpected status:", status);
+        setCurrentStep(1);
         return false;
       }
     }
-  };
 
+    setCurrentStep(1);
+    return false;
+  } catch (error) {
+    if (error.response?.status === 404) {
+      setCurrentStep(1);
+      return false;
+    } else {
+      console.error("Unexpected error:", error.response?.data || error);
+      setErrorMsg("Failed to check participation status");
+      return false;
+    }
+  }
+};
+
+  
 
 
   useEffect(() => {
@@ -82,7 +133,6 @@ const fetchCompany = async () => {
     setErrorMsg("Failed to load company data");
   }
 };
-
 
 const fetchTracks = async () => {
   try {
