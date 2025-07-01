@@ -16,6 +16,7 @@
   --primary-600: #7a171cff; /* Primary hover state */
 
   /* Secondary Color Palette */
+  --secondary-400: rgb(39, 67, 83);
   --secondary-500: #203947ff; /* Main secondary color */
 
   /* Additional semantic colors can be added here */
@@ -235,7 +236,7 @@ button {
 
 /* Border utilities */
 .border-primary {
-  border-color: var(--primary-500);
+  border: 1px solid var(--gray-200);
 }
 
 .border-secondary {
@@ -408,6 +409,36 @@ button {
   to {
     opacity: 1;
     transform: scale(1);
+  }
+}
+
+/* Shimmer effect animation for skeletons */
+.shimmer-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.shimmer-effect::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 20%,
+    rgba(255, 255, 255, 0.5) 60%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  100% {
+    transform: translateX(100%);
   }
 }
 

@@ -35,4 +35,28 @@ export const trackAPI = {
   delete: id => api.delete(`/test/tracks/${id}`),
 };
 
+// Event API endpoints
+export const eventAPI = {
+  getAll: params => api.get('/events', { params }),
+  getById: id => api.get(`/events/${id}`),
+  create: eventData => api.post('/events', eventData),
+  update: (id, eventData) => api.put(`/events/${id}`, eventData),
+  delete: id => api.delete(`/events/${id}`),
+};
+
+// Company API endpoints
+export const companyAPI = {
+  getAll: params => api.get('/companies', { params }),
+  getById: id => api.get(`/companies/${id}`),
+  create: companyData => api.post('/companies', companyData),
+  update: (id, companyData) => api.put(`/companies/${id}`, companyData),
+  delete: id => api.delete(`/companies/${id}`),
+};
+
+// Queue API endpoints
+export const queueAPI = {
+  getStats: params => api.get('/queue/stats', { params }),
+  getCurrentWaitTime: () => api.get('/queue/wait-time'),
+};
+
 export default api;

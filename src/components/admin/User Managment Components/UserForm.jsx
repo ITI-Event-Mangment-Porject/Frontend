@@ -129,19 +129,6 @@ const UserForm = ({
 
   return (
     <form ref={formRef} onSubmit={onSubmit} className="space-y-6">
-      {error && (
-        <div className="p-4 text-red-600 bg-red-50 rounded-md text-sm border border-red-200 shadow-sm error-message animate-shake">
-          <h3 className="font-semibold mb-2">
-            Please fix the following issues:
-          </h3>
-          {error.split('\n').map((line, index) => (
-            <div key={index} className="mb-1 last:mb-0 flex items-start">
-              <span className="mr-2">•</span>
-              <span>{line}</span>
-            </div>
-          ))}
-        </div>
-      )}
       <div>
         <label className="block text-base font-semibold text-gray-700 mb-1">
           Profile Image
@@ -187,7 +174,7 @@ const UserForm = ({
               type="file"
               accept="image/*"
               onChange={handleProfileImageChange}
-              className="block pl-2 w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-5 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-[var(--primary-500)] hover:file:bg-blue-100 hover:file:shadow-md focus:outline-none file:transition-all file:duration-200 cursor-pointer py-2 border border-gray-300 rounded-md hover:border-[var(--primary-500)]"
+              className="block pl-2 w-full text-sm text-gray-500 file:mr-4 file:py-3 file:px-5 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-[var(--primary-500)] file:text-white hover:file:bg-[var(--primary-600)]hover:file:shadow-md focus:outline-none file:transition-all file:duration-200 cursor-pointer py-2 border border-gray-300 rounded-md hover:border-[var(--primary-500)]"
             />
             <p className="text-xs text-gray-500 mt-1">
               PNG, JPG, GIF up to 5MB
@@ -208,7 +195,11 @@ const UserForm = ({
             onChange={e =>
               setUser(prev => ({ ...prev, portal_user_id: e.target.value }))
             }
-            className={`${inputClass} ${getFieldError(error, 'portal_user_id') ? 'border-red-500' : ''}`}
+            className={`${inputClass} ${
+              getFieldError(error, 'portal_user_id')
+                ? 'border-red-500 bg-red-50'
+                : ''
+            }`}
           />
           {getFieldError(error, 'portal_user_id') && (
             <p className="mt-1 text-sm text-red-600 flex items-center">
@@ -241,7 +232,9 @@ const UserForm = ({
           onChange={e =>
             setUser(prev => ({ ...prev, first_name: e.target.value }))
           }
-          className={`${inputClass} ${getFieldError(error, 'first_name') ? 'border-red-500' : ''}`}
+          className={`${inputClass} ${
+            getFieldError(error, 'first_name') ? 'border-red-500 bg-red-50' : ''
+          }`}
         />
         {getFieldError(error, 'first_name') && (
           <p className="mt-1 text-sm text-red-600 flex items-center">
@@ -273,7 +266,9 @@ const UserForm = ({
           onChange={e =>
             setUser(prev => ({ ...prev, last_name: e.target.value }))
           }
-          className={`${inputClass} ${getFieldError(error, 'last_name') ? 'border-red-500' : ''}`}
+          className={`${inputClass} ${
+            getFieldError(error, 'last_name') ? 'border-red-500 bg-red-50' : ''
+          }`}
         />
         {getFieldError(error, 'last_name') && (
           <p className="mt-1 text-sm text-red-600 flex items-center">
@@ -303,7 +298,9 @@ const UserForm = ({
           name="email"
           value={user.email}
           onChange={e => setUser(prev => ({ ...prev, email: e.target.value }))}
-          className={`${inputClass} ${getFieldError(error, 'email') ? 'border-red-500' : ''}`}
+          className={`${inputClass} ${
+            getFieldError(error, 'email') ? 'border-red-500 bg-red-50' : ''
+          }`}
         />
         {getFieldError(error, 'email') && (
           <p className="mt-1 text-sm text-red-600 flex items-center">
@@ -324,23 +321,62 @@ const UserForm = ({
         )}
       </div>
       <div>
+        {' '}
         <label className="block text-sm font-medium text-gray-700">Phone</label>
         <input
           type="tel"
           value={user.phone}
           onChange={e => setUser(prev => ({ ...prev, phone: e.target.value }))}
-          className={inputClass}
+          className={`${inputClass} ${
+            getFieldError(error, 'phone') ? 'border-red-500 bg-red-50' : ''
+          }`}
         />
+        {getFieldError(error, 'phone') && (
+          <p className="mt-1 text-sm text-red-600 flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="w-4 h-4 mr-1 inline-block"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                clipRule="evenodd"
+              />
+            </svg>
+            {getFieldError(error, 'phone')}
+          </p>
+        )}
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700">Bio</label>
+        <label className="block text-sm font-medium text-gray-700">Bio</label>{' '}
         <textarea
           value={user.bio}
           onChange={e => setUser(prev => ({ ...prev, bio: e.target.value }))}
           rows={4}
-          className="mt-2 block w-full px-4 py-3 rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-300 focus:outline-none sm:text-sm transition-all duration-200 hover:border-blue-400 hover:shadow-md"
+          className={`mt-2 block w-full px-4 py-3 rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-300 focus:outline-none sm:text-sm transition-all duration-200 hover:border-blue-400 hover:shadow-md ${
+            getFieldError(error, 'bio') ? 'border-red-500 bg-red-50' : ''
+          }`}
           placeholder="Brief description about the user"
         />
+        {getFieldError(error, 'bio') && (
+          <p className="mt-1 text-sm text-red-600 flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="w-4 h-4 mr-1 inline-block"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                clipRule="evenodd"
+              />
+            </svg>
+            {getFieldError(error, 'bio')}
+          </p>
+        )}
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">
@@ -352,9 +388,30 @@ const UserForm = ({
           onChange={e =>
             setUser(prev => ({ ...prev, linkedin_url: e.target.value }))
           }
-          className={inputClass}
+          className={`${inputClass} ${
+            getFieldError(error, 'linkedin_url')
+              ? 'border-red-500 bg-red-50'
+              : ''
+          }`}
           placeholder="https://linkedin.com/in/username"
         />
+        {getFieldError(error, 'linkedin_url') && (
+          <p className="mt-1 text-sm text-red-600 flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="w-4 h-4 mr-1 inline-block"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                clipRule="evenodd"
+              />
+            </svg>
+            {getFieldError(error, 'linkedin_url')}
+          </p>
+        )}
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">
@@ -366,9 +423,28 @@ const UserForm = ({
           onChange={e =>
             setUser(prev => ({ ...prev, github_url: e.target.value }))
           }
-          className={inputClass}
+          className={`${inputClass} ${
+            getFieldError(error, 'github_url') ? 'border-red-500 bg-red-50' : ''
+          }`}
           placeholder="https://github.com/username"
         />
+        {getFieldError(error, 'github_url') && (
+          <p className="mt-1 text-sm text-red-600 flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="w-4 h-4 mr-1 inline-block"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                clipRule="evenodd"
+              />
+            </svg>
+            {getFieldError(error, 'github_url')}
+          </p>
+        )}
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">
@@ -380,9 +456,30 @@ const UserForm = ({
           onChange={e =>
             setUser(prev => ({ ...prev, portfolio_url: e.target.value }))
           }
-          className={inputClass}
+          className={`${inputClass} ${
+            getFieldError(error, 'portfolio_url')
+              ? 'border-red-500 bg-red-50'
+              : ''
+          }`}
           placeholder="https://your-portfolio.com"
         />
+        {getFieldError(error, 'portfolio_url') && (
+          <p className="mt-1 text-sm text-red-600 flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="w-4 h-4 mr-1 inline-block"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                clipRule="evenodd"
+              />
+            </svg>
+            {getFieldError(error, 'portfolio_url')}
+          </p>
+        )}
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">
@@ -394,10 +491,31 @@ const UserForm = ({
           onChange={e =>
             setUser(prev => ({ ...prev, intake_year: e.target.value }))
           }
-          className={inputClass}
+          className={`${inputClass} ${
+            getFieldError(error, 'intake_year')
+              ? 'border-red-500 bg-red-50'
+              : ''
+          }`}
           min="2020"
           max="2030"
         />
+        {getFieldError(error, 'intake_year') && (
+          <p className="mt-1 text-sm text-red-600 flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="w-4 h-4 mr-1 inline-block"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                clipRule="evenodd"
+              />
+            </svg>
+            {getFieldError(error, 'intake_year')}
+          </p>
+        )}
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">
@@ -409,26 +527,67 @@ const UserForm = ({
           onChange={e =>
             setUser(prev => ({ ...prev, graduation_year: e.target.value }))
           }
-          className={inputClass}
+          className={`${inputClass} ${
+            getFieldError(error, 'graduation_year')
+              ? 'border-red-500 bg-red-50'
+              : ''
+          }`}
           min="2020"
           max="2035"
         />
+        {getFieldError(error, 'graduation_year') && (
+          <p className="mt-1 text-sm text-red-600 flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="w-4 h-4 mr-1 inline-block"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                clipRule="evenodd"
+              />
+            </svg>
+            {getFieldError(error, 'graduation_year')}
+          </p>
+        )}
       </div>{' '}
       <div>
         {' '}
         <label className="block text-base font-semibold text-gray-700 mb-1">
           Status
+          <RequiredStar />
         </label>
         <select
           value={user.is_active ? '1' : '0'}
           onChange={e =>
             setUser(prev => ({ ...prev, is_active: e.target.value === '1' }))
           }
-          className={selectClass}
+          className={`${selectClass} ${
+            getFieldError(error, 'is_active') ? 'border-red-500 bg-red-50' : ''
+          }`}
         >
           <option value="1">Active</option>
           <option value="0">Inactive</option>
         </select>
+        {getFieldError(error, 'is_active') && (
+          <p className="mt-1 text-sm text-red-600 flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="w-4 h-4 mr-1 inline-block"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                clipRule="evenodd"
+              />
+            </svg>
+            {getFieldError(error, 'is_active')}
+          </p>
+        )}
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700">
@@ -440,7 +599,9 @@ const UserForm = ({
           onChange={e =>
             setUser(prev => ({ ...prev, track_id: e.target.value }))
           }
-          className={selectClass}
+          className={`${selectClass} ${
+            getFieldError(error, 'track_id') ? 'border-red-500 bg-red-50' : ''
+          }`}
           required
           disabled={trackLoading}
         >
@@ -453,11 +614,28 @@ const UserForm = ({
             </option>
           ))}
         </select>
+        {getFieldError(error, 'track_id') && (
+          <p className="mt-1 text-sm text-red-600 flex items-center">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+              className="w-4 h-4 mr-1 inline-block"
+            >
+              <path
+                fillRule="evenodd"
+                d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-8-5a.75.75 0 01.75.75v4.5a.75.75 0 01-1.5 0v-4.5A.75.75 0 0110 5zm0 10a1 1 0 100-2 1 1 0 000 2z"
+                clipRule="evenodd"
+              />
+            </svg>
+            {getFieldError(error, 'track_id')}
+          </p>
+        )}
       </div>{' '}
       <div className="mt-5 sm:mt-6">
         <button
           type="submit"
-          className="inline-flex w-full justify-center items-center rounded-md border border-transparent bg-blue-600 px-6 py-3 text-base font-medium text-white shadow-md hover:shadow-xl hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:-translate-y-1 active:translate-y-0"
+          className="inline-flex w-full justify-center items-center rounded-md border border-transparent bg-[var(--secondary-400)] px-6 py-3 text-base font-medium text-white shadow-md hover:shadow-xl hover:bg-[var(--secondary-500)] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 sm:text-sm disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 "
           disabled={submitLoading}
         >
           {submitLoading && (
