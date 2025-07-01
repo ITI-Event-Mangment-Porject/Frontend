@@ -8,7 +8,7 @@ const CompanyTable = ({ companies,loading, onView, onApproveReject, actionLoadin
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Company</th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Contact</th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Industry</th>
-          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Slots</th>
+        
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
         </tr>
@@ -19,9 +19,11 @@ const CompanyTable = ({ companies,loading, onView, onApproveReject, actionLoadin
         <tbody className="bg-white divide-y divide-gray-200">
         {companies.length > 0 ? (
           companies.map(c => (
+            
             <CompanyRow
               key={c.id}
               company={c}
+              statusAppr={c.status}
               onView={onView}
               onApproveReject={onApproveReject}
               actionLoading={actionLoading}
@@ -38,6 +40,7 @@ const CompanyTable = ({ companies,loading, onView, onApproveReject, actionLoadin
       )}
      
     </table>
+    
   </div>
 );
 export default CompanyTable;

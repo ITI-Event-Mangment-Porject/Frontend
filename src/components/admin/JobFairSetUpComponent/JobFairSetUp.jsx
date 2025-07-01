@@ -6,7 +6,6 @@ import CompanyModal from './CompanyModal';
 import Pagination from './Pagination';
 import FullPageLoader from '../../FullPageLoader';
 
-
 const JobFairSetUp = () => {
   const [companies, setCompanies] = useState([]);
   const [totalCompanies, setTotalCompanies] = useState(0);
@@ -24,16 +23,31 @@ const JobFairSetUp = () => {
     prev_page_url: null,
     links: [],
   });
+  const [showAddForm, setShowAddform] = useState(false);
+  const [newCompany, setNewCompany] = useState({
+    name: '',
+    description: '',
+    website: '',
+    industry: '',
+    size: '',
+    location: '',
+    contact_email: '',
+    contact_phone: '',
+    linkedin_url: '',
+  });
+ 
 
-  const fetchCompanies = async (url = 'http://localhost:8001/api/companies?sort=-created_at&per_page=10') => {
+  const fetchCompanies = async (
+    url = 'http://localhost:8001/api/companies?sort=-created_at&per_page=10'
+  ) => {
     try {
       setLoading(true);
       let finalUrl = url;
       if (searchTerm) finalUrl += `&filter[name]=${searchTerm}`;
       if (statusFilter === 'approved') finalUrl += `&filter[is_approved]=1`;
       if (statusFilter === 'rejected') finalUrl += `&filter[is_approved]=0`;
-
       const res = await fetch(finalUrl);
+      console.log(res)
       const data = await res.json();
 
       setCompanies(data.data.companies.data);
@@ -57,18 +71,61 @@ const JobFairSetUp = () => {
     fetchCompanies();
   }, [statusFilter]);
 
-  const handleSearch = (e) => {
+  const handleSearch = e => {
     e.preventDefault();
     fetchCompanies();
   };
 
+  const handleAddCompany = async e => {
+    e.preventDefault();
+    try {
+      const response = await fetch('http://localhost:8001/api/companies', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newCompany),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        const newCompanyData = {
+          ...data.data[0], // Extract the new company data
+          status: data.data.status, // Include the "status" field
+        };
+
+        // Update the UI with the new company
+        setCompanies(prevCompanies => [newCompanyData, ...prevCompanies]);
+        setShowAddform(false);
+        setNewCompany({
+          name: '',
+          description: '',
+          website: '',
+          industry: '',
+          size: '',
+          location: '',
+          contact_email: '',
+          contact_phone: '',
+          linkedin_url: '',
+        });
+        console.log('Company added successfully');
+      } else {
+        console.error('Failed to add company');
+      }
+    } catch (err) {
+      console.error('Error adding company:', err);
+    }
+  };
+
   const handleApproveReject = async (companyId, action) => {
     try {
-      setActionLoading(`${companyId}-${action}`);
-      const response = await fetch(`http://localhost:8001/api/companies/${companyId}/${action}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      // setActionLoading(`${companyId}-${action}`);
+      const response = await fetch(
+        `http://localhost:8001/api/companies/${companyId}/${action}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
       if (response.ok) {
         fetchCompanies();
         console.log(`Company ${action}d successfully`);
@@ -82,20 +139,232 @@ const JobFairSetUp = () => {
     }
   };
 
-  const totalSlots = companies.reduce((acc, c) => acc + c.interview_requests_count, 0);
-  const totalFilled = companies.reduce((acc, c) => acc + c.filled_interviews_count, 0);
+  const totalSlots = companies.reduce(
+    (acc, c) => acc + c.interview_requests_count,
+    0
+  );
+  const totalFilled = companies.reduce(
+    (acc, c) => acc + c.filled_interviews_count,
+    0
+  );
 
   if (loading) {
-    <FullPageLoader loading={loading} />
-
+    <FullPageLoader loading={loading} />;
   }
 
   return (
     <div className="container mx-auto px-4 py-6">
-      <div className="font-bold text-3xl mb-6">Job Fair Setup</div>
+      <div className="flex justify-between align-items-center mb-6">
+        <div className="font-bold text-3xl mb-6">Job Fair Setup</div>
+        <div>
+          <button
+            onClick={() => setShowAddform(true)}
+            className="bg-red-600 hover:bg-red-700 cursor-pointer text-white font-semibold px-8 py-2 rounded-lg"
+          >
+            Add New Company
+          </button>
+        </div>
+      </div>
+      {showAddForm && (
+        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+          <h2 className="text-xl font-bold mb-4">Add New Company</h2>
+          <form onSubmit={handleAddCompany}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Name
+              </label>
+              <input
+                type="text"
+                value={newCompany.name}
+                onChange={e =>
+                  setNewCompany({ ...newCompany, name: e.target.value })
+                }
+                className="w-full p-3 border border-gray-300 rounded-lg"
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Email
+              </label>
+              <input
+                type="email"
+                value={newCompany.email}
+                onChange={e =>
+                  setNewCompany({ ...newCompany, email: e.target.value })
+                }
+                className="w-full p-3 border border-gray-300 rounded-lg"
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Phone
+              </label>
+              <input
+                type="text"
+                value={newCompany.phone}
+                onChange={e =>
+                  setNewCompany({ ...newCompany, phone: e.target.value })
+                }
+                className="w-full p-3 border border-gray-300 rounded-lg"
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Address
+              </label>
+              <input
+                type="text"
+                value={newCompany.address}
+                onChange={e =>
+                  setNewCompany({ ...newCompany, address: e.target.value })
+                }
+                className="w-full p-3 border border-gray-300 rounded-lg"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Contact Email
+              </label>
+              <input
+                type="email"
+                value={newCompany.contact_email}
+                onChange={e =>
+                  setNewCompany({
+                    ...newCompany,
+                    contact_email: e.target.value,
+                  })
+                }
+                className="w-full p-3 border border-gray-300 rounded-lg"
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Contact Phone
+              </label>
+              <input
+                type="text"
+                value={newCompany.contact_phone}
+                onChange={e =>
+                  setNewCompany({
+                    ...newCompany,
+                    contact_phone: e.target.value,
+                  })
+                }
+                className="w-full p-3 border border-gray-300 rounded-lg"
+                required
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Location
+              </label>
+              <input
+                type="text"
+                value={newCompany.location}
+                onChange={e =>
+                  setNewCompany({ ...newCompany, location: e.target.value })
+                }
+                className="w-full p-3 border border-gray-300 rounded-lg"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Description
+              </label>
+              <textarea
+                value={newCompany.description}
+                onChange={e =>
+                  setNewCompany({ ...newCompany, description: e.target.value })
+                }
+                className="w-full p-3 border border-gray-300 rounded-lg"
+                rows="3"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Website
+              </label>
+              <input
+                type="url"
+                value={newCompany.website}
+                onChange={e =>
+                  setNewCompany({ ...newCompany, website: e.target.value })
+                }
+                className="w-full p-3 border border-gray-300 rounded-lg"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Industry
+              </label>
+              <input
+                type="text"
+                value={newCompany.industry}
+                onChange={e =>
+                  setNewCompany({ ...newCompany, industry: e.target.value })
+                }
+                className="w-full p-3 border border-gray-300 rounded-lg"
+              />
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Company Size
+              </label>
+              <select
+                value={newCompany.size}
+                onChange={e =>
+                  setNewCompany({ ...newCompany, size: e.target.value })
+                }
+                className="w-full p-3 border border-gray-300 rounded-lg"
+              >
+                <option value="">Select size</option>
+                <option value="small">Small (1-50 employees)</option>
+                <option value="medium">Medium (51-200 employees)</option>
+                <option value="large">Large (200+ employees)</option>
+              </select>
+            </div>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                LinkedIn URL
+              </label>
+              <input
+                type="url"
+                value={newCompany.linkedin_url}
+                onChange={e =>
+                  setNewCompany({ ...newCompany, linkedin_url: e.target.value })
+                }
+                className="w-full p-3 border border-gray-300 rounded-lg"
+              />
+            </div>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => setShowAddform(false)} // Hide the form
+                className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg mr-2"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+              >
+                Add Company
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
       <div className="grid grid-cols-1 mb-8 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard title="Total Companies" value={totalCompanies} icon="🏢" />
-        <StatCard title="Approved Companies" value={approvedCompanies} icon="✅" />
+        <StatCard
+          title="Approved Companies"
+          value={approvedCompanies}
+          icon="✅"
+        />
         <StatCard title="Total Slots" value={totalSlots} icon="🗓️" />
         <StatCard title="Filled Slots" value={totalFilled} icon="📌" />
       </div>
@@ -120,10 +389,17 @@ const JobFairSetUp = () => {
         actionLoading={actionLoading}
       />
 
-      <Pagination pagination={pagination} onPageChange={fetchCompanies} totalCompanies={totalCompanies} />
+      <Pagination
+        pagination={pagination}
+        onPageChange={fetchCompanies}
+        totalCompanies={totalCompanies}
+      />
 
       {showModal && (
-        <CompanyModal company={selectedCompany} onClose={() => setShowModal(false)} />
+        <CompanyModal
+          company={selectedCompany}
+          onClose={() => setShowModal(false)}
+        />
       )}
     </div>
   );

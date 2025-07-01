@@ -1,4 +1,4 @@
-const CompanyRow = ({ company, onView, onApproveReject, actionLoading }) => {
+const CompanyRow = ({ company,statusAppr, onView, onApproveReject, actionLoading }) => {
   const getStatusStyle = (status) => {
     if (status === 'approved') return 'bg-green-100 text-green-700';
     if (status === 'rejected') return 'bg-red-100 text-red-700';
@@ -11,15 +11,15 @@ const CompanyRow = ({ company, onView, onApproveReject, actionLoading }) => {
     return 'Pending';
   };
 
-  const status = company.is_approved == 1
-    ? 'approved'
-    : company.is_approved == 0
-    ? 'rejected'
-    : 'pending';
+  // Correctly determine the status
+  const status =
+    company.is_approved === true
+      ? 'approved'
+      : company.is_approved === false && statusAppr === 'pending'
+      ? 'pending'
+      : 'rejected';
 
-  const progress = company.interview_requests_count > 0
-    ? (company.filled_interviews_count / company.interview_requests_count) * 100
-    : 0;
+ 
 
   return (
     <tr className="hover:bg-gray-50">
@@ -43,27 +43,17 @@ const CompanyRow = ({ company, onView, onApproveReject, actionLoading }) => {
         <div className="text-sm text-gray-500">{company.contact_phone}</div>
       </td>
       <td className="px-6 py-4 text-sm text-gray-500">{company.industry}</td>
+      
       <td className="px-6 py-4">
-        <div className="text-sm text-gray-900">
-          {company.filled_interviews_count} / {company.interview_requests_count}
-        </div>
-        <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-          <div
-            className="bg-red-600 h-2 rounded-full"
-            style={{ width: `${progress}%` }}
-          ></div>
-        </div>
-      </td>
-      <td className="px-6 py-4">
-        <span className={`px-2 py-1 inline-flex text-xs font-semibold rounded-full  ${getStatusStyle(status)}`}>
+        <span className={`px-2 py-1 inline-flex text-xs font-semibold rounded-full ${getStatusStyle(status)}`}>
           {getStatusLabel(status)}
         </span>
       </td>
       <td className="px-6 py-4">
         <div className="flex items-center space-x-2">
           {status === 'approved' ? (
-            <button onClick={() => onView(company)} className="text-blue-600 hover:text-blue-800" title="View Details">
-              👁️
+            <button onClick={() => onView(company)} className="text-red-600 hover:text-red-800" title="View Details">
+              view
             </button>
           ) : (
             <>
