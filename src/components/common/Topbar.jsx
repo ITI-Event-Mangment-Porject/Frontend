@@ -15,7 +15,7 @@ const Topbar = () => {
         {[
           { label: "Profile", path: "profile" },
           // { label: "Dashboard", path: "dashboard" },
-          { label: "Participation Form", path: "setup" },
+          { label: "Participation Form", path: "job-fairs/:jobFairId/setup" },
           { label: "Requests", path: "requests" },
           { label: "Tracking", path: "tracking" },
 

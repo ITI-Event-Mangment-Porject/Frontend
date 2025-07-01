@@ -14,7 +14,7 @@ export default function AppRoutes() {
       <Route path="/company/:companyId" element={<Layout />}>
         <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />
-        <Route path="setup" element={<SetupForm />} />
+        <Route path="job-fairs/:jobFairId/setup" element={<SetupForm />} />
         <Route path="requests" element={<ManageRequests />} />
         <Route path="tracking" element={<InterviewTracking />} />
         <Route path="profile" element={<Profile />} />

@@ -20,7 +20,7 @@ const Sidebar = () => {
         </NavLink>
 
         <NavLink
-          to={`/company/${companyId}/setup`}
+          to={`/company/${companyId}/job-fairs/:jobFairId/setup`}
           className={({ isActive }) =>
             `flex items-center gap-3 px-4 py-2 rounded-lg transition ease-in-out duration-200 ${
               isActive ? 'bg-gray-700 text-white' : 'hover:bg-[#a72b2b] hover:text-white'
