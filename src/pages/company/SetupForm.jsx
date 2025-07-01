@@ -34,14 +34,20 @@ const MultiStepVerificationWithSetup = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [availableTracks, setAvailableTracks] = useState([]);
   
+  // Add state for participation ID
+  const [participationId, setParticipationId] = useState(null);
+  const [existingJobProfiles, setExistingJobProfiles] = useState([]);
+  
   const token = localStorage.getItem('token');
 
   
   const [hasParticipated, setHasParticipated] = useState(false);
   const [candidateSuccess, setCandidateSuccess] = useState('');
   const [candidateError, setCandidateError] = useState('');
+  
 
 const fetchParticipationStatus = async () => {
+  // جلب رقم الجوب فير من localStorage أو من prop/jobFairId
   const storedJobFairId = localStorage.getItem('jobFairId') || jobFairId;
   console.log('Stored Job Fair ID:', storedJobFairId);
 
@@ -52,34 +58,63 @@ const fetchParticipationStatus = async () => {
   }
 
   try {
+    // جلب قائمة الشركات المشاركة في الجوب فير
     const response = await api.get(`/job-fairs/${storedJobFairId}/companies`);
 
     if (response.status === 200) {
       const companies = response.data?.data?.result;
-      
+
       console.log('Companies from API:', companies);
       console.log('Looking for companyId:', companyId);
       console.log('Type of companyId:', typeof companyId);
-      
+
       if (!Array.isArray(companies)) {
         console.warn("Expected array of companies but got:", companies);
         setCurrentStep(1);
         return false;
       }
 
+      // البحث عن الشركة بال companyId داخل القائمة
       const currentCompany = companies.find(company => {
         console.log(`Comparing ${company.companyId} (${typeof company.companyId}) with ${companyId} (${typeof companyId})`);
-        return company.companyId == companyId; 
+        // == بدل === عشان يسمح بالتحويل بين string و number لو حصل
+        return company.companyId == companyId;
       });
-      
+
       console.log('Found company:', currentCompany);
-      
+
       if (!currentCompany) {
         console.log("Company not found in job fair participants");
         setCurrentStep(1);
         return false;
       }
 
+      // تخزين participationId لو موجود
+      if (currentCompany.participationId) {
+        setParticipationId(currentCompany.participationId);
+        console.log('Participation ID found:', currentCompany.participationId);
+      } else {
+        // في كودك في محاولة لجلب participation data من endpoint تاني بدون id
+        // ممكن يكون خطأ هنا، لازم تمرر participationId أو تبعت بدون / في الآخر
+        try {
+          // لو عايز تجيب كل participations ممكن تبعت كدا بدون / في الآخر
+          const participationResponse = await api.get(`/job-fairs/${storedJobFairId}/participations`);
+          const participationData = participationResponse.data?.data?.result;
+          // participationData هنا مصفوفة مش كائن، يبقى لازم تدور فيها
+          if (Array.isArray(participationData)) {
+            // لو عايز تدور على participation حسب companyId
+            const companyParticipation = participationData.find(p => p.company_id == companyId);
+            if (companyParticipation) {
+              setParticipationId(companyParticipation.id);
+              console.log('Participation ID found from participations list:', companyParticipation.id);
+            }
+          }
+        } catch (err) {
+          console.error("Error fetching participation details:", err);
+        }
+      }
+
+      // التحقق من حالة المشاركة
       const status = currentCompany.status;
       const validStatuses = ['approved', 'pending', 'rejected'];
 
@@ -108,6 +143,28 @@ const fetchParticipationStatus = async () => {
       setErrorMsg("Failed to check participation status");
       return false;
     }
+  }
+};
+
+
+// New function to fetch existing job profiles
+const fetchExistingJobProfiles = async (participationId) => {
+  if (!participationId) {
+    console.log('No participation ID available');
+    return;
+  }
+
+  try {
+    const response = await api.get(`/job-fairs/${jobFairId}/participations/${participationId}/job-profiles`);
+    
+    if (response.status === 200) {
+      const jobProfiles = response.data?.data?.job_profiles || [];
+      setExistingJobProfiles(jobProfiles);
+      console.log('Existing job profiles:', jobProfiles);
+    }
+  } catch (error) {
+    console.error("Error fetching job profiles:", error);
+    // Don't set error message here as this might be called when no profiles exist yet
   }
 };
 
@@ -152,55 +209,93 @@ const fetchTracks = async () => {
     fetchTracks();
   }, [companyId, jobFairId, token]);
 
-  const handleSubmit = async (e) => {
-    if (e) e.preventDefault();
-    setSuccessMsg('');
-    setErrorMsg('');
-    setIsSubmitting(true);
-
-    try {
-      const payload = {
-        company: {
-          name: companyData.name,
-          logo_path: companyData.logo_path,
-          description: companyData.description,
-          website: companyData.website,
-          industry: companyData.industry,
-          size: companyData.size,
-          location: companyData.location,
-          contact_email: companyData.contact_email,
-          contact_phone: companyData.contact_phone,
-          linkedin_url: companyData.linkedin_url
-        },
-        special_requirements: formData.specialRequirements,
-        need_branding: formData.needBranding
-      };
-      
-      console.log("🚀 Payload being sent to backend:", payload);
-      const response = await api.post(`/job-fairs/${jobFairId}/participate`, payload);
-      
-      if (response.status === 200 || response.status === 201) {
-        setSuccessMsg("Participation form submitted successfully!");
-        setCompletedSteps(prev => new Set([...prev, 1]));
-        setHasParticipated(true);
-        return true;
-      } else {
-        setErrorMsg("You already submitted your participation request, Please wait for approval!.");
-        return false;
-      }
-    } catch (error) {
-      console.error("Submit error:", error);
-      if (error.response?.status === 409) {
-        setErrorMsg("You have already submitted your participation request, Please wait for approval!");
-      } else {
-        setErrorMsg("An error occurred while submitting the form.");
-      }
-      return false;
-    } finally {
-      setIsSubmitting(false);
+  // Fetch job profiles when participation ID is available
+  useEffect(() => {
+    if (participationId) {
+      fetchExistingJobProfiles(participationId);
     }
-  };
-  
+  }, [participationId, jobFairId]);
+
+const handleSubmit = async (e) => {
+  if (e) e.preventDefault();
+
+  // مسح رسائل الخطأ والنجاح القديمة
+  setCandidateError('');
+  setCandidateSuccess('');
+
+  // تحقق سريع من الحقول المطلوبة
+  if (
+    !formData.title?.trim() ||
+    !formData.description?.trim() ||
+    !formData.positions_available ||
+    Number(formData.positions_available) <= 0
+  ) {
+    setCandidateError('Please fill in valid Title, Description, and Positions Available.');
+    return;
+  }
+  if (!formData.tracks || formData.tracks.length === 0) {
+    setCandidateError('Please select at least one track.');
+    return;
+  }
+  if (!participationId) {
+    setCandidateError('Participation ID not found. Please complete participation first.');
+    return;
+  }
+
+  setIsLoading(true); // تشغيل مؤشر التحميل
+
+  try {
+    const payload = {
+      title: formData.title.trim(),
+      description: formData.description.trim(),
+      requirements: formData.requirements,
+      employment_type: formData.employment_type,
+      location: formData.location,
+      positions_available: Number(formData.positions_available),
+      tracks: formData.tracks,
+    };
+
+    const response = await api.post(
+      `/job-fairs/${jobFairId}/participations/${participationId}/job-profiles`,
+      payload
+    );
+
+    if (response.status === 200 || response.status === 201) {
+      // إعادة تعيين الفورم
+      setFormData({
+        title: '',
+        description: '',
+        requirements: '',
+        employment_type: '',
+        location: '',
+        positions_available: '',
+        tracks: []
+      });
+
+      setCandidateSuccess('Job profile added successfully!');
+      setCandidateError('');
+
+      // تحديث قائمة الوظائف الموجودة بعد الإضافة
+      await fetchExistingJobProfiles(participationId);
+    } else {
+      setCandidateError('Failed to add job profile. Please try again.');
+      setCandidateSuccess('');
+    }
+  } catch (error) {
+    console.error("Error adding job profile:", error);
+    if (error.response?.data?.message) {
+      setCandidateError(error.response.data.message);
+    } else {
+      setCandidateError('An unexpected error occurred.');
+    }
+    setCandidateSuccess('');
+  } finally {
+    setIsLoading(false); // إيقاف مؤشر التحميل
+  }
+};
+
+
+
   if (!companyData) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -221,43 +316,54 @@ const fetchTracks = async () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
-  const simulateVerification = async () => {
-    setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setIsLoading(false);
-    setCompletedSteps(prev => new Set([...prev, currentStep]));
-  };
+  // const simulateVerification = async () => {
+  //   setIsLoading(true);
+  //   await new Promise(resolve => setTimeout(resolve, 2000));
+  //   setIsLoading(false);
+  //   setCompletedSteps(prev => new Set([...prev, currentStep]));
+  // };
 
 const handleJobProfileSubmit = async () => {
   setIsSubmitting(true);
   setErrorMsg('');
   setSuccessMsg('');
 
-  try {
-    if (
-      !formData.title?.trim() ||
-      !formData.description?.trim() ||
-      !formData.positions_available ||
-      isNaN(Number(formData.positions_available)) ||
-      !formData.tracks ||
-      formData.tracks.length === 0
-    ) {
-      setErrorMsg("Please fill in all required fields correctly.");
-      return false;
-    }
+  // تأكد وجود participationId
+  if (!participationId) {
+    setErrorMsg("Participation ID not found. Please complete participation first.");
+    setIsSubmitting(false);
+    return false;
+  }
 
+  // تحقق من صحة الحقول المطلوبة
+  if (
+    !formData.title?.trim() ||
+    !formData.description?.trim() ||
+    !formData.positions_available ||
+    isNaN(Number(formData.positions_available)) ||
+    Number(formData.positions_available) <= 0 ||
+    !formData.tracks ||
+    formData.tracks.length === 0
+  ) {
+    setErrorMsg("Please fill in all required fields correctly.");
+    setIsSubmitting(false);
+    return false;
+  }
+
+  try {
     const jobProfilePayload = {
-      title: formData.title,
-      description: formData.description,
+      title: formData.title.trim(),
+      description: formData.description.trim(),
       requirements: formData.requirements,
       employment_type: formData.employment_type,
       location: formData.location,
       positions_available: Number(formData.positions_available),
-      tracks: formData.tracks, 
+      tracks: formData.tracks,
     };
 
+    // إرسال الطلب مع استخدام participationId
     const response = await api.post(
-      `/job-fairs/${jobFairId}/participations/${companyId}/job-profiles`,
+  `/job-fairs/${jobFairId}/participations/${participationId}/job-profiles`, 
       jobProfilePayload
     );
 
@@ -265,6 +371,7 @@ const handleJobProfileSubmit = async () => {
       setSuccessMsg("Job profile submitted successfully!");
       setCompletedSteps((prev) => new Set([...prev, 2]));
 
+      // إعادة تهيئة النموذج
       setFormData({
         title: '',
         description: '',
@@ -274,6 +381,9 @@ const handleJobProfileSubmit = async () => {
         positions_available: '',
         tracks: [],
       });
+
+      // تحديث قائمة الوظائف الموجودة
+      await fetchExistingJobProfiles(participationId);
 
       return true;
     } else {
@@ -290,31 +400,170 @@ const handleJobProfileSubmit = async () => {
 };
 
 
+
+
 const handleNext = async () => {
   if (currentStep === 1) {
-    const success = await handleSubmit();
+    if (!hasParticipated) {
+      setIsLoading(true);
+      setErrorMsg('');
+      setSuccessMsg('');
 
-    if (success && !hasParticipated) {
-      setSuccessMsg("Your participation request was submitted. Please wait for admin approval before proceeding.");
+      try {
+        // CORRECT: Send only participation-related data
+        const participationPayload = {
+  company_id: parseInt(companyId),
+  special_requirements: formData.specialRequirements || null,
+  need_branding: formData.needBranding || false,
+  company: {
+    name: companyData.name,
+    contact_email: companyData.contact_email || companyData.email
+  }
+};
+
+        console.log('Sending participation payload:', participationPayload);
+        console.log('To endpoint:', `/job-fairs/${jobFairId}/participate`);
+
+        const response = await api.post(
+          `/job-fairs/${jobFairId}/participate`,
+          participationPayload
+        );
+
+        if (response.status === 200 || response.status === 201) {
+          setSuccessMsg("Participation request submitted successfully!");
+          setHasParticipated(true);
+          setCompletedSteps(prev => new Set([...prev, 1]));
+
+          // Extract participation ID from response
+          const responseData = response.data?.data;
+          if (responseData?.id) {
+            setParticipationId(responseData.id);
+          }
+
+          // Check if immediately approved
+          const isApproved = await fetchParticipationStatus();
+          if (isApproved) {
+            setCurrentStep(2);
+          }
+        }
+      } catch (error) {
+        console.error("Participation submission error:", error);
+        console.error("Response data:", error.response?.data);
+        
+        // Better error handling for 422 errors
+        if (error.response?.status === 422) {
+          const errors = error.response.data?.errors;
+          if (errors) {
+            const errorMessages = Object.entries(errors)
+              .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+              .join('\n');
+            setErrorMsg(`Validation errors:\n${errorMessages}`);
+          } else {
+            setErrorMsg(error.response.data?.message || "Validation failed");
+          }
+        } else {
+          setErrorMsg(error.response?.data?.message || "Failed to submit participation request");
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    } else {
+      // Already participated, check approval status
+      const isApproved = await fetchParticipationStatus();
+      if (isApproved) {
+        setCurrentStep(2);
+      } else {
+        setErrorMsg("Your participation request is pending approval. Please wait.");
+      }
+    }
+  } else if (currentStep === 2) {
+    // Job Profile Submission - Use the CORRECT endpoint
+    setCandidateError('');
+    setCandidateSuccess('');
+
+    // Validation
+    if (!formData.title?.trim() || !formData.description?.trim() || 
+        !formData.positions_available || Number(formData.positions_available) <= 0) {
+      setCandidateError('Please fill in valid Title, Description, and Positions Available.');
       return;
     }
 
-    if (success && hasParticipated) {
-      await simulateVerification();
-      setCurrentStep(2);
+    if (!formData.tracks || formData.tracks.length === 0) {
+      setCandidateError('Please select at least one track.');
+      return;
     }
-  } else if (currentStep === 2) {
-    const success = await handleJobProfileSubmit();
-    if (success) {
-      navigate('/company/profile');
+
+    if (!participationId) {
+      setCandidateError('Participation ID not found. Please complete participation first.');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const payload = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        requirements: formData.requirements || null,
+        employment_type: formData.employment_type || null,
+        location: formData.location || null,
+        positions_available: Number(formData.positions_available),
+        tracks: formData.tracks // Make sure this is an array of track IDs
+      };
+
+      console.log('Sending job profile payload:', payload);
+      console.log('To endpoint:', `/job-fairs/${jobFairId}/participations/${participationId}/job-profiles`);
+
+      // Use the CORRECT endpoint for job profiles
+      const response = await api.post(
+        `/job-fairs/${jobFairId}/participations/${participationId}/job-profiles`,
+        payload
+      );
+
+      if (response.status === 200 || response.status === 201) {
+        setFormData({
+          ...formData,
+          title: '',
+          description: '',
+          requirements: '',
+          employment_type: '',
+          location: '',
+          positions_available: '',
+          tracks: []
+        });
+        setCandidateSuccess('Job profile added successfully!');
+        await fetchExistingJobProfiles(participationId);
+      }
+    } catch (error) {
+      console.error("Error adding job profile:", error);
+      console.error("Response data:", error.response?.data);
+      
+      if (error.response?.status === 422) {
+        const errors = error.response.data?.errors;
+        if (errors) {
+          const errorMessages = Object.entries(errors)
+            .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`)
+            .join('\n');
+          setCandidateError(`Validation errors:\n${errorMessages}`);
+        } else {
+          setCandidateError(error.response.data?.message || "Validation failed");
+        }
+      } else {
+        setCandidateError('An unexpected error occurred.');
+      }
+    } finally {
+      setIsLoading(false);
     }
   }
 };
 
 
+
+
   const isStepComplete = (stepId) => completedSteps.has(stepId);
   
  const isCurrentStepValid = () => {
+
     switch (currentStep) {
       case 1:
         return companyData && Object.keys(companyData).length > 0;
@@ -697,101 +946,94 @@ const handleNext = async () => {
 
               {/* Add Another Candidate Button */}
               <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-                <button
-                  onClick={async () => {
-                    if (!formData.title?.trim() || !formData.description?.trim() || !formData.positions_available || Number(formData.positions_available) <= 0) {
-                      setCandidateError('Please fill in valid Title, Description, and Positions Available.');
-                      setCandidateSuccess('');
-                      return;
-                    }
-                    if (!formData.tracks || formData.tracks.length === 0) {
-                      setCandidateError('Please select at least one track.');
-                      setCandidateSuccess('');
-                      return;
-                    }
-
-                    setIsLoading(true);
-                    try {
-                      const payload = {
-                        title: formData.title,
-                        description: formData.description,
-                        requirements: formData.requirements,
-                        employment_type: formData.employment_type,
-                        location: formData.location,
-                        positions_available: Number(formData.positions_available),
-                        tracks: formData.tracks || []
-                      };
-
-                      const response = await api.post(
-  `/job-fairs/${jobFairId}/participations/${companyId}/job-profiles`,
-  payload
-);
+<button
+  onClick={handleJobProfileSubmit}
+  disabled={isSubmitting || isLoading}
+  className="bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded"
+>
+  {(isSubmitting || isLoading) ? 'Adding...' : 'Submit Job Profile'}
+</button>
 
 
-                      if (response.status === 200 || response.status === 201) {
-                        setFormData(prev => ({
-                          ...prev,
-                          title: '',
-                          description: '',
-                          requirements: '',
-                          employment_type: '',
-                          location: '',
-                          positions_available: '',
-                          tracks: []
-                        }));
-                        setCandidateSuccess('Candidate added successfully!');
-                        setCandidateError('');
-                      } else {
-                        setCandidateError('Failed to add candidate. Please try again.');
-                        setCandidateSuccess('');
-                      }
-                                        } catch (error) {
-                      setCandidateError('An unexpected error occurred.');
-                      setCandidateSuccess('');
-                      console.error("Error adding candidate:", error);
-                    } finally {
-                      setIsLoading(false);
-                    }
-                  }}
-                  className="bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded"
-                >
-                  {isLoading ? 'Adding...' : 'Submit Job Profile'}
-                </button>
+
+{/* <button 
+  onClick={async () => {
+    // التحقق من الحقول
+    if (
+      !formData.title?.trim() || 
+      !formData.description?.trim() || 
+      !formData.positions_available || 
+      Number(formData.positions_available) <= 0
+    ) {
+      setCandidateError('Please fill in valid Title, Description, and Positions Available.');
+      setCandidateSuccess('');
+      return;
+    }
+    if (!formData.tracks || formData.tracks.length === 0) {
+      setCandidateError('Please select at least one track.');
+      setCandidateSuccess('');
+      return;
+    }
+
+    // تحقق من وجود participationId
+    if (!participationId) {
+      setCandidateError('Participation ID not found. Please complete participation first.');
+      setCandidateSuccess('');
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const payload = {
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        requirements: formData.requirements,
+        employment_type: formData.employment_type,
+        location: formData.location,
+        positions_available: Number(formData.positions_available),
+        tracks: formData.tracks || []
+      };
+
+      const response = await api.post(
+        `/job-fairs/${jobFairId}/participations/${participationId}/job-profiles`,
+        payload
+      );
+
+      if (response.status === 200 || response.status === 201) {
+        setFormData({
+          title: '',
+          description: '',
+          requirements: '',
+          employment_type: '',
+          location: '',
+          positions_available: '',
+          tracks: []
+        });
+        setCandidateSuccess('Job profile added successfully!');
+        setCandidateError('');
+
+        await fetchExistingJobProfiles(participationId);
+      } else {
+        setCandidateError('Failed to add job profile. Please try again.');
+        setCandidateSuccess('');
+      }
+    } catch (error) {
+      console.error("Error adding job profile:", error);
+      console.error("Response data:", error.response?.data);
+      setCandidateError('An unexpected error occurred.');
+      setCandidateSuccess('');
+    } finally {
+      setIsLoading(false);
+    }
+  }}
+  className="bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded"
+>
+  {isLoading ? 'Adding...' : 'Submit Job Profile'}
+</button> */}
+
               </div>
             </div>
-
-            {/* Navigation Buttons */}
-            {/* <div className="flex justify-between pt-6 border-t border-gray-200">
-              <button
-                onClick={() => setCurrentStep(currentStep - 1)}
-                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Previous</span>
-              </button>
-
-            <button
-              onClick={handleNext}
-              disabled={!isCurrentStepValid() || isSubmitting || isLoading}
-              className={`flex items-center px-6 py-2 rounded-md font-medium ${
-                isCurrentStepValid() && !isSubmitting && !isLoading
-                  ? 'bg-red-600 text-white hover:bg-red-700'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-              }`}
-            >
-              {isSubmitting || isLoading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  {currentStep === 1 ? 'Submitting...' : 'Saving...'}
-                </>
-              ) : (
-                <>
-                  {currentStep < steps.length ? 'Continue' : 'Submit Job Profile2'}
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </>
-              )}
-            </button>
-            </div> */}
           </div>
         );
         
