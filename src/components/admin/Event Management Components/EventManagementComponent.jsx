@@ -56,49 +56,131 @@ const EventManagementComponent = () => {
   const [editImagePreview, setEditImagePreview] = useState(null);
 
   // Event actions
-  const handleAddEvent = async e => {
+  const handleAddEvent = async (e, eventWithCreatedBy) => {
     e.preventDefault();
+    console.log('handleAddEvent called with data:', eventWithCreatedBy);
     setAddError('');
     try {
       let eventData;
 
+      // Use the event data from the form with created_by field
+      const eventToSubmit = eventWithCreatedBy || {
+        ...newEvent,
+        created_by: 1, // Ensure created_by is set
+      };
+
+      console.log('Processing event submission:', eventToSubmit);
+
       // If there's an image file, use FormData
-      if (newEvent.image instanceof File) {
+      if (eventToSubmit.image instanceof File) {
+        console.log('Creating FormData for image upload');
         eventData = new FormData();
-        const cleanedData = cleanEventData(newEvent);
+        const cleanedData = cleanEventData(eventToSubmit);
+        console.log('Cleaned data:', cleanedData);
+
+        // Add image with correct field name
+        eventData.append('event_image', eventToSubmit.image);
+        console.log('Added event_image to FormData');
+
+        // Add all other fields
         Object.keys(cleanedData).forEach(key => {
-          if (key === 'image' && cleanedData[key] instanceof File) {
-            eventData.append('event_image', cleanedData[key]);
-          } else if (cleanedData[key] !== null && cleanedData[key] !== '') {
-            eventData.append(key, cleanedData[key]);
+          if (key !== 'image') {
+            // For visibility_config, ensure it's properly stringified
+            if (
+              key === 'visibility_config' &&
+              typeof cleanedData[key] === 'object'
+            ) {
+              eventData.append(key, JSON.stringify(cleanedData[key]));
+              console.log(
+                `Added ${key} as JSON string:`,
+                JSON.stringify(cleanedData[key])
+              );
+            } else {
+              eventData.append(key, cleanedData[key]);
+              console.log(`Added ${key}:`, cleanedData[key]);
+            }
           }
         });
+
+        // Explicitly add created_by to ensure it's included
+        eventData.append('created_by', 1);
+        console.log('Added created_by=1 to FormData');
+
         console.log('Sending FormData with image');
       } else {
         // Otherwise use regular JSON
-        eventData = cleanEventData(newEvent);
+        eventData = cleanEventData(eventToSubmit);
+        // Ensure created_by is set
+        eventData.created_by = 1;
+
+        // Double check end_date is present
+        if (!eventData.end_date) {
+          console.error('End date is missing in form submission');
+          setAddError(JSON.stringify({ end_date: 'End date is required' }));
+          return false;
+        }
+
         console.log('Sending JSON data:', eventData);
       }
 
-      const result = await submitEvent(() => eventAPI.create(eventData));
-      if (result.success) {
-        setIsAddModalOpen(false);
-        setNewEvent(getInitialEventState());
-        setImagePreview(null);
-        loadEvents();
-      } else {
-        // Handle validation errors in API response
-        if (result.errors && typeof result.errors === 'object') {
-          const errorMessages = Object.entries(result.errors)
-            .map(
-              ([field, messages]) =>
-                `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`
-            )
-            .join('\n');
-          setAddError(errorMessages || result.message || 'Validation failed');
+      console.log('About to call submitEvent with API call');
+      console.log('Making API call to create event with data:', eventData);
+      try {
+        const result = await submitEvent(() => {
+          console.log('Executing eventAPI.create with:', eventData);
+          return eventAPI.create(eventData);
+        });
+        console.log('API response:', result);
+
+        // Check if we have a response with data
+        if (result && (result.success || (result.data && !result.message))) {
+          console.log('Event created successfully:', result);
+
+          // Reset state and close modal
+          setIsAddModalOpen(false);
+          setNewEvent(getInitialEventState());
+          setImagePreview(null);
+
+          // Explicitly reload events after a small delay to ensure API has completed
+          setTimeout(() => {
+            console.log('Reloading events after successful creation');
+            loadEvents();
+          }, 500);
+
+          return true;
         } else {
-          setAddError(result.message || 'Failed to add event');
+          console.error('Failed to create event:', result);
+          // Handle validation errors in API response
+          if (result.errors && typeof result.errors === 'object') {
+            // Check specifically for end_date error in the format { "end_date": "End date is required" }
+            if (result.errors.end_date) {
+              const jsonError = JSON.stringify({
+                end_date: result.errors.end_date,
+              });
+              console.log('Formatted end_date error as JSON:', jsonError);
+              setAddError(jsonError);
+            } else {
+              const errorMessages = Object.entries(result.errors)
+                .map(
+                  ([field, messages]) =>
+                    `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`
+                )
+                .join('\n');
+              setAddError(
+                errorMessages || result.message || 'Validation failed'
+              );
+            }
+          } else {
+            setAddError(result.message || 'Failed to add event');
+          }
+          return false;
         }
+      } catch (apiError) {
+        console.error('Exception during API call:', apiError);
+        setAddError(
+          'An unexpected error occurred. Please check the console for details.'
+        );
+        return false;
       }
     } catch (error) {
       console.error('Add event error:', error);

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   FaImage,
   FaCalendarAlt,
@@ -19,6 +19,102 @@ const EventForm = ({
   isEdit,
 }) => {
   const [errors, setErrors] = useState({});
+
+  // Create a ref for the form
+  const formRef = useRef(null);
+
+  // Effect to scroll to the field with an error when API returns errors
+  useEffect(() => {
+    if (error && formRef.current) {
+      // Scroll to top of form with a slight delay to ensure DOM is updated
+      setTimeout(() => {
+        // First scroll to the error message at the top
+        formRef.current.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+
+        // Now look for specific field errors and focus on the first one found
+        const errorFields = [
+          { pattern: 'title:', selector: 'input[name="title"]' },
+          { pattern: 'description:', selector: 'textarea' },
+          {
+            pattern: 'start_date:',
+            selector: 'input[type="date"]:first-of-type',
+          },
+          { pattern: 'end_date:', selector: 'input[type="date"]:last-of-type' },
+          { pattern: 'location:', selector: 'input[name="location"]' },
+          { pattern: 'capacity:', selector: 'input[name="capacity"]' },
+          { pattern: 'visibility_type:', selector: 'select' },
+        ];
+
+        // Check if error contains end_date in JSON format
+        let hasEndDateError = false;
+        if (typeof error === 'string' && error.includes('"end_date"')) {
+          hasEndDateError = true;
+          const endDateInput = formRef.current.querySelector(
+            'input[type="date"]:last-of-type'
+          );
+          if (endDateInput) {
+            // Scroll the element into view
+            endDateInput.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+            });
+
+            // Add a highlight effect
+            endDateInput.classList.add(
+              'border-red-500',
+              'ring-2',
+              'ring-red-200'
+            );
+
+            // Focus on the input
+            endDateInput.focus();
+
+            // Remove highlight effect after 2 seconds
+            setTimeout(() => {
+              endDateInput.classList.remove('ring-2', 'ring-red-200');
+            }, 2000);
+          }
+        }
+
+        // Only search for other errors if end_date error wasn't already handled
+        if (!hasEndDateError) {
+          // Find the first field that has an error
+          for (const field of errorFields) {
+            if (error.includes(field.pattern)) {
+              const errorInput = formRef.current.querySelector(field.selector);
+              if (errorInput) {
+                // Scroll the element into view
+                errorInput.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'center',
+                });
+
+                // Add a highlight effect
+                errorInput.classList.add(
+                  'border-red-500',
+                  'ring-2',
+                  'ring-red-200'
+                );
+
+                // Focus on the input
+                errorInput.focus();
+
+                // Remove highlight effect after 2 seconds
+                setTimeout(() => {
+                  errorInput.classList.remove('ring-2', 'ring-red-200');
+                }, 2000);
+
+                break; // Stop after finding the first error
+              }
+            }
+          }
+        }
+      }, 100);
+    }
+  }, [error]);
 
   // Validation function for all fields
   const validateForm = () => {
@@ -59,8 +155,161 @@ const EventForm = ({
 
   const handleSubmit = e => {
     e.preventDefault();
+    console.log('Submit button clicked, validating form...');
+
+    // Check for missing required fields
+    let newErrors = {};
+    if (!event.start_date) {
+      console.error('Start date is missing');
+      newErrors.start_date = 'Start date is required';
+    }
+    if (!event.end_date) {
+      console.error('End date is missing');
+      newErrors.end_date = 'End date is required';
+
+      // Log the specific JSON error format for missing end_date
+      console.error(
+        'JSON formatted error:',
+        JSON.stringify({ end_date: 'End date is required' })
+      );
+    }
+    if (!event.title) {
+      console.error('Title is missing');
+      newErrors.title = 'Title is required';
+    }
+    if (!event.location) {
+      console.error('Location is missing');
+      newErrors.location = 'Location is required';
+    }
+    if (!event.description) {
+      console.error('Description is missing');
+      newErrors.description = 'Description is required';
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      console.log('Form validation failed, errors:', newErrors);
+
+      // If end_date is missing, format error as requested JSON format
+      if (newErrors.end_date) {
+        // This will be passed to the parent component and displayed
+        const jsonErrorFormat = JSON.stringify({
+          end_date: 'End date is required',
+        });
+        console.error('Formatted JSON error for end_date:', jsonErrorFormat);
+      }
+
+      // Scroll to the first field with an error
+      setTimeout(() => {
+        // Get all error fields
+        const errorFields = Object.keys(newErrors);
+        if (errorFields.length > 0) {
+          // Find the first field with an error
+          const firstErrorField = errorFields[0];
+
+          let errorElement;
+
+          // Handle different fields that might have different selectors
+          if (
+            firstErrorField === 'start_date' ||
+            firstErrorField === 'end_date'
+          ) {
+            errorElement = formRef.current.querySelector(
+              `input[type="date"][value="${event[firstErrorField] || ''}"]`
+            );
+            if (!errorElement) {
+              // If can't find by value, try to find by position
+              if (firstErrorField === 'start_date') {
+                errorElement = formRef.current.querySelector(
+                  'input[type="date"]:first-of-type'
+                );
+              } else if (firstErrorField === 'end_date') {
+                errorElement = formRef.current.querySelector(
+                  'input[type="date"]:last-of-type'
+                );
+              }
+            }
+          } else if (firstErrorField === 'description') {
+            errorElement = formRef.current.querySelector('textarea');
+          } else {
+            // Generic case for other fields
+            errorElement = formRef.current.querySelector(
+              `[name="${firstErrorField}"]`
+            );
+            if (!errorElement) {
+              errorElement = formRef.current.querySelector(
+                `input[placeholder*="${firstErrorField}"]`
+              );
+            }
+          }
+
+          if (errorElement) {
+            // Scroll to the error element
+            errorElement.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center',
+            });
+
+            // Add a highlight effect
+            errorElement.classList.add(
+              'border-red-500',
+              'ring-2',
+              'ring-red-200'
+            );
+
+            // Focus on the error element
+            errorElement.focus();
+
+            // Remove highlight effect after 2 seconds
+            setTimeout(() => {
+              errorElement.classList.remove('ring-2', 'ring-red-200');
+            }, 2000);
+          }
+        }
+      }, 100);
+
+      return;
+    }
+
     if (validateForm()) {
-      onSubmit(e);
+      console.log('Form validation passed, submitting event data:', event);
+
+      // Ensure created_by is set to 1 (System Administrator)
+      const eventData = {
+        ...event,
+        created_by: 1,
+        // Make sure these fields are properly formatted
+        start_date: formatDateForInput(event.start_date),
+        end_date: formatDateForInput(event.end_date),
+        visibility_type: event.visibility_type || 'role_based',
+      };
+
+      // Properly handle visibility_config
+      if (
+        !eventData.visibility_config &&
+        eventData.visibility_type === 'role_based'
+      ) {
+        eventData.visibility_config = JSON.stringify({
+          roles: ['student', 'alumni'],
+        });
+      } else if (typeof eventData.visibility_config === 'object') {
+        eventData.visibility_config = JSON.stringify(
+          eventData.visibility_config
+        );
+      }
+
+      // Convert capacity to number if it's a string
+      if (eventData.capacity && typeof eventData.capacity === 'string') {
+        eventData.capacity = parseInt(eventData.capacity, 10);
+      }
+
+      console.log(
+        'Event data with created_by prepared for submission:',
+        eventData
+      );
+      onSubmit(e, eventData);
+    } else {
+      console.log('Form validation failed, errors:', errors);
     }
   };
 
@@ -82,20 +331,55 @@ const EventForm = ({
     if (!dateString) return '';
     const date = new Date(dateString);
     if (isNaN(date.getTime())) return '';
-    return date.toISOString().split('T')[0];
+
+    // Format as YYYY-MM-DD for input field
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   };
 
   const formatTimeForInput = timeString => {
     if (!timeString) return '';
+
+    // If it's already in HH:MM format, return as is
+    if (timeString.match(/^\d{2}:\d{2}(:\d{2})?$/)) {
+      return timeString.substring(0, 5);
+    }
+
+    // Otherwise treat as date
     const time = new Date(timeString);
     if (isNaN(time.getTime())) return '';
-    return time.toTimeString().slice(0, 5);
+
+    const hours = String(time.getHours()).padStart(2, '0');
+    const minutes = String(time.getMinutes()).padStart(2, '0');
+    return `${hours}:${minutes}`;
   };
 
   // Parse API error message if it's in a specific format (field: message)
   const getFieldErrorFromApiError = fieldName => {
     if (!error) return null;
+    // Check if error is in JSON format like { "end_date": "End date is required" }
+    try {
+      // Check if error is already a parsed JSON object
+      if (typeof error === 'object' && error !== null) {
+        return error[fieldName] || null;
+      }
 
+      // Try to parse error as JSON string
+      if (error.includes('{') && error.includes('}')) {
+        const jsonMatch = error.match(/\{.*\}/s);
+        if (jsonMatch) {
+          const errorObj = JSON.parse(jsonMatch[0]);
+          return errorObj[fieldName] || null;
+        }
+      }
+    } catch (e) {
+      console.log('Error parsing JSON error:', e);
+      // Continue with line-by-line parsing if JSON parsing fails
+    }
+
+    // Fall back to line-by-line parsing if not JSON
     const lines = error.split('\n');
     for (const line of lines) {
       if (line.startsWith(fieldName + ':')) {
@@ -115,11 +399,22 @@ const EventForm = ({
 
       {error && (
         <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded-md text-sm mb-6">
-          {error}
+          {error.includes('"end_date"') ? (
+            <div>
+              <p className="font-medium">Validation Error:</p>
+              <code className="block mt-1 p-2 bg-red-100 rounded">{error}</code>
+              <p className="mt-2">Please check the end date field below.</p>
+            </div>
+          ) : (
+            error
+          )}
         </div>
       )}
 
-      <form onSubmit={handleSubmit}>
+      <form ref={formRef} onSubmit={handleSubmit}>
+        {/* Hidden input for created_by */}
+        <input type="hidden" name="created_by" value="1" />
+
         <div className="space-y-8">
           {/* Event Title */}
           <div>
@@ -128,6 +423,7 @@ const EventForm = ({
             </label>
             <input
               type="text"
+              name="title"
               value={event.title || ''}
               onChange={e => setEvent({ ...event, title: e.target.value })}
               className={`w-full p-2 border rounded-md focus:border-0 focus:border-blue-500 ${
@@ -154,6 +450,7 @@ const EventForm = ({
                 <div className="relative">
                   <input
                     type="date"
+                    name="start_date"
                     value={formatDateForInput(event.start_date)}
                     onChange={e =>
                       setEvent({ ...event, start_date: e.target.value })
@@ -171,6 +468,39 @@ const EventForm = ({
                       {errors.start_date ||
                         getFieldErrorFromApiError('start_date')}
                     </p>
+                  )}
+                </div>
+
+                <div className="relative">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    End Date <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="date"
+                    name="end_date"
+                    value={formatDateForInput(event.end_date)}
+                    onChange={e =>
+                      setEvent({ ...event, end_date: e.target.value })
+                    }
+                    className={`w-full p-2 border rounded-md focus:border-0 focus:border-blue-500 ${
+                      errors.end_date || getFieldErrorFromApiError('end_date')
+                        ? 'border-red-500 bg-red-50'
+                        : 'border-gray-300'
+                    }`}
+                  />
+                  {(errors.end_date ||
+                    getFieldErrorFromApiError('end_date')) && (
+                    <div className="mt-1 text-sm text-red-600">
+                      <p className="font-medium">
+                        {errors.end_date ||
+                          getFieldErrorFromApiError('end_date')}
+                      </p>
+                      {error && error.includes('"end_date"') && (
+                        <p className="text-xs mt-1 italic">
+                          {'{ "end_date": "End date is required" }'}
+                        </p>
+                      )}
+                    </div>
                   )}
                 </div>
 
@@ -204,14 +534,25 @@ const EventForm = ({
                       id="public-visibility"
                       type="checkbox"
                       checked={event.visibility_type === 'all'}
-                      onChange={e =>
+                      onChange={e => {
+                        const visibilityType = e.target.checked
+                          ? 'all'
+                          : 'role_based';
+                        let visibilityConfig = null;
+
+                        // Set default visibility config if role_based
+                        if (visibilityType === 'role_based') {
+                          visibilityConfig = JSON.stringify({
+                            roles: ['student', 'alumni'],
+                          });
+                        }
+
                         setEvent({
                           ...event,
-                          visibility_type: e.target.checked
-                            ? 'all'
-                            : 'role_based',
-                        })
-                      }
+                          visibility_type: visibilityType,
+                          visibility_config: visibilityConfig,
+                        });
+                      }}
                       className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:border-0"
                     />
                   </div>
@@ -231,6 +572,7 @@ const EventForm = ({
                 Description <span className="text-red-500">*</span>
               </label>
               <textarea
+                name="description"
                 value={event.description || ''}
                 onChange={e =>
                   setEvent({ ...event, description: e.target.value })
@@ -261,16 +603,13 @@ const EventForm = ({
               </label>
               <div className="relative">
                 <select
-                  value={event.type || 'general'}
+                  value={event.type}
                   onChange={e => setEvent({ ...event, type: e.target.value })}
                   className="w-full p-2 border border-gray-300 rounded-md focus:border-0 focus:border-blue-500 appearance-none pr-8"
                 >
-                  <option value="general">General</option>
-                  <option value="workshop">Workshop</option>
-                  <option value="seminar">Seminar</option>
-                  <option value="conference">Conference</option>
-                  <option value="job_fair">Job Fair</option>
-                  <option value="networking">Networking</option>
+                  <option value="Job Fair">Job Fair</option>
+                  <option value="Tech">Tech</option>
+                  <option value="Fun">Fun</option>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                   <svg
@@ -299,7 +638,7 @@ const EventForm = ({
                   <option value="published">Published</option>
                   <option value="ongoing">Ongoing</option>
                   <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
+                  <option value="archived">Archived</option>
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                   <svg
@@ -314,103 +653,29 @@ const EventForm = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Speakers */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Speakers
-              </label>
-              <div className="relative">
-                <select className="w-full p-2 border border-gray-300 rounded-md focus:border-0 focus:border-blue-500 appearance-none pr-8">
-                  <option value="" disabled selected>
-                    Add speakers (e.g., Dr. Jane Doe)
-                  </option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                  <svg
-                    className="fill-current h-4 w-4"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {/* Associated Companies */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Associated Companies
-              </label>
-              <div className="relative">
-                <select className="w-full p-2 border border-gray-300 rounded-md focus:border-0 focus:border-blue-500 appearance-none pr-8">
-                  <option value="" disabled selected>
-                    Add companies (e.g., Innovate Corp)
-                  </option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                  <svg
-                    className="fill-current h-4 w-4"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Assigned Staff */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Assigned Staff
-              </label>
-              <div className="relative">
-                <select className="w-full p-2 border border-gray-300 rounded-md focus:border-0 focus:border-blue-500 appearance-none pr-8">
-                  <option value="" disabled selected>
-                    Add staff (e.g., Alice Brown)
-                  </option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                  <svg
-                    className="fill-current h-4 w-4"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
-
-            {/* Location */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Location <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={event.location || ''}
-                  onChange={e =>
-                    setEvent({ ...event, location: e.target.value })
-                  }
-                  className={`w-full p-2 border rounded-md focus:border-0 focus:border-blue-500 ${
-                    errors.location || getFieldErrorFromApiError('location')
-                      ? 'border-red-500 bg-red-50'
-                      : 'border-gray-300'
-                  }`}
-                  placeholder="Enter location"
-                />
-                {(errors.location || getFieldErrorFromApiError('location')) && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {errors.location || getFieldErrorFromApiError('location')}
-                  </p>
-                )}
-              </div>
+          {/* Location */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Location <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                name="location"
+                value={event.location || ''}
+                onChange={e => setEvent({ ...event, location: e.target.value })}
+                className={`w-full p-2 border rounded-md focus:border-0 focus:border-blue-500 ${
+                  errors.location || getFieldErrorFromApiError('location')
+                    ? 'border-red-500 bg-red-50'
+                    : 'border-gray-300'
+                }`}
+                placeholder="Enter location"
+              />
+              {(errors.location || getFieldErrorFromApiError('location')) && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.location || getFieldErrorFromApiError('location')}
+                </p>
+              )}
             </div>
           </div>
 
@@ -530,7 +795,7 @@ const EventForm = ({
                     Processing...
                   </span>
                 ) : (
-                  <span>{isEdit ? 'Save & Publish' : 'Save & Publish'}</span>
+                  <span>{isEdit ? 'Update Event' : 'Create Event'}</span>
                 )}
               </button>
             </div>
