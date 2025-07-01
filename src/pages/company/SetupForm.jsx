@@ -1,33 +1,109 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { CheckCircle, Mail, Phone, Shield, ArrowRight, ArrowLeft, Building } from 'lucide-react';
 import { useParams } from 'react-router-dom';
+import api from '../../api/axios';
+import { useNavigate } from 'react-router-dom';
 
-const SetupForm = () => {
-  const { companyId } = useParams();
+
+const MultiStepVerificationWithSetup = () => {
+  const [currentStep, setCurrentStep] = useState(1);
+  const [formData, setFormData] = useState({
+  specialRequirements: '',
+  needBranding: false,
+  title: '',
+  description: '',
+  requirements: '',
+  employment_type: '',
+  location: '',
+  positions_available: '',
+  tracks: [],
+});
+
+
+  const navigate = useNavigate();
+
+  const [completedSteps, setCompletedSteps] = useState(new Set());
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const { companyId, jobFairId } = useParams();
+  
   const [companyData, setCompanyData] = useState(null);
-  const [specialRequirements, setSpecialRequirements] = useState('');
-  const [needBranding, setNeedBranding] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [availableTracks, setAvailableTracks] = useState([]);
+  
   const token = localStorage.getItem('token');
 
-  useEffect(() => {
-    const fetchCompany = async () => {
-      try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/companies/${companyId}`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setCompanyData(response.data.data);
-      } catch (error) {
-        setErrorMsg("Failed to load company data");
+  
+  const [hasParticipated, setHasParticipated] = useState(false);
+  const [candidateSuccess, setCandidateSuccess] = useState('');
+  const [candidateError, setCandidateError] = useState('');
+
+  const fetchParticipationStatus = async () => {
+    try {
+      const response = await api.get(`/job-fairs/${jobFairId}/participations/${companyId}`);
+      if (response.status === 200) {
+        setCurrentStep(2);
+        return true;
       }
-    };
+      setCurrentStep(1);
+      return false;
+    } catch (error) {
+      if (error.response && error.response.status === 404) {
+        setCurrentStep(1);
+        return false;
+      } else {
+        console.error("Unexpected error:", error.response?.data || error);
+        setErrorMsg("Failed to check participation status");
+        return false;
+      }
+    }
+  };
+
+
+
+  useEffect(() => {
+const fetchCompany = async () => {
+  try {
+    
+    const response = await api.get(`/companies/${companyId}`);
+    setCompanyData(response.data.data);
+
+    const participated = await fetchParticipationStatus();
+    setHasParticipated(participated);
+
+    if (participated) {
+      setCompletedSteps(new Set([1]));
+      setCurrentStep(2);
+    }
+  } catch (error) {
+    console.error("Error fetching company:", error);
+    setErrorMsg("Failed to load company data");
+  }
+};
+
+
+const fetchTracks = async () => {
+  try {
+    const response = await api.get('/test/tracks?sort_order=desc');
+    const tracksData = response.data.data.tracks.map(track => ({
+      id: track.id,
+      name: track.name
+    }));
+    setAvailableTracks(tracksData);
+  } catch (error) {
+    console.error("Failed to load tracks", error);
+  }
+};
+
+
     fetchCompany();
-  }, [companyId, token]);
+    fetchTracks();
+  }, [companyId, jobFairId, token]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setSuccessMsg('');
     setErrorMsg('');
     setIsSubmitting(true);
@@ -46,22 +122,35 @@ const SetupForm = () => {
           contact_phone: companyData.contact_phone,
           linkedin_url: companyData.linkedin_url
         },
-        special_requirements: specialRequirements,
-        need_branding: needBranding
+        special_requirements: formData.specialRequirements,
+        need_branding: formData.needBranding
       };
-
-      await axios.post(`http://127.0.0.1:8000/api/job-fairs/1/participate`, payload, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      setSuccessMsg("Participation form submitted successfully!");
+      
+      console.log("🚀 Payload being sent to backend:", payload);
+      const response = await api.post(`/job-fairs/${jobFairId}/participate`, payload);
+      
+      if (response.status === 200 || response.status === 201) {
+        setSuccessMsg("Participation form submitted successfully!");
+        setCompletedSteps(prev => new Set([...prev, 1]));
+        setHasParticipated(true);
+        return true;
+      } else {
+        setErrorMsg("You already submitted your participation request, Please wait for approval!.");
+        return false;
+      }
     } catch (error) {
-      setErrorMsg("You already submitted your participation request.");
+      console.error("Submit error:", error);
+      if (error.response?.status === 409) {
+        setErrorMsg("You have already submitted your participation request, Please wait for approval!");
+      } else {
+        setErrorMsg("An error occurred while submitting the form.");
+      }
+      return false;
     } finally {
       setIsSubmitting(false);
     }
   };
-
+  
   if (!companyData) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -73,274 +162,685 @@ const SetupForm = () => {
     );
   }
 
+  const steps = [
+    { id: 1, title: 'Job Fair Participation', icon: Building, description: 'Complete company registration' },
+    { id: 2, title: 'Job Fair Profiles', icon: Mail, description: 'Add required job profiles' },
+  ];
+
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const simulateVerification = async () => {
+    setIsLoading(true);
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setIsLoading(false);
+    setCompletedSteps(prev => new Set([...prev, currentStep]));
+  };
+
+const handleJobProfileSubmit = async () => {
+  setIsSubmitting(true);
+  setErrorMsg('');
+  setSuccessMsg('');
+
+  try {
+    if (
+      !formData.title?.trim() ||
+      !formData.description?.trim() ||
+      !formData.positions_available ||
+      isNaN(Number(formData.positions_available)) ||
+      !formData.tracks ||
+      formData.tracks.length === 0
+    ) {
+      setErrorMsg("Please fill in all required fields correctly.");
+      return false;
+    }
+
+    const jobProfilePayload = {
+      title: formData.title,
+      description: formData.description,
+      requirements: formData.requirements,
+      employment_type: formData.employment_type,
+      location: formData.location,
+      positions_available: Number(formData.positions_available),
+      tracks: formData.tracks, 
+    };
+
+    const response = await api.post(
+      `/job-fairs/${jobFairId}/participations/${companyId}/job-profiles`,
+      jobProfilePayload
+    );
+
+    if (response.status === 200 || response.status === 201) {
+      setSuccessMsg("Job profile submitted successfully!");
+      setCompletedSteps((prev) => new Set([...prev, 2]));
+
+      setFormData({
+        title: '',
+        description: '',
+        requirements: '',
+        employment_type: '',
+        location: '',
+        positions_available: '',
+        tracks: [],
+      });
+
+      return true;
+    } else {
+      setErrorMsg("Failed to submit job profile. Please try again.");
+      return false;
+    }
+  } catch (error) {
+    console.error("Job profile submission error:", error);
+    setErrorMsg("An unexpected error occurred while submitting the job profile.");
+    return false;
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
+
+const handleNext = async () => {
+  if (currentStep === 1) {
+    const success = await handleSubmit();
+
+    if (success && !hasParticipated) {
+      setSuccessMsg("Your participation request was submitted. Please wait for admin approval before proceeding.");
+      return;
+    }
+
+    if (success && hasParticipated) {
+      await simulateVerification();
+      setCurrentStep(2);
+    }
+  } else if (currentStep === 2) {
+    const success = await handleJobProfileSubmit();
+    if (success) {
+      navigate('/company/profile');
+    }
+  }
+};
+
+
+  const isStepComplete = (stepId) => completedSteps.has(stepId);
+  
+ const isCurrentStepValid = () => {
+    switch (currentStep) {
+      case 1:
+        return companyData && Object.keys(companyData).length > 0;
+      case 2:
+        return formData.title.trim() && 
+               formData.description.trim() && 
+               formData.positions_available && 
+               formData.tracks.length > 0;
+      default:
+        return false;
+    }
+  };
+
   const logoURL = companyData.logo_path?.startsWith('http')
     ? companyData.logo_path
     : `http://127.0.0.1:8000/storage/${companyData.logo_path}`;
 
-  return (
-    <div className="min-h-screen bg-gray-100 py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header Section */}
-        <div className="bg-gradient-to-r from-slate-700 via-slate-800 to-red-900 rounded-2xl p-8 mb-6 shadow-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              {companyData.logo_path && (
-                <div className="relative w-32 h-32 rounded-3xl border-4 border-white shadow-2xl bg-white overflow-hidden group-hover:scale-105 transition-transform duration-300">
-                  <img
-                    src={logoURL}
-                    alt={`${companyData.name} Logo`}
-                    className="w-full h-full object-cover"
-                  />
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1:
+        return (
+          <form onSubmit={handleSubmit}>
+            <div className="space-y-6">
+              {/* Header Section */}
+              <div className="bg-gradient-to-r from-slate-700 via-slate-800 to-red-900 rounded-2xl p-8 shadow-lg -mx-8 -mt-8 mb-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-6">
+                    {companyData.logo_path && (
+                      <div className="relative w-32 h-32 rounded-3xl border-4 border-white shadow-2xl bg-white overflow-hidden">
+                        <img
+                          src={logoURL}
+                          alt={`${companyData.name} Logo`}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                    <div>
+                      <h1 className="text-3xl font-bold text-white mb-2">{companyData.name}</h1>
+                      <div className="flex items-center space-x-3">
+                        <span className="bg-red-600 bg-opacity-80 text-white px-3 py-1 rounded-full text-sm font-medium">
+                          {companyData.industry}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2">
+                    <Building className="w-4 h-4" />
+                    <span>Job Fair Registration</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Company Information Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                {/* Email Card */}
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-red-100 rounded-lg p-2">
+                      <Mail className="w-5 h-5 text-red-600" />
+                    </div>
+                    <div>
+                      <p className="text-gray-600 font-medium text-sm">Email Address</p>
+                      <p className="text-gray-900 text-sm">{companyData.contact_email}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Phone Card */}
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-red-100 rounded-lg p-2">
+                      <Phone className="w-5 h-5 text-red-600" />
+                    </div>
+                    <div>
+                      <p className="text-gray-600 font-medium text-sm">Phone Number</p>
+                      <p className="text-gray-900 text-sm">{companyData.contact_phone}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Website Card */}
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-red-100 rounded-lg p-2">
+                      <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9m0 9c-5 0-9-4-9-9s4-9 9-9" />
+                      </svg>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-gray-600 font-medium text-sm">Website</p>
+                      <a
+                        href={companyData.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-red-600 hover:text-red-700 hover:underline text-sm truncate block"
+                      >
+                        {companyData.website}
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Location Card */}
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-red-100 rounded-lg p-2">
+                      <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-gray-600 font-medium text-sm">Office Location</p>
+                      <p className="text-gray-900 text-sm">{companyData.location}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Company Size Card */}
+                <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-red-100 rounded-lg p-2">
+                      <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                    <div>
+                      <p className="text-gray-600 font-medium text-sm">Company Size</p>
+                      <span className="bg-gray-200 text-gray-800 px-2 py-1 rounded-full text-xs font-medium">
+                        {companyData.size}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* LinkedIn Card */}
+                {companyData.linkedin_url && (
+                  <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-200">
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-red-100 rounded-lg p-2">
+                        <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-gray-600 font-medium text-sm">LinkedIn</p>
+                        <a href={companyData.linkedin_url} target="_blank" rel="noopener noreferrer"
+                           className="text-red-600 hover:text-red-700 hover:underline text-sm">
+                          Company Profile
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Company Description Card */}
+              {companyData.description && (
+                <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mb-6">
+                  <div className="flex items-start space-x-4">
+                    <div className="bg-red-100 rounded-lg p-3 mt-1">
+                      <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-gray-900 mb-3">Company Description</h3>
+                      <p className="text-gray-700 leading-relaxed">{companyData.description}</p>
+                    </div>
+                  </div>
                 </div>
               )}
-              <div>
-                <h1 className="text-3xl font-bold text-white mb-2">{companyData.name}</h1>
-                <div className="flex items-center space-x-3">
-                  <span className="bg-red-600 bg-opacity-80 text-white px-3 py-1 rounded-full text-sm font-medium">
-                    {companyData.industry}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div
-              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg font-medium transition-colors duration-200 flex items-center space-x-2"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-              </svg>
-              <span>Job Fair Registration</span>
-            </div>
-          </div>
-        </div>
 
-        {/* Company Information Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
-          {/* Email Card */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center space-x-4">
-              <div className="bg-red-100 rounded-lg p-3">
-                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-gray-600 font-medium">Email Address</p>
-                <p className="text-gray-900">{companyData.contact_email}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Phone Card */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center space-x-4">
-              <div className="bg-red-100 rounded-lg p-3">
-                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-gray-600 font-medium">Phone Number</p>
-                <p className="text-gray-900">{companyData.contact_phone}</p>
-              </div>
-            </div>
-          </div>
-
-{/* Website Card */}
-<div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-  <div className="flex items-center space-x-4">
-    <div className="bg-red-100 rounded-lg p-3">
-      <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9m0 9c-5 0-9-4-9-9s4-9 9-9" />
-      </svg>
-    </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-gray-600 font-medium">Website</p>
-      <a
-        href={companyData.website}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="text-red-600 hover:text-red-700 hover:underline truncate block max-w-full overflow-hidden whitespace-nowrap text-ellipsis"
-      >
-        {companyData.website}
-      </a>
-    </div>
-  </div>
-</div>
-
-
-          {/* Location Card */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center space-x-4">
-              <div className="bg-red-100 rounded-lg p-3">
-                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-gray-600 font-medium">Office Location</p>
-                <p className="text-gray-900">{companyData.location}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Company Size Card */}
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-            <div className="flex items-center space-x-4">
-              <div className="bg-red-100 rounded-lg p-3">
-                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
-              <div>
-                <p className="text-gray-600 font-medium">Company Size</p>
-                <span className="bg-gray-200 text-gray-800 px-3 py-1 rounded-full text-sm font-medium">
-                  {companyData.size}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* LinkedIn Card */}
-          {companyData.linkedin_url && (
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-              <div className="flex items-center space-x-4">
-                <div className="bg-red-100 rounded-lg p-3">
-                  <svg className="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                  </svg>
-                </div>
+              {/* Registration Form */}
+              <div className="space-y-6">
                 <div>
-                  <p className="text-gray-600 font-medium">LinkedIn</p>
-                  <a href={companyData.linkedin_url} target="_blank" rel="noopener noreferrer"
-                     className="text-red-600 hover:text-red-700 hover:underline">
-                    Company Profile
-                  </a>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Job Fair Registration Details</h3>
+                  <p className="text-gray-600">Complete your participation setup for the job fair</p>
                 </div>
+                
+                {/* Special Requirements */}
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-gray-900">
+                    Special Requirements
+                    <span className="text-gray-500 font-normal ml-2">(Optional)</span>
+                  </label>
+                  <p className="text-sm text-gray-600">
+                    Let us know if you have any specific booth requirements, equipment needs, or special arrangements.
+                  </p>
+                  <textarea
+                    value={formData.specialRequirements}
+                    onChange={(e) => handleInputChange('specialRequirements', e.target.value)}
+                    className="w-full border border-gray-300 rounded-lg p-3 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors duration-200 resize-none"
+                    rows="4"
+                    placeholder="e.g., Power outlets, internet connection, additional tables, accessibility requirements..."
+                  />
+                </div>
+
+                {/* Branding Checkbox */}
+                <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="flex items-start space-x-3">
+                    <input
+                      type="checkbox"
+                      checked={formData.needBranding}
+                      onChange={(e) => handleInputChange('needBranding', e.target.checked)}
+                      className="mt-1 w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
+                      id="branding"
+                    />
+                    <div>
+                      <label htmlFor="branding" className="text-sm font-medium text-gray-900 cursor-pointer">
+                        Branding Support Required
+                      </label>
+                      <p className="text-sm text-gray-600 mt-1">
+                        Check this if you need assistance with booth branding, banners, or promotional materials.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Success/Error Messages */}
+                {successMsg && (
+                  <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                    {successMsg}
+                  </div>
+                )}
+                {errorMsg && (
+                  <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
+                    {errorMsg}
+                  </div>
+                )}
               </div>
             </div>
-          )}
+          </form>
+        );
+
+      case 2:
+        return (
+          <div className="space-y-6 max-w-xl mx-auto">
+            <h2 className="text-2xl font-bold text-slate-800 mb-4 text-center">Add Candidate Job Profile</h2>
+
+            <div className="space-y-4">
+              {/* Title */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Job Title</label>
+                <input
+                  type="text"
+                  value={formData.title || ''}
+                  onChange={(e) => handleInputChange('title', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                  placeholder="e.g., Backend Developer"
+                />
+              </div>
+
+              {/* Description */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea
+                  value={formData.description || ''}
+                  onChange={(e) => handleInputChange('description', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                  rows={3}
+                  placeholder="Job responsibilities..."
+                />
+              </div>
+
+              {/* Requirements */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Requirements</label>
+                <textarea
+                  value={formData.requirements || ''}
+                  onChange={(e) => handleInputChange('requirements', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                  rows={2}
+                  placeholder="Skills, tools, experience..."
+                />
+              </div>
+
+              {/* Employment Type */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Employment Type</label>
+                <select
+                  value={formData.employment_type || ''}
+                  onChange={(e) => handleInputChange('employment_type', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                >
+                  <option value="">Select type</option>
+                  <option value="Full-time">Full-time</option>
+                  <option value="Part-time">Part-time</option>
+                  <option value="Internship">Internship</option>
+                  <option value="Contract">Contract</option>
+                </select>
+              </div>
+
+              {/* Location */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
+                <input
+                  type="text"
+                  value={formData.location || ''}
+                  onChange={(e) => handleInputChange('location', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                  placeholder="e.g., Cairo"
+                />
+              </div>
+
+              {/* Positions Available */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Positions Available</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={formData.positions_available || ''}
+                  onChange={(e) => handleInputChange('positions_available', e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-red-500 focus:border-red-500"
+                  placeholder="Number of positions"
+                />
+              </div>
+
+              {/* Tracks Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Available Tracks</label>
+                {availableTracks.map(track => {
+                  const trackIndex = formData.tracks.findIndex(t => t.track_id === track.id);
+                  const trackPref = trackIndex !== -1 ? formData.tracks[trackIndex] : { preference_level: '' };
+                  return (
+                    <div key={track.id} className="flex items-center space-x-4 mb-2">
+                      <input
+                        type="checkbox"
+                        checked={trackIndex !== -1}
+                        onChange={(e) => {
+                          let newTracks = [...formData.tracks];
+                          if (e.target.checked) {
+                            if (trackIndex === -1) {
+                              newTracks.push({ track_id: track.id, preference_level: 'required' });
+                            }
+                          } else {
+                            newTracks = newTracks.filter(t => t.track_id !== track.id);
+                          }
+                          handleInputChange('tracks', newTracks);
+                        }}
+                        className="w-4 h-4 text-red-600 border-gray-300 rounded"
+                        id={`track-${track.id}`}
+                      />
+                      <label htmlFor={`track-${track.id}`} className="flex-1 text-gray-700 cursor-pointer">{track.name}</label>
+
+                      {trackIndex !== -1 && (
+                        <select
+                          value={trackPref.preference_level}
+                          onChange={(e) => {
+                            const newTracks = formData.tracks.map((t, idx) =>
+                              idx === trackIndex ? { ...t, preference_level: e.target.value } : t
+                            );
+                            handleInputChange('tracks', newTracks);
+                          }}
+                          className="border border-gray-300 rounded px-2 py-1"
+                        >
+                          <option value="required">Required</option>
+                          <option value="preferred">Preferred</option>
+                          <option value="acceptable">Acceptable</option>
+                        </select>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {candidateSuccess && (
+                <div className="text-green-600 font-medium text-sm bg-green-100 p-2 rounded border border-green-300">
+                  ✅ {candidateSuccess}
+                </div>
+              )}
+              {candidateError && (
+                <div className="text-red-600 font-medium text-sm bg-red-100 p-2 rounded border border-red-300">
+                  ❌ {candidateError}
+                </div>
+              )}
+
+              {/* Add Another Candidate Button */}
+              <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
+                <button
+                  onClick={async () => {
+                    if (!formData.title?.trim() || !formData.description?.trim() || !formData.positions_available || Number(formData.positions_available) <= 0) {
+                      setCandidateError('Please fill in valid Title, Description, and Positions Available.');
+                      setCandidateSuccess('');
+                      return;
+                    }
+                    if (!formData.tracks || formData.tracks.length === 0) {
+                      setCandidateError('Please select at least one track.');
+                      setCandidateSuccess('');
+                      return;
+                    }
+
+                    setIsLoading(true);
+                    try {
+                      const payload = {
+                        title: formData.title,
+                        description: formData.description,
+                        requirements: formData.requirements,
+                        employment_type: formData.employment_type,
+                        location: formData.location,
+                        positions_available: Number(formData.positions_available),
+                        tracks: formData.tracks || []
+                      };
+
+                      const response = await api.post(
+  `/job-fairs/${jobFairId}/participations/${companyId}/job-profiles`,
+  payload
+);
+
+
+                      if (response.status === 200 || response.status === 201) {
+                        setFormData(prev => ({
+                          ...prev,
+                          title: '',
+                          description: '',
+                          requirements: '',
+                          employment_type: '',
+                          location: '',
+                          positions_available: '',
+                          tracks: []
+                        }));
+                        setCandidateSuccess('Candidate added successfully!');
+                        setCandidateError('');
+                      } else {
+                        setCandidateError('Failed to add candidate. Please try again.');
+                        setCandidateSuccess('');
+                      }
+                                        } catch (error) {
+                      setCandidateError('An unexpected error occurred.');
+                      setCandidateSuccess('');
+                      console.error("Error adding candidate:", error);
+                    } finally {
+                      setIsLoading(false);
+                    }
+                  }}
+                  className="bg-red-600 hover:bg-red-700 text-white font-medium px-4 py-2 rounded"
+                >
+                  {isLoading ? 'Adding...' : 'Submit Job Profile'}
+                </button>
+              </div>
+            </div>
+
+            {/* Navigation Buttons */}
+            {/* <div className="flex justify-between pt-6 border-t border-gray-200">
+              <button
+                onClick={() => setCurrentStep(currentStep - 1)}
+                className="flex items-center space-x-2 text-gray-600 hover:text-gray-900"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Previous</span>
+              </button>
+
+            <button
+              onClick={handleNext}
+              disabled={!isCurrentStepValid() || isSubmitting || isLoading}
+              className={`flex items-center px-6 py-2 rounded-md font-medium ${
+                isCurrentStepValid() && !isSubmitting && !isLoading
+                  ? 'bg-red-600 text-white hover:bg-red-700'
+                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+              }`}
+            >
+              {isSubmitting || isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  {currentStep === 1 ? 'Submitting...' : 'Saving...'}
+                </>
+              ) : (
+                <>
+                  {currentStep < steps.length ? 'Continue' : 'Submit Job Profile2'}
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </>
+              )}
+            </button>
+            </div> */}
+          </div>
+        );
+        
+      default:
+        return <div className="text-center text-gray-500">Step not found.</div>;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-100 py-8">
+      <div className="max-w-4xl mx-auto px-4">
+        {/* Progress Steps */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            {steps.map((step, index) => {
+              const Icon = step.icon;
+              const isComplete = isStepComplete(step.id);
+              const isCurrent = step.id === currentStep;
+              
+              return (
+                <div key={step.id} className="flex items-center">
+                  <div className={`flex items-center justify-center w-12 h-12 rounded-full border-2 ${
+                    isComplete 
+                      ? 'bg-green-500 border-green-500 text-white' 
+                      : isCurrent 
+                        ? 'bg-red-500 border-red-500 text-white' 
+                        : 'bg-white border-gray-300 text-gray-400'
+                  }`}>
+                    {isComplete ? (
+                      <CheckCircle className="w-6 h-6" />
+                    ) : (
+                      <Icon className="w-6 h-6" />
+                    )}
+                  </div>
+                  <div className="ml-4">
+                    <p className={`text-sm font-medium ${isCurrent ? 'text-red-600' : 'text-gray-500'}`}>
+                      {step.title}
+                    </p>
+                    <p className="text-xs text-gray-400">{step.description}</p>
+                  </div>
+                  {index < steps.length - 1 && (
+                    <div className={`w-24 h-0.5 mx-8 ${isComplete ? 'bg-green-500' : 'bg-gray-300'}`} />
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
 
-        {/* Company Description Card */}
-        {companyData.description && (
-          <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200 mb-6">
-            <div className="flex items-start space-x-4">
-              <div className="bg-red-100 rounded-lg p-3 mt-1">
-                <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div className="flex-1">
-                <h3 className="text-lg font-semibold text-gray-900 mb-3">Company Description</h3>
-                <p className="text-gray-700 leading-relaxed">{companyData.description}</p>
-              </div>
-            </div>
+        {/* Messages */}
+        {successMsg && (
+          <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+            {successMsg}
+          </div>
+        )}
+        
+        {errorMsg && (
+          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+            {errorMsg}
           </div>
         )}
 
-        {/* Registration Form Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Job Fair Registration Details</h2>
-            <p className="text-gray-600 mt-1">Complete your participation setup for the job fair</p>
+        {/* Step Content */}
+        <div className="bg-white rounded-lg shadow-lg p-6">
+          {renderStepContent()}
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between items-center mt-8 pt-6 border-t">
+            <button
+              onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
+              disabled={currentStep === 1}
+              className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Previous
+            </button>
+
+            <button
+              onClick={handleNext}
+              disabled={!isCurrentStepValid() || isSubmitting || isLoading}
+              className="flex items-center px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting || isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  {currentStep === 1 ? 'Submitting...' : 'Saving...'}
+                </>
+              ) : (
+                <>
+                  {currentStep === steps.length ? 'Done' : 'Next'}
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </>
+              )}
+            </button>
           </div>
-          
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
-            {/* Special Requirements */}
-            <div className="space-y-3">
-              <label className="block text-sm font-medium text-gray-900">
-                Special Requirements
-                <span className="text-gray-500 font-normal ml-2">(Optional)</span>
-              </label>
-              <p className="text-sm text-gray-600">
-                Let us know if you have any specific booth requirements, equipment needs, or special arrangements.
-              </p>
-              <textarea
-                value={specialRequirements}
-                onChange={(e) => setSpecialRequirements(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg p-3 focus:border-red-500 focus:ring-1 focus:ring-red-500 transition-colors duration-200 resize-none"
-                rows="4"
-                placeholder="e.g., Power outlets, internet connection, additional tables, accessibility requirements..."
-              />
-            </div>
-
-            {/* Branding Checkbox */}
-            <div className="bg-gray-50 rounded-lg p-4">
-              <div className="flex items-start space-x-3">
-                <input
-                  type="checkbox"
-                  checked={needBranding}
-                  onChange={(e) => setNeedBranding(e.target.checked)}
-                  className="mt-1 w-4 h-4 text-red-600 border-gray-300 rounded focus:ring-red-500"
-                  id="branding"
-                />
-                <div>
-                  <label htmlFor="branding" className="text-sm font-medium text-gray-900 cursor-pointer">
-                    Branding Support Required
-                  </label>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Check this if you need assistance with booth branding, banners, or promotional materials.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Feedback Messages */}
-            {successMsg && (
-              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-                <div className="flex items-center space-x-2">
-                  <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                  </svg>
-                  <p className="text-green-800 text-sm font-medium">{successMsg}</p>
-                </div>
-              </div>
-            )}
-            
-            {errorMsg && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-                <div className="flex items-center space-x-2">
-                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <p className="text-red-800 text-sm font-medium">{errorMsg}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Submit Button */}
-            <div className="pt-4 border-t border-gray-200">
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-6 rounded-lg transition-colors duration-200 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isSubmitting ? (
-                  <div className="flex items-center justify-center space-x-2">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                    <span>Submitting...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center justify-center space-x-2">
-                    <span>Submit Participation Request</span>
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
-                  </div>
-                )}
-              </button>
-            </div>
-          </form>
-        </div>
-
-        {/* Footer */}
-        <div className="text-center mt-8 text-gray-500">
-          <p className="text-sm">Need help? Contact our support team for assistance.</p>
         </div>
       </div>
     </div>
   );
 };
 
-export default SetupForm;
+export default MultiStepVerificationWithSetup;
