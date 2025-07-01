@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import FeedbackForm from './pages/student/FeedbackForm';
 import EventDetails from './pages/student/EventDetails';
+import NotificationPage from './pages/student/notification';
 import CompanyDirectory from './pages/student/CompanyDirectory';
 import InterviewQueue from './pages/student/InterviewQueue';
 import Profile from './pages/student/Profile';
@@ -11,10 +12,11 @@ const App = () => {
   return (
     <Router>
       <Routes>
+        <Route path="/notifications" element={<NotificationPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/feedback" element={<FeedbackForm />} />
         <Route path="/event-details/:id" element={<EventDetails />} />
-        <Route path="/show-events" element={<ShowEvents />} />{' '}
+        <Route path="/show-events" element={<ShowEvents />} />
         <Route path="/company-directory" element={<CompanyDirectory />} />
         <Route path="/interview-queue" element={<InterviewQueue />} />
         <Route path="/profile" element={<Profile />} />

@@ -1,4 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
+import { FaBell } from 'react-icons/fa';
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -23,6 +24,13 @@ const Navbar = () => {
             src="./profile.jpg"
             alt="Profile"
           />
+        </Link>
+
+        <Link
+          to="/notifications"
+          className="text-gray-500 hover:text-gray-700 transition"
+        >
+          <FaBell className="w-6 h-6" />
         </Link>
 
         <button
