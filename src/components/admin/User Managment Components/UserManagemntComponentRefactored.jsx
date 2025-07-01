@@ -190,17 +190,11 @@ const UserManagementComponent = () => {
   };
 
   const handleDeleteUser = async user => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete ${user.first_name} ${user.last_name}?`
-      )
-    ) {
-      try {
-        await userAPI.delete(user.id);
-        loadUsers();
-      } catch (error) {
-        console.error('Error deleting user:', error);
-      }
+    try {
+      await userAPI.delete(user.id);
+      loadUsers();
+    } catch (error) {
+      console.error('Error deleting user:', error);
     }
   };
   const handleEditClick = user => {

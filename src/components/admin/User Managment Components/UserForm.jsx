@@ -232,24 +232,28 @@ const UserForm = ({
 
   return (
     <div className="max-w-4xl mx-auto">
-      <p className="text-sm text-gray-500 mb-6">
+      <p className="text-sm text-gray-500 mb-6 animate-[fadeIn_0.5s_0s_forwards] opacity-0">
         Fill out the details below to {isEdit ? 'update' : 'create'} a user. All
         fields with * are required.
       </p>
 
       {error && (
-        <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded-md text-sm mb-6">
+        <div className="p-3 bg-red-50 border border-red-200 text-red-800 rounded-md text-sm mb-6 animate-[fadeIn_0.5s_0.1s_forwards] opacity-0">
           {error}
         </div>
       )}
 
-      <form ref={formRef} onSubmit={handleSubmit} className="space-y-8">
+      <form
+        ref={formRef}
+        onSubmit={handleSubmit}
+        className="space-y-8 form-container"
+      >
         {/* Profile Image */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="animate-[fadeIn_0.5s_0.2s_forwards] opacity-0">
+          <label className="block text-sm font-medium text-gray-700 mb-2 animate-[fadeIn_0.3s_0.2s_forwards]">
             Profile Image
           </label>
-          <div className="border-2 border-gray-300 border-dashed rounded-md p-6 flex flex-col items-center justify-center">
+          <div className="border-2 border-gray-300 border-dashed rounded-md p-6 flex flex-col items-center justify-center animate-[fadeIn_0.3s_0.2s_forwards]">
             {profileImagePreview ? (
               <div className="relative w-full max-w-md mx-auto">
                 <img
@@ -278,7 +282,7 @@ const UserForm = ({
                 </button>
               </div>
             ) : isEdit && user.profile_image ? (
-              <div className="relative w-full max-w-md mx-auto">
+              <div className="relative w-full max-w-md mx-auto animate-[fadeIn_0.3s_0.2s_forwards]">
                 <img
                   src={user.profile_image}
                   alt="Current profile"
@@ -306,8 +310,10 @@ const UserForm = ({
               </div>
             ) : (
               <>
-                <div className="text-center">
-                  <FaUser className="mx-auto h-12 w-12 text-gray-400" />
+                <div className="text-center animate-[fadeIn_0.3s_0.2s_forwards]">
+                  <FaUser
+                    className={`mx-auto h-12 w-12 ${errors.profile_image || getFieldErrorFromApiError(error, 'profile_image') ? 'text-red-500' : 'text-gray-400'}`}
+                  />
                   <p className="mt-2 text-sm text-gray-600">
                     Drag & drop an image here, or{' '}
                     <span className="text-blue-500">browse</span>
@@ -338,15 +344,22 @@ const UserForm = ({
         </div>
 
         {/* Basic Information */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-[fadeIn_0.5s_0.4s_forwards] opacity-0">
           {/* First Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 animate-[fadeIn_0.3s_0.2s_forwards]">
               First Name <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                <FaUser className="h-4 w-4" />
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center animate-[fadeIn_0.3s_0.2s_forwards]">
+                <FaUser
+                  className={`h-4 w-4 ${
+                    errors.first_name ||
+                    getFieldErrorFromApiError(error, 'first_name')
+                      ? 'text-red-500'
+                      : 'text-gray-500'
+                  }`}
+                />
               </span>
               <input
                 type="text"
@@ -355,7 +368,7 @@ const UserForm = ({
                 onChange={e =>
                   setUser(prev => ({ ...prev, first_name: e.target.value }))
                 }
-                className={`w-full p-2 pl-10 border rounded-md focus:border-0 ${
+                className={`w-full p-2 pl-10 border rounded-md focus:border-0 animate-[fadeIn_0.3s_0.2s_forwards] ${
                   errors.first_name ||
                   getFieldErrorFromApiError(error, 'first_name')
                     ? 'border-red-500 bg-red-50'
@@ -375,12 +388,19 @@ const UserForm = ({
 
           {/* Last Name */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 animate-[fadeIn_0.3s_0.2s_forwards]">
               Last Name <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                <FaUser className="h-4 w-4" />
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center animate-[fadeIn_0.3s_0.2s_forwards]">
+                <FaUser
+                  className={`h-4 w-4 ${
+                    errors.last_name ||
+                    getFieldErrorFromApiError(error, 'last_name')
+                      ? 'text-red-500'
+                      : 'text-gray-500'
+                  }`}
+                />
               </span>
               <input
                 type="text"
@@ -389,7 +409,7 @@ const UserForm = ({
                 onChange={e =>
                   setUser(prev => ({ ...prev, last_name: e.target.value }))
                 }
-                className={`w-full p-2 pl-10 border rounded-md focus:border-0 ${
+                className={`w-full p-2 pl-10 border rounded-md focus:border-0 animate-[fadeIn_0.3s_0.2s_forwards] ${
                   errors.last_name ||
                   getFieldErrorFromApiError(error, 'last_name')
                     ? 'border-red-500 bg-red-50'
@@ -408,15 +428,21 @@ const UserForm = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-[fadeIn_0.5s_0.6s_forwards] opacity-0">
           {/* Email */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 animate-[fadeIn_0.3s_0.2s_forwards]">
               Email <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                <FaEnvelope className="h-4 w-4" />
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center animate-[fadeIn_0.3s_0.2s_forwards]">
+                <FaEnvelope
+                  className={`h-4 w-4 ${
+                    errors.email || getFieldErrorFromApiError(error, 'email')
+                      ? 'text-red-500'
+                      : 'text-gray-500'
+                  }`}
+                />
               </span>
               <input
                 type="email"
@@ -425,7 +451,7 @@ const UserForm = ({
                 onChange={e =>
                   setUser(prev => ({ ...prev, email: e.target.value }))
                 }
-                className={`w-full p-2 pl-10 border rounded-md focus:border-0 ${
+                className={`w-full p-2 pl-10 border rounded-md focus:border-0 animate-[fadeIn_0.3s_0.2s_forwards] ${
                   errors.email || getFieldErrorFromApiError(error, 'email')
                     ? 'border-red-500 bg-red-50'
                     : 'border-gray-300'
@@ -442,12 +468,18 @@ const UserForm = ({
 
           {/* Phone */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 animate-[fadeIn_0.3s_0.2s_forwards]">
               Phone
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                <FaPhoneAlt className="h-4 w-4" />
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center animate-[fadeIn_0.3s_0.2s_forwards]">
+                <FaPhoneAlt
+                  className={`h-4 w-4 ${
+                    errors.phone || getFieldErrorFromApiError(error, 'phone')
+                      ? 'text-red-500'
+                      : 'text-gray-500'
+                  }`}
+                />
               </span>
               <input
                 type="tel"
@@ -455,7 +487,7 @@ const UserForm = ({
                 onChange={e =>
                   setUser(prev => ({ ...prev, phone: e.target.value }))
                 }
-                className={`w-full p-2 pl-10 border rounded-md focus:border-0 ${
+                className={`w-full p-2 pl-10 border border-primary rounded-md focus:border-0 animate-[fadeIn_0.3s_0.2s_forwards]${
                   errors.phone || getFieldErrorFromApiError(error, 'phone')
                     ? 'border-red-500 bg-red-50'
                     : 'border-gray-300'
@@ -473,13 +505,20 @@ const UserForm = ({
 
         {/* Portal User ID - only for new users */}
         {!isEdit && (
-          <div>
+          <div className="animate-[fadeIn_0.5s_0.8s_forwards] opacity-0">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Portal User ID <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                <FaIdCard className="h-4 w-4" />
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center animate-[fadeIn_0.3s_0.2s_forwards]">
+                <FaIdCard
+                  className={`h-4 w-4 ${
+                    errors.portal_user_id ||
+                    getFieldErrorFromApiError(error, 'portal_user_id')
+                      ? 'text-red-500'
+                      : 'text-gray-500'
+                  }`}
+                />
               </span>
               <input
                 type="text"
@@ -488,7 +527,7 @@ const UserForm = ({
                 onChange={e =>
                   setUser(prev => ({ ...prev, portal_user_id: e.target.value }))
                 }
-                className={`w-full p-2 pl-10 border rounded-md focus:border-0 ${
+                className={`w-full p-2 pl-10 border rounded-md focus:border-0 animate-[fadeIn_0.3s_0.2s_forwards] ${
                   errors.portal_user_id ||
                   getFieldErrorFromApiError(error, 'portal_user_id')
                     ? 'border-red-500 bg-red-50'
@@ -508,15 +547,15 @@ const UserForm = ({
         )}
 
         {/* Biography */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="animate-[fadeIn_0.5s_1.0s_forwards] opacity-0">
+          <label className="block text-sm font-medium text-gray-700 mb-1 animate-[fadeIn_0.3s_0.2s_forwards]">
             Bio
           </label>
           <textarea
             value={user.bio || ''}
             onChange={e => setUser(prev => ({ ...prev, bio: e.target.value }))}
             rows="4"
-            className={`w-full p-2 border rounded-md focus:border-0 ${
+            className={`w-full p-2 border rounded-md border-primary focus:border-0 animate-[fadeIn_0.3s_0.2s_forwards]${
               errors.bio || getFieldErrorFromApiError(error, 'bio')
                 ? 'border-red-500 bg-red-50'
                 : 'border-gray-300'
@@ -530,15 +569,22 @@ const UserForm = ({
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-[fadeIn_0.5s_1.1s_forwards] opacity-0">
           {/* Intake Year */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 animate-[fadeIn_0.3s_0.2s_forwards]">
               Intake Year
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                <FaCalendarAlt className="h-4 w-4" />
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center animate-[fadeIn_0.3s_0.2s_forwards]">
+                <FaCalendarAlt
+                  className={`h-4 w-4 ${
+                    errors.intake_year ||
+                    getFieldErrorFromApiError(error, 'intake_year')
+                      ? 'text-red-500'
+                      : 'text-gray-500'
+                  }`}
+                />
               </span>
               <input
                 type="number"
@@ -546,7 +592,7 @@ const UserForm = ({
                 onChange={e =>
                   setUser(prev => ({ ...prev, intake_year: e.target.value }))
                 }
-                className={`w-full p-2 pl-10 border rounded-md focus:border-0 ${
+                className={`w-full p-2 pl-10 border border-primary rounded-md focus:border-0 animate-[fadeIn_0.3s_0.2s_forwards]${
                   errors.intake_year ||
                   getFieldErrorFromApiError(error, 'intake_year')
                     ? 'border-red-500 bg-red-50'
@@ -568,12 +614,19 @@ const UserForm = ({
 
           {/* Graduation Year */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 animate-[fadeIn_0.3s_0.2s_forwards]">
               Graduation Year
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                <FaUserGraduate className="h-4 w-4" />
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center animate-[fadeIn_0.3s_0.2s_forwards]">
+                <FaUserGraduate
+                  className={`h-4 w-4 ${
+                    errors.graduation_year ||
+                    getFieldErrorFromApiError(error, 'graduation_year')
+                      ? 'text-red-500'
+                      : 'text-gray-500'
+                  }`}
+                />
               </span>
               <input
                 type="number"
@@ -584,7 +637,7 @@ const UserForm = ({
                     graduation_year: e.target.value,
                   }))
                 }
-                className={`w-full p-2 pl-10 border rounded-md focus:border-0 ${
+                className={`w-full p-2 pl-10 border rounded-md focus:border-0 animate-[fadeIn_0.3s_0.2s_forwards] ${
                   errors.graduation_year ||
                   getFieldErrorFromApiError(error, 'graduation_year')
                     ? 'border-red-500 bg-red-50'
@@ -605,15 +658,22 @@ const UserForm = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-[fadeIn_0.5s_1.2s_forwards] opacity-0">
           {/* LinkedIn URL */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 animate-[fadeIn_0.3s_0.2s_forwards]">
               LinkedIn URL
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                <FaLinkedin className="h-4 w-4" />
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center animate-[fadeIn_0.3s_0.2s_forwards]">
+                <FaLinkedin
+                  className={`h-4 w-4 ${
+                    errors.linkedin_url ||
+                    getFieldErrorFromApiError(error, 'linkedin_url')
+                      ? 'text-red-500'
+                      : 'text-gray-500'
+                  }`}
+                />
               </span>
               <input
                 type="url"
@@ -621,7 +681,7 @@ const UserForm = ({
                 onChange={e =>
                   setUser(prev => ({ ...prev, linkedin_url: e.target.value }))
                 }
-                className={`w-full p-2 pl-10 border rounded-md focus:border-0 ${
+                className={`w-full p-2 pl-10 border rounded-md focus:border-0 animate-[fadeIn_0.3s_0.2s_forwards] ${
                   errors.linkedin_url ||
                   getFieldErrorFromApiError(error, 'linkedin_url')
                     ? 'border-red-500 bg-red-50'
@@ -641,12 +701,19 @@ const UserForm = ({
 
           {/* GitHub URL */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 animate-[fadeIn_0.3s_0.2s_forwards]">
               GitHub URL
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                <FaGithub className="h-4 w-4" />
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center animate-[fadeIn_0.3s_0.2s_forwards]">
+                <FaGithub
+                  className={`h-4 w-4 ${
+                    errors.github_url ||
+                    getFieldErrorFromApiError(error, 'github_url')
+                      ? 'text-red-500'
+                      : 'text-gray-500'
+                  }`}
+                />
               </span>
               <input
                 type="url"
@@ -654,7 +721,7 @@ const UserForm = ({
                 onChange={e =>
                   setUser(prev => ({ ...prev, github_url: e.target.value }))
                 }
-                className={`w-full p-2 pl-10 border rounded-md focus:border-0 ${
+                className={`w-full p-2 pl-10 border rounded-md focus:border-0 animate-[fadeIn_0.3s_0.2s_forwards] ${
                   errors.github_url ||
                   getFieldErrorFromApiError(error, 'github_url')
                     ? 'border-red-500 bg-red-50'
@@ -673,15 +740,22 @@ const UserForm = ({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 animate-[fadeIn_0.5s_1.3s_forwards] opacity-0">
           {/* Portfolio URL */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 animate-[fadeIn_0.3s_0.2s_forwards]">
               Portfolio URL
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500">
-                <FaGlobe className="h-4 w-4" />
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center animate-[fadeIn_0.3s_0.2s_forwards]">
+                <FaGlobe
+                  className={`h-4 w-4 ${
+                    errors.portfolio_url ||
+                    getFieldErrorFromApiError(error, 'portfolio_url')
+                      ? 'text-red-500'
+                      : 'text-gray-500'
+                  }`}
+                />
               </span>
               <input
                 type="url"
@@ -689,7 +763,7 @@ const UserForm = ({
                 onChange={e =>
                   setUser(prev => ({ ...prev, portfolio_url: e.target.value }))
                 }
-                className={`w-full p-2 pl-10 border rounded-md focus:border-0 ${
+                className={`w-full p-2 pl-10 border border-primary rounded-md focus:border-0 animate-[fadeIn_0.3s_0.2s_forwards]${
                   errors.portfolio_url ||
                   getFieldErrorFromApiError(error, 'portfolio_url')
                     ? 'border-red-500 bg-red-50'
@@ -709,7 +783,7 @@ const UserForm = ({
 
           {/* Track */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-700 mb-1 animate-[fadeIn_0.3s_0.2s_forwards]">
               Track <span className="text-red-500">*</span>
             </label>
             <div className="relative">
@@ -718,7 +792,7 @@ const UserForm = ({
                 onChange={e =>
                   setUser(prev => ({ ...prev, track_id: e.target.value }))
                 }
-                className={`w-full p-2 border rounded-md focus:border-0 appearance-none pr-8 ${
+                className={`w-full p-2 border rounded-md focus:border-0 appearance-none pr-8 animate-[fadeIn_0.3s_0.2s_forwards] ${
                   errors.track_id ||
                   getFieldErrorFromApiError(error, 'track_id')
                     ? 'border-red-500 bg-red-50'
@@ -757,8 +831,8 @@ const UserForm = ({
         </div>
 
         {/* Status */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        <div className="animate-[fadeIn_0.5s_1.4s_forwards] opacity-0">
+          <label className="block text-sm font-medium text-gray-700 mb-1 animate-[fadeIn_0.3s_0.2s_forwards]">
             Status <span className="text-red-500">*</span>
           </label>
           <div className="relative">
@@ -770,7 +844,7 @@ const UserForm = ({
                   is_active: e.target.value === '1',
                 }))
               }
-              className={`w-full p-2 border rounded-md focus:border-0 appearance-none pr-8 ${
+              className={`w-full p-2 border border-primary rounded-md focus:border-0 appearance-none pr-8 animate-[fadeIn_0.3s_0.2s_forwards]${
                 errors.is_active ||
                 getFieldErrorFromApiError(error, 'is_active')
                   ? 'border-red-500 bg-red-50'
@@ -800,10 +874,10 @@ const UserForm = ({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex justify-between pt-5 border-t border-gray-200">
+        <div className="flex justify-between pt-5 border-t border-gray-200 animate-[fadeIn_0.5s_1.5s_forwards] opacity-0">
           <button
             type="button"
-            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            className="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-all duration-300 hover:shadow-md"
             onClick={() => {
               /* Cancel logic */
             }}
@@ -813,7 +887,7 @@ const UserForm = ({
           <button
             type="submit"
             disabled={submitLoading}
-            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[var(--secondary-400)] hover:bg-[var(--secondary-500)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+            className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-[var(--secondary-400)] hover:bg-[var(--secondary-500)] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 transition-all duration-300 hover:shadow-lg transform hover:scale-105"
           >
             {submitLoading ? (
               <span className="flex items-center">

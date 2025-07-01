@@ -266,7 +266,7 @@ button {
 
 /* Border utilities */
 .border-primary {
-  border: 1px solid var(--gray-200);
+  border: 1px solid var(--gray-300);
 }
 
 .border-secondary {
