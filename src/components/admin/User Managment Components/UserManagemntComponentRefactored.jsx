@@ -6,6 +6,7 @@ import Pagination from '../../common/Pagination.jsx';
 import LoadingSpinner from '../../common/LoadingSpinner.jsx';
 import TableSkeleton from '../../common/TableSkeleton.jsx';
 import UserForm from './UserForm.jsx';
+import DeleteConfirmationModal from '../../common/DeleteConfirmationModal.jsx';
 import { userAPI } from '../../../services/api.js';
 import { useUserManagement } from '../../../hooks/useUserManagement.js';
 import { getUserTableColumns } from './userTableConfig.jsx';
@@ -40,6 +41,8 @@ const UserManagementComponent = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
   // Form states
   const [newUser, setNewUser] = useState(getInitialUserState());
@@ -190,12 +193,28 @@ const UserManagementComponent = () => {
   };
 
   const handleDeleteUser = async user => {
+    // Show the delete confirmation modal
+    setUserToDelete(user);
+    setIsDeleteModalOpen(true);
+  };
+
+  // Function to actually delete the user after confirmation
+  const confirmDeleteUser = async () => {
     try {
-      await userAPI.delete(user.id);
+      await userAPI.delete(userToDelete.id);
       loadUsers();
+      setIsDeleteModalOpen(false);
+      setUserToDelete(null);
     } catch (error) {
       console.error('Error deleting user:', error);
+      setIsDeleteModalOpen(false);
     }
+  };
+
+  // Function to cancel user deletion
+  const cancelDeleteUser = () => {
+    setIsDeleteModalOpen(false);
+    setUserToDelete(null);
   };
   const handleEditClick = user => {
     setSelectedUser(user);
@@ -568,6 +587,14 @@ const UserManagementComponent = () => {
           isEdit={true}
         />
       </Modal>
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && userToDelete && (
+        <DeleteConfirmationModal
+          user={userToDelete}
+          onConfirm={confirmDeleteUser}
+          onCancel={cancelDeleteUser}
+        />
+      )}
     </div>
   );
 };

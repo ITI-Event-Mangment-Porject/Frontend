@@ -1,7 +1,4 @@
-import React, { useState } from 'react';
 import { FaEdit, FaTrash } from 'react-icons/fa';
-
-import DeleteConfirmationModal from '../../common/DeleteConfirmationModal';
 
 export const getUserTableColumns = (handleEditClick, handleDeleteClick) => {
   // Define column configurations
@@ -102,28 +99,7 @@ export const getUserTableColumns = (handleEditClick, handleDeleteClick) => {
     {
       header: 'Actions',
       accessor: 'actions',
-      Render: user => {
-        // We use React's useState hook inside a render function
-        // This is a bit unconventional but works for this specific case
-        const [showDeleteModal, setShowDeleteModal] = useState(false);
-
-        // Handle the delete button click
-        const handleDeleteButtonClick = e => {
-          e.stopPropagation();
-          setShowDeleteModal(true);
-        };
-
-        // Handle confirmation of deletion
-        const handleConfirmDelete = () => {
-          handleDeleteClick(user);
-          setShowDeleteModal(false);
-        };
-
-        // Handle cancellation of deletion
-        const handleCancelDelete = () => {
-          setShowDeleteModal(false);
-        };
-
+      render: user => {
         return (
           <div>
             <div className="flex gap-2">
@@ -139,7 +115,12 @@ export const getUserTableColumns = (handleEditClick, handleDeleteClick) => {
                 Edit
               </button>
               <button
-                onClick={handleDeleteButtonClick}
+                onClick={e => {
+                  e.stopPropagation();
+                  // Instead of using useState to manage modal visibility,
+                  // we'll call the handler directly, which should display a confirmation
+                  handleDeleteClick(user);
+                }}
                 className="px-3 py-1 text-sm rounded-md bg-[var(--primary-500)] text-white hover:bg-[var(--primary-600)] flex items-center"
                 title="Delete User"
               >
@@ -147,15 +128,6 @@ export const getUserTableColumns = (handleEditClick, handleDeleteClick) => {
                 Delete
               </button>
             </div>
-
-            {/* Render modal conditionally */}
-            {showDeleteModal && (
-              <DeleteConfirmationModal
-                user={user}
-                onConfirm={handleConfirmDelete}
-                onCancel={handleCancelDelete}
-              />
-            )}
           </div>
         );
       },
