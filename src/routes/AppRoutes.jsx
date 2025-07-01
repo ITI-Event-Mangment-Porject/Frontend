@@ -14,6 +14,7 @@ import ShowEvents from '../pages/student/ShowEvents';
 // Admin Pages
 import AdminDashboard from '../pages/admin/Dashboard';
 import ManageEvents from '../pages/admin/ManageEvents';
+import Notifications from '../pages/admin/Notifications';
 
 const AppRoutes = () => {
   return (
@@ -22,6 +23,7 @@ const AppRoutes = () => {
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/users" element={<UserManagement />} />
       <Route path="/admin/events" element={<ManageEvents />} />
+      <Route path="/admin/notifications" element={<Notifications />} />
       <Route path="/admin/job-fair" element={<JobFairSetup />} />
       <Route
         path="/admin"
