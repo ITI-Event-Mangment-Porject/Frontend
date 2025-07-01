@@ -6,7 +6,6 @@ import CompanyModal from './CompanyModal';
 import Pagination from './Pagination';
 import FullPageLoader from '../../FullPageLoader';
 
-
 const JobFairSetUp = () => {
   const [companies, setCompanies] = useState([]);
   const [totalCompanies, setTotalCompanies] = useState(0);
@@ -25,7 +24,9 @@ const JobFairSetUp = () => {
     links: [],
   });
 
-  const fetchCompanies = async (url = 'http://localhost:8001/api/companies?sort=-created_at&per_page=10') => {
+  const fetchCompanies = async (
+    url = 'http://localhost:8000/api/companies?sort=-created_at&per_page=10'
+  ) => {
     try {
       setLoading(true);
       let finalUrl = url;
@@ -57,7 +58,7 @@ const JobFairSetUp = () => {
     fetchCompanies();
   }, [statusFilter]);
 
-  const handleSearch = (e) => {
+  const handleSearch = e => {
     e.preventDefault();
     fetchCompanies();
   };
@@ -65,10 +66,13 @@ const JobFairSetUp = () => {
   const handleApproveReject = async (companyId, action) => {
     try {
       setActionLoading(`${companyId}-${action}`);
-      const response = await fetch(`http://localhost:8001/api/companies/${companyId}/${action}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const response = await fetch(
+        `http://localhost:8000/api/companies/${companyId}/${action}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
       if (response.ok) {
         fetchCompanies();
         console.log(`Company ${action}d successfully`);
@@ -82,12 +86,17 @@ const JobFairSetUp = () => {
     }
   };
 
-  const totalSlots = companies.reduce((acc, c) => acc + c.interview_requests_count, 0);
-  const totalFilled = companies.reduce((acc, c) => acc + c.filled_interviews_count, 0);
+  const totalSlots = companies.reduce(
+    (acc, c) => acc + c.interview_requests_count,
+    0
+  );
+  const totalFilled = companies.reduce(
+    (acc, c) => acc + c.filled_interviews_count,
+    0
+  );
 
   if (loading) {
-    <FullPageLoader loading={loading} />
-
+    <FullPageLoader loading={loading} />;
   }
 
   return (
@@ -95,7 +104,11 @@ const JobFairSetUp = () => {
       <div className="font-bold text-3xl mb-6">Job Fair Setup</div>
       <div className="grid grid-cols-1 mb-8 sm:grid-cols-2 md:grid-cols-4 gap-4">
         <StatCard title="Total Companies" value={totalCompanies} icon="🏢" />
-        <StatCard title="Approved Companies" value={approvedCompanies} icon="✅" />
+        <StatCard
+          title="Approved Companies"
+          value={approvedCompanies}
+          icon="✅"
+        />
         <StatCard title="Total Slots" value={totalSlots} icon="🗓️" />
         <StatCard title="Filled Slots" value={totalFilled} icon="📌" />
       </div>
@@ -120,10 +133,17 @@ const JobFairSetUp = () => {
         actionLoading={actionLoading}
       />
 
-      <Pagination pagination={pagination} onPageChange={fetchCompanies} totalCompanies={totalCompanies} />
+      <Pagination
+        pagination={pagination}
+        onPageChange={fetchCompanies}
+        totalCompanies={totalCompanies}
+      />
 
       {showModal && (
-        <CompanyModal company={selectedCompany} onClose={() => setShowModal(false)} />
+        <CompanyModal
+          company={selectedCompany}
+          onClose={() => setShowModal(false)}
+        />
       )}
     </div>
   );

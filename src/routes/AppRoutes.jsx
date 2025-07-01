@@ -3,13 +3,13 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import UserManagement from '../pages/admin/UserManagement';
 import JobFairSetup from '../pages/admin/JobFairSetup';
 import Help from '../components/common/Help';
-import FeedbackForm from './pages/student/FeedbackForm';
-import EventDetails from './pages/student/EventDetails';
-import CompanyDirectory from './pages/student/CompanyDirectory';
-import InterviewQueue from './pages/student/InterviewQueue';
-import Profile from './pages/student/Profile';
-import Login from './pages/student/Login';
-import ShowEvents from './pages/student/ShowEvents';
+import FeedbackForm from '../pages/student/FeedbackForm';
+import EventDetails from '../pages/student/EventDetails';
+import CompanyDirectory from '../pages/student/CompanyDirectory';
+import InterviewQueue from '../pages/student/InterviewQueue';
+import Profile from '../pages/student/Profile';
+import Login from '../pages/student/Login';
+import ShowEvents from '../pages/student/ShowEvents';
 
 // Admin Pages
 import AdminDashboard from '../pages/admin/Dashboard';
