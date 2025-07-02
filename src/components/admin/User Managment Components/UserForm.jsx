@@ -351,16 +351,14 @@ const UserForm = ({
               First Name <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center animate-[fadeIn_0.3s_0.2s_forwards]">
-                <FaUser
-                  className={`h-4 w-4 ${
-                    errors.first_name ||
-                    getFieldErrorFromApiError(error, 'first_name')
-                      ? 'text-red-500'
-                      : 'text-gray-500'
-                  }`}
-                />
-              </span>
+              <FaUser
+                className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 z-10 animate-[fadeIn_0.3s_0.2s_forwards] ${
+                  errors.first_name ||
+                  getFieldErrorFromApiError(error, 'first_name')
+                    ? 'text-red-500'
+                    : 'text-gray-500'
+                }`}
+              />
               <input
                 type="text"
                 name="first_name"
@@ -392,16 +390,14 @@ const UserForm = ({
               Last Name <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center animate-[fadeIn_0.3s_0.2s_forwards]">
-                <FaUser
-                  className={`h-4 w-4 ${
-                    errors.last_name ||
-                    getFieldErrorFromApiError(error, 'last_name')
-                      ? 'text-red-500'
-                      : 'text-gray-500'
-                  }`}
-                />
-              </span>
+              <FaUser
+                className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 z-10 animate-[fadeIn_0.3s_0.2s_forwards] ${
+                  errors.last_name ||
+                  getFieldErrorFromApiError(error, 'last_name')
+                    ? 'text-red-500'
+                    : 'text-gray-500'
+                }`}
+              />
               <input
                 type="text"
                 name="last_name"
@@ -435,15 +431,13 @@ const UserForm = ({
               Email <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center animate-[fadeIn_0.3s_0.2s_forwards]">
-                <FaEnvelope
-                  className={`h-4 w-4 ${
-                    errors.email || getFieldErrorFromApiError(error, 'email')
-                      ? 'text-red-500'
-                      : 'text-gray-500'
-                  }`}
-                />
-              </span>
+              <FaEnvelope
+                className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 z-10 animate-[fadeIn_0.3s_0.2s_forwards] ${
+                  errors.email || getFieldErrorFromApiError(error, 'email')
+                    ? 'text-red-500'
+                    : 'text-gray-500'
+                }`}
+              />
               <input
                 type="email"
                 name="email"
@@ -472,22 +466,20 @@ const UserForm = ({
               Phone
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center animate-[fadeIn_0.3s_0.2s_forwards]">
-                <FaPhoneAlt
-                  className={`h-4 w-4 ${
-                    errors.phone || getFieldErrorFromApiError(error, 'phone')
-                      ? 'text-red-500'
-                      : 'text-gray-500'
-                  }`}
-                />
-              </span>
+              <FaPhoneAlt
+                className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 z-10 animate-[fadeIn_0.3s_0.2s_forwards] ${
+                  errors.phone || getFieldErrorFromApiError(error, 'phone')
+                    ? 'text-red-500'
+                    : 'text-gray-500'
+                }`}
+              />
               <input
                 type="tel"
                 value={user.phone || ''}
                 onChange={e =>
                   setUser(prev => ({ ...prev, phone: e.target.value }))
                 }
-                className={`w-full p-2 pl-10 border border-primary rounded-md focus:border-0 animate-[fadeIn_0.3s_0.2s_forwards]${
+                className={`w-full p-2 pl-10 border border-primary rounded-md focus:border-0 animate-[fadeIn_0.3s_0.2s_forwards] ${
                   errors.phone || getFieldErrorFromApiError(error, 'phone')
                     ? 'border-red-500 bg-red-50'
                     : 'border-gray-300'
@@ -510,16 +502,14 @@ const UserForm = ({
               Portal User ID <span className="text-red-500">*</span>
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center animate-[fadeIn_0.3s_0.2s_forwards]">
-                <FaIdCard
-                  className={`h-4 w-4 ${
-                    errors.portal_user_id ||
-                    getFieldErrorFromApiError(error, 'portal_user_id')
-                      ? 'text-red-500'
-                      : 'text-gray-500'
-                  }`}
-                />
-              </span>
+              <FaIdCard
+                className={`absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 z-10 animate-[fadeIn_0.3s_0.2s_forwards] ${
+                  errors.portal_user_id ||
+                  getFieldErrorFromApiError(error, 'portal_user_id')
+                    ? 'text-red-500'
+                    : 'text-gray-500'
+                }`}
+              />
               <input
                 type="text"
                 name="portal_user_id"
@@ -802,7 +792,7 @@ const UserForm = ({
                 disabled={trackLoading}
               >
                 <option value="" disabled>
-                  {trackLoading ? 'Loading tracks...' : 'Select a track'}
+                  Select a track
                 </option>
                 {tracks.map(track => (
                   <option key={track.id} value={track.id}>

@@ -822,12 +822,12 @@ const EventForm = ({
                 }`}
                 placeholder="Enter location"
               />
-              {(errors.location || getFieldErrorFromApiError('location')) && (
-                <p className="mt-1 text-sm text-red-600">
-                  {errors.location || getFieldErrorFromApiError('location')}
-                </p>
-              )}
             </div>
+            {(errors.location || getFieldErrorFromApiError('location')) && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors.location || getFieldErrorFromApiError('location')}
+              </p>
+            )}
           </div>
 
           {/* Event Banner */}
