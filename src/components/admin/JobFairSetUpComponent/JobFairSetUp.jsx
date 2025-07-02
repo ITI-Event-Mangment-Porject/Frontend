@@ -38,7 +38,9 @@ const JobFairSetUp = () => {
  
 
   const fetchCompanies = async (
+
     url = 'http://localhost:8001/api/companies?sort=-created_at&per_page=10'
+
   ) => {
     try {
       setLoading(true);
@@ -79,6 +81,7 @@ const JobFairSetUp = () => {
   const handleAddCompany = async e => {
     e.preventDefault();
     try {
+
       const response = await fetch('http://localhost:8001/api/companies', {
         method: 'POST',
         headers: {
@@ -86,6 +89,7 @@ const JobFairSetUp = () => {
         },
         body: JSON.stringify(newCompany),
       });
+
       if (response.ok) {
         const data = await response.json();
         const newCompanyData = {
