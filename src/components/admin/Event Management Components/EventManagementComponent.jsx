@@ -348,6 +348,8 @@ const EventManagementComponent = () => {
     setSearchTerm('');
     setStartDate('');
     setEndDate('');
+    // Reset pagination to first page when clearing filters
+    handlePageChange(1);
   };
 
   const columns = getEventTableColumns(handleEditClick, handleDeleteEvent);
@@ -370,6 +372,69 @@ const EventManagementComponent = () => {
           </button>
         </div>
       </div>
+
+      {/* Filter Results Indicator */}
+      {(searchTerm || selectedStatus || startDate || endDate) && (
+        <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md animate-fade-in">
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-blue-800 font-medium">Active Filters:</span>
+            {searchTerm && (
+              <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                Search: "{searchTerm}"
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="ml-1 text-blue-600 hover:text-blue-800"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+            {selectedStatus && (
+              <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                Status: {selectedStatus}
+                <button
+                  onClick={() => setSelectedStatus('')}
+                  className="ml-1 text-blue-600 hover:text-blue-800"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+            {startDate && (
+              <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                From: {new Date(startDate).toLocaleDateString()}
+                <button
+                  onClick={() => setStartDate('')}
+                  className="ml-1 text-blue-600 hover:text-blue-800"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+            {endDate && (
+              <span className="inline-flex items-center px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs">
+                To: {new Date(endDate).toLocaleDateString()}
+                <button
+                  onClick={() => setEndDate('')}
+                  className="ml-1 text-blue-600 hover:text-blue-800"
+                >
+                  ×
+                </button>
+              </span>
+            )}
+            <span className="text-blue-700">
+              ({pagination.total} result{pagination.total !== 1 ? 's' : ''}{' '}
+              found)
+            </span>
+            <button
+              onClick={clearFilters}
+              className="ml-2 text-blue-600 hover:text-blue-800 underline text-xs"
+            >
+              Clear all
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Filters */}
       <div
@@ -491,6 +556,18 @@ const EventManagementComponent = () => {
           className="w-full animate-fade-in"
           style={{ animationDelay: '0.1s' }}
         >
+          {/* Results Summary */}
+          <div className="mb-4 flex justify-between items-center text-sm text-gray-600">
+            <span>
+              Showing {pagination.from}-{pagination.to} of {pagination.total}{' '}
+              events
+            </span>
+            {(searchTerm || selectedStatus || startDate || endDate) && (
+              <span className="text-blue-600 font-medium">
+                Filtered results
+              </span>
+            )}
+          </div>
           {/* Mobile Card View for small screens */}
           <div className="block md:hidden space-y-4 mb-4">
             {Array.isArray(events) &&
