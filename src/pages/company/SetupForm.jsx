@@ -2,11 +2,30 @@ import React, { useState, useEffect } from 'react';
 import { CheckCircle, Mail, Phone, Shield, ArrowRight, ArrowLeft, Building } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import api from '../../api/axios';
-import { useNavigate } from 'react-router-dom';
 
 
 const MultiStepVerificationWithSetup = () => {
+
+
   const [currentStep, setCurrentStep] = useState(1);
+  const [completedSteps, setCompletedSteps] = useState(new Set());
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { companyId, jobFairId } = useParams();
+  const [companyData, setCompanyData] = useState(null);
+  const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
+  const [availableTracks, setAvailableTracks] = useState([]);
+  const [participationId, setParticipationId] = useState(null);
+  const [existingJobProfiles, setExistingJobProfiles] = useState([]);
+  const token = localStorage.getItem('token');
+  const [hasParticipated, setHasParticipated] = useState(false);
+  const [candidateSuccess, setCandidateSuccess] = useState('');
+  const [candidateError, setCandidateError] = useState('');
+  const [jobFairData, setJobFairData] = useState(null);
+  const [stepLocked, setStepLocked] = useState(false);
+  const [initialStepLoaded, setInitialStepLoaded] = useState(false);
+  const [interviewSlots, setInterviewSlots] = useState([]);
   const [formData, setFormData] = useState({
   specialRequirements: '',
   needBranding: false,
@@ -17,40 +36,125 @@ const MultiStepVerificationWithSetup = () => {
   location: '',
   positions_available: '',
   tracks: [],
-
-  
+});
+const [interviewSlot, setInterviewSlot] = useState({
+  slot_date: '',
+  start_time: '',
+  end_time: '',
+  duration_minutes: 30,
+  max_interviews_per_slot: 3,
+  is_break: false,
+  break_reason: null,
+  is_available: true,
 });
 
-  const navigate = useNavigate();
+const steps = [
+  { id: 1, title: 'Job Fair Participation', icon: Building, description: 'Complete company registration' },
+  { id: 2, title: 'Interview Slot Setup', icon: Shield, description: 'Add interview slots' }, 
+  { id: 3, title: 'Job Fair Profiles', icon: Mail, description: 'Add required job profiles' },
+];
 
-  const [completedSteps, setCompletedSteps] = useState(new Set());
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const { companyId, jobFairId } = useParams();
-  
-  const [companyData, setCompanyData] = useState(null);
-  const [successMsg, setSuccessMsg] = useState('');
-  const [errorMsg, setErrorMsg] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [availableTracks, setAvailableTracks] = useState([]);
-  
-  const [participationId, setParticipationId] = useState(null);
-  const [existingJobProfiles, setExistingJobProfiles] = useState([]);
-  
-  const token = localStorage.getItem('token');
+////////////////////////////////////////////////////////////////
 
+
+
+
+const formatDateForInput = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toISOString().split('T')[0]; 
+};
+
+const formatTimeForInput = (timeString) => {
+  if (!timeString) return '';
+  return timeString.split(':').slice(0, 2).join(':');
+};
+
+const getJobFairDateRange = () => {
+  if (!jobFairData) return { minDate: '', maxDate: '', minTime: '', maxTime: '' };
   
-  const [hasParticipated, setHasParticipated] = useState(false);
-  const [candidateSuccess, setCandidateSuccess] = useState('');
-  const [candidateError, setCandidateError] = useState('');
+  return {
+    minDate: formatDateForInput(jobFairData.start_date),
+    maxDate: formatDateForInput(jobFairData.end_date),
+    minTime: formatTimeForInput(jobFairData.start_time),
+    maxTime: formatTimeForInput(jobFairData.end_time)
+  };
+};
+
+const isTimeInRange = (selectedTime, selectedDate) => {
+  if (!jobFairData || !selectedTime || !selectedDate) return true;
   
+  const { minDate, maxDate, minTime, maxTime } = getJobFairDateRange();
+  
+  if (selectedDate === minDate && selectedTime < minTime) {
+    return false;
+  }
+  
+  if (selectedDate === maxDate && selectedTime > maxTime) {
+    return false;
+  }
+  
+  return true;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+
+  const setCurrentStepProtected = (newStep, force = false) => {
+  console.log(`Attempting to set step to: ${newStep}, current step: ${currentStep}, locked: ${stepLocked}, force: ${force}`);
+  
+  if (!force && stepLocked && newStep < currentStep) {
+    console.log(`Blocked step change from ${currentStep} to ${newStep} - step is locked`);
+    return;
+  }
+  
+  if (!force && initialStepLoaded && newStep < currentStep) {
+    console.log(`Blocked step regression from ${currentStep} to ${newStep}`);
+    return;
+  }
+  
+  console.log(`Setting step to: ${newStep}`);
+  setCurrentStep(newStep);
+};
+
+  const isStepComplete = (stepId) => completedSteps.has(stepId);
+
+  const isCurrentStepValid = () => {
+  switch (currentStep) {
+    case 1:
+      return companyData && Object.keys(companyData).length > 0;
+      
+    case 2:
+      return (
+        interviewSlot?.slot_date && 
+        interviewSlot?.start_time && 
+        interviewSlot?.end_time && 
+        interviewSlot?.duration_minutes > 0 && 
+        interviewSlot?.max_interviews_per_slot > 0
+        
+      );
+      
+    case 3:
+      return (
+        formData.title.trim() &&
+        formData.description.trim() &&
+        formData.positions_available &&
+        formData.tracks.length > 0
+      );
+      
+    default:
+      return false;
+  }
+};
+
+/////////////////////////////////////////////////////////////////////
+
 
 const fetchParticipationStatus = async () => {
   const storedJobFairId = localStorage.getItem('jobFairId') || jobFairId;
-  console.log('Stored Job Fair ID:', storedJobFairId);
 
   if (!storedJobFairId) {
-    console.log('Job fair ID not found');
     setErrorMsg('Job fair ID is missing');
     return false;
   }
@@ -61,32 +165,18 @@ const fetchParticipationStatus = async () => {
     if (response.status === 200) {
       const companies = response.data?.data?.result;
 
-      console.log('Companies from API:', companies);
-      console.log('Looking for companyId:', companyId);
-      console.log('Type of companyId:', typeof companyId);
-
       if (!Array.isArray(companies)) {
-        console.warn("Expected array of companies but got:", companies);
-        setCurrentStep(1);
         return false;
       }
 
-      const currentCompany = companies.find(company => {
-        console.log(`Comparing ${company.companyId} (${typeof company.companyId}) with ${companyId} (${typeof companyId})`);
-        return company.companyId == companyId;
-      });
-
-      console.log('Found company:', currentCompany);
+      const currentCompany = companies.find(company => company.companyId == companyId);
 
       if (!currentCompany) {
-        console.log("Company not found in job fair participants");
-        setCurrentStep(1);
         return false;
       }
 
       if (currentCompany.participationId) {
         setParticipationId(currentCompany.participationId);
-        console.log('Participation ID found:', currentCompany.participationId);
       } else {
         try {
           const participationResponse = await api.get(`/job-fairs/${storedJobFairId}/participations`);
@@ -95,7 +185,6 @@ const fetchParticipationStatus = async () => {
             const companyParticipation = participationData.find(p => p.company_id == companyId);
             if (companyParticipation) {
               setParticipationId(companyParticipation.id);
-              console.log('Participation ID found from participations list:', companyParticipation.id);
             }
           }
         } catch (err) {
@@ -103,37 +192,31 @@ const fetchParticipationStatus = async () => {
         }
       }
 
-      const status = currentCompany.status;
-      const validStatuses = ['approved', 'pending', 'rejected'];
-
-      if (status === 'approved') {
-        setCurrentStep(2);
-        return true;
-      } else if (validStatuses.includes(status)) {
-        console.log("Participation found but status is not approved:", status);
-        setCurrentStep(1);
-        return false;
-      } else {
-        console.warn("Unexpected status:", status);
-        setCurrentStep(1);
-        return false;
-      }
+      return currentCompany.status === 'approved';
     }
 
-    setCurrentStep(1);
     return false;
   } catch (error) {
-    if (error.response?.status === 404) {
-      setCurrentStep(1);
-      return false;
-    } else {
-      console.error("Unexpected error:", error.response?.data || error);
+    if (error.response?.status !== 404) {
+      console.error("Error checking participation:", error);
       setErrorMsg("Failed to check participation status");
-      return false;
     }
+    return false;
   }
 };
 
+const fetchExistingInterviewSlots = async () => {
+  if (!participationId) return;
+  
+  try {
+    const response = await api.get(`/job-fairs/${jobFairId}/participations/${participationId}/interview-slots`);
+    if (response.status === 200) {
+      setInterviewSlots(response.data?.data?.interview_slots || []);
+    }
+  } catch (error) {
+    console.error("Error fetching interview slots:", error);
+  }
+};
 
 const fetchExistingJobProfiles = async (participationId) => {
   if (!participationId) {
@@ -154,52 +237,118 @@ const fetchExistingJobProfiles = async (participationId) => {
   }
 };
 
-  
+//////////////////////////////////////////////////////////////////////////////
 
 
-  useEffect(() => {
-const fetchCompany = async () => {
-  try {
-    
-    const response = await api.get(`/companies/${companyId}`);
-    setCompanyData(response.data.data);
 
-    const participated = await fetchParticipationStatus();
-    setHasParticipated(participated);
 
-    if (participated) {
-      setCompletedSteps(new Set([1]));
-      setCurrentStep(2);
-    }
-  } catch (error) {
-    console.error("Error fetching company:", error);
-    setErrorMsg("Failed to load company data");
-  }
-};
+const addInterviewSlot = async () => {
+  const success = await submitInterviewSlot();
+  if (success) {
+    setInterviewSlots(prevSlots => [...prevSlots, interviewSlot]);
 
-const fetchTracks = async () => {
-  try {
-    const response = await api.get('/test/tracks?sort_order=desc');
-    const tracksData = response.data.data.tracks.map(track => ({
-      id: track.id,
-      name: track.name
-    }));
-    setAvailableTracks(tracksData);
-  } catch (error) {
-    console.error("Failed to load tracks", error);
+    setInterviewSlot({
+      slot_date: '',
+      start_time: '',
+      end_time: '',
+      duration_minutes: 30,
+      max_interviews_per_slot: 3,
+      is_break: false,
+      break_reason: null,
+      is_available: true,
+    });
+
+    setSuccessMsg('Interview slot added successfully!');
   }
 };
 
 
-    fetchCompany();
-    fetchTracks();
-  }, [companyId, jobFairId, token]);
+useEffect(() => {
+  const initializeComponent = async () => {
+    try {
+      const savedStep = localStorage.getItem('currentStep');
+      const savedStepNumber = savedStep ? Number(savedStep) : 1;
+      console.log('Loading saved step:', savedStepNumber);
+      
+      setCurrentStep(savedStepNumber);
+      setInitialStepLoaded(true);
+      
+      const companyResponse = await api.get(`/companies/${companyId}`);
+      setCompanyData(companyResponse.data.data);
 
-  useEffect(() => {
-    if (participationId) {
-      fetchExistingJobProfiles(participationId);
+      try {
+        const tracksResponse = await api.get('/test/tracks?sort_order=desc');
+        const tracksData = tracksResponse.data.data.tracks.map(track => ({
+          id: track.id,
+          name: track.name
+        }));
+        setAvailableTracks(tracksData);
+      } catch (error) {
+        console.error("Failed to load tracks", error);
+      }
+
+      const participated = await fetchParticipationStatus();
+      setHasParticipated(participated);
+
+      if (participated) {
+        setCompletedSteps(new Set([1]));
+        
+        if (savedStepNumber === 1) {
+          console.log('Participated user on step 1, moving to step 2');
+          setCurrentStepProtected(2, true); 
+        }
+      } else {
+        if (savedStepNumber > 1) {
+          console.log('Non-participated user, forcing back to step 1');
+          setCurrentStepProtected(1, true); 
+        }
+      }
+
+      try {
+        const jobFairResponse = await api.get(`/job-fairs/${jobFairId}`);
+        if (jobFairResponse.status === 200) {
+          setJobFairData(jobFairResponse.data.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch job fair data:', error);
+        setErrorMsg('Failed to load job fair info.');
+      }
+
+      setTimeout(() => {
+        setStepLocked(true);
+        console.log('Step is now locked');
+      }, 1000);
+
+    } catch (error) {
+      console.error("Error during initialization:", error);
+      setErrorMsg("Failed to load component data");
     }
-  }, [participationId, jobFairId]);
+  };
+
+  initializeComponent();
+}, [companyId, jobFairId, token]);
+
+useEffect(() => {
+  if (initialStepLoaded) {
+    console.log('Saving step to localStorage:', currentStep);
+    localStorage.setItem('currentStep', currentStep);
+  }
+}, [currentStep, initialStepLoaded]);
+
+
+useEffect(() => {
+  if (initialStepLoaded) {
+    console.log('Saving step to localStorage:', currentStep);
+    localStorage.setItem('currentStep', currentStep);
+  }
+}, [currentStep, initialStepLoaded]);
+
+useEffect(() => {
+  if (participationId && initialStepLoaded) {
+    fetchExistingJobProfiles(participationId);
+  }
+}, [participationId, initialStepLoaded, jobFairId]);
+
 
 const handleSubmit = async (e) => {
   if (e) e.preventDefault();
@@ -288,14 +437,56 @@ const handleSubmit = async (e) => {
     );
   }
 
-  const steps = [
-    { id: 1, title: 'Job Fair Participation', icon: Building, description: 'Complete company registration' },
-    { id: 2, title: 'Job Fair Profiles', icon: Mail, description: 'Add required job profiles' },
-  ];
+
+
+
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
+
+  const submitInterviewSlot = async () => {
+  if (!participationId) {
+    setErrorMsg('Participation ID not found. Please complete participation first.');
+    return false;
+  }
+
+  setIsLoading(true);
+  setErrorMsg('');
+  setSuccessMsg('');
+
+  try {
+    const payload = {
+      slot_date: interviewSlot.slot_date,
+      start_time: interviewSlot.start_time,
+      end_time: interviewSlot.end_time,
+      duration_minutes: Number(interviewSlot.duration_minutes),
+      max_interviews_per_slot: Number(interviewSlot.max_interviews_per_slot),
+      is_break: interviewSlot.is_break,
+      break_reason: interviewSlot.is_break ? interviewSlot.break_reason : null,
+      is_available: interviewSlot.is_available,
+    };
+
+    const response = await api.post(
+      `/job-fairs/${jobFairId}/participations/${participationId}/interview-slots`,
+      payload
+    );
+
+    if (response.status === 200 || response.status === 201) {
+      setSuccessMsg('Interview slot added successfully!');
+      return true;
+    } else {
+      setErrorMsg('Failed to add interview slot.');
+      return false;
+    }
+  } catch (error) {
+    console.error('Interview slot submission error:', error);
+    setErrorMsg(error.response?.data?.message || 'An unexpected error occurred.');
+    return false;
+  } finally {
+    setIsLoading(false);
+  }
+};
 
 
 
@@ -374,6 +565,49 @@ const handleJobProfileSubmit = async () => {
 
 
 const handleNext = async () => {
+  const submitInterviewSlot = async () => {
+    if (!participationId) {
+      setErrorMsg('Participation ID not found. Please complete participation first.');
+      return false;
+    }
+
+    setIsLoading(true);
+    setErrorMsg('');
+    setSuccessMsg('');
+
+    try {
+      const payload = {
+        slot_date: interviewSlot.slot_date,
+        start_time: interviewSlot.start_time,
+        end_time: interviewSlot.end_time,
+        duration_minutes: Number(interviewSlot.duration_minutes),
+        max_interviews_per_slot: Number(interviewSlot.max_interviews_per_slot),
+        is_break: interviewSlot.is_break,
+        break_reason: interviewSlot.is_break ? interviewSlot.break_reason : null,
+        is_available: interviewSlot.is_available,
+      };
+
+      const response = await api.post(
+        `/job-fairs/${jobFairId}/participations/${participationId}/interview-slots`,
+        payload
+      );
+
+      if (response.status === 200 || response.status === 201) {
+        setSuccessMsg('Interview slot added successfully!');
+        return true;
+      } else {
+        setErrorMsg('Failed to add interview slot.');
+        return false;
+      }
+    } catch (error) {
+      console.error('Interview slot submission error:', error);
+      setErrorMsg(error.response?.data?.message || 'An unexpected error occurred.');
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   if (currentStep === 1) {
     if (!hasParticipated) {
       setIsLoading(true);
@@ -382,14 +616,14 @@ const handleNext = async () => {
 
       try {
         const participationPayload = {
-  company_id: parseInt(companyId),
-  special_requirements: formData.specialRequirements || null,
-  need_branding: formData.needBranding || false,
-  company: {
-    name: companyData.name,
-    contact_email: companyData.contact_email || companyData.email
-  }
-};
+          company_id: parseInt(companyId),
+          special_requirements: formData.specialRequirements || null,
+          need_branding: formData.needBranding || false,
+          company: {
+            name: companyData.name,
+            contact_email: companyData.contact_email || companyData.email
+          }
+        };
 
         console.log('Sending participation payload:', participationPayload);
         console.log('To endpoint:', `/job-fairs/${jobFairId}/participate`);
@@ -417,7 +651,7 @@ const handleNext = async () => {
       } catch (error) {
         console.error("Participation submission error:", error);
         console.error("Response data:", error.response?.data);
-        
+
         if (error.response?.status === 422) {
           const errors = error.response.data?.errors;
           if (errors) {
@@ -443,6 +677,13 @@ const handleNext = async () => {
       }
     }
   } else if (currentStep === 2) {
+    const success = await submitInterviewSlot();
+    if (success) {
+      setCurrentStep(3); 
+      setErrorMsg('');
+      setSuccessMsg('');
+    }
+  } else if (currentStep === 3) {
     setCandidateError('');
     setCandidateSuccess('');
 
@@ -500,7 +741,7 @@ const handleNext = async () => {
     } catch (error) {
       console.error("Error adding job profile:", error);
       console.error("Response data:", error.response?.data);
-      
+
       if (error.response?.status === 422) {
         const errors = error.response.data?.errors;
         if (errors) {
@@ -523,26 +764,12 @@ const handleNext = async () => {
 
 
 
-  const isStepComplete = (stepId) => completedSteps.has(stepId);
+
   
- const isCurrentStepValid = () => {
 
-    switch (currentStep) {
-      case 1:
-        return companyData && Object.keys(companyData).length > 0;
-      case 2:
-        return formData.title.trim() && 
-               formData.description.trim() && 
-               formData.positions_available && 
-               formData.tracks.length > 0;
-      default:
-        return false;
-    }
-  };
 
-  const logoURL = companyData.logo_path?.startsWith('http')
-    ? companyData.logo_path
-    : `http://127.0.0.1:8000/storage/${companyData.logo_path}`;
+
+
 
   const renderStepContent = () => {
     switch (currentStep) {
@@ -764,8 +991,219 @@ const handleNext = async () => {
             </div>
           </form>
         );
+        case 2:
+  const dateRange = getJobFairDateRange();
+  
+  return (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <Shield className="w-16 h-16 text-blue-600 mx-auto mb-4" />
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">Interview Slot Setup</h2>
+        <p className="text-gray-600">Configure your interview time slots for the job fair</p>
+        {jobFairData && (
+          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <strong>Job Fair Schedule:</strong> {formatDateForInput(jobFairData.start_date)} to {formatDateForInput(jobFairData.end_date)}
+              <br />
+              <strong>Time:</strong> {formatTimeForInput(jobFairData.start_time)} - {formatTimeForInput(jobFairData.end_time)}
+            </p>
+          </div>
+        )}
+      </div>
 
-      case 2:
+      {/* Show existing interview slots */}
+      {interviewSlots.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">Added Interview Slots</h3>
+          <div className="space-y-2">
+            {interviewSlots.map((slot, index) => (
+              <div key={index} className="p-3 bg-gray-50 rounded-lg border">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                  <div><strong>Date:</strong> {slot.slot_date}</div>
+                  <div><strong>Time:</strong> {slot.start_time} - {slot.end_time}</div>
+                  <div><strong>Duration:</strong> {slot.duration_minutes} min</div>
+                  <div><strong>Max Interviews:</strong> {slot.max_interviews_per_slot}</div>
+                </div>
+                {slot.is_break && (
+                  <div className="text-sm text-orange-600 mt-1">
+                    <strong>Break:</strong> {slot.break_reason}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <form onSubmit={async e => {
+        e.preventDefault();
+        await addInterviewSlot();
+      }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Slot Date *
+            </label>
+            <input
+              type="date"
+              value={interviewSlot.slot_date}
+              min={dateRange.minDate}
+              max={dateRange.maxDate}
+              onChange={(e) => setInterviewSlot({...interviewSlot, slot_date: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+            {dateRange.minDate && dateRange.maxDate && (
+              <p className="text-xs text-gray-500 mt-1">
+                Available: {dateRange.minDate} to {dateRange.maxDate}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Duration (minutes) *
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={interviewSlot.duration_minutes}
+              onChange={(e) => setInterviewSlot({...interviewSlot, duration_minutes: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Start Time *
+            </label>
+            <input
+              type="time"
+              value={interviewSlot.start_time}
+              min={interviewSlot.slot_date === dateRange.minDate ? dateRange.minTime : undefined}
+              max={interviewSlot.slot_date === dateRange.maxDate ? dateRange.maxTime : undefined}
+              onChange={(e) => setInterviewSlot({...interviewSlot, start_time: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+            {!isTimeInRange(interviewSlot.start_time, interviewSlot.slot_date) && (
+              <p className="text-xs text-red-500 mt-1">
+                Time must be within job fair hours
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              End Time *
+            </label>
+            <input
+              type="time"
+              value={interviewSlot.end_time}
+              min={interviewSlot.start_time}
+              max={interviewSlot.slot_date === dateRange.maxDate ? dateRange.maxTime : undefined}
+              onChange={(e) => setInterviewSlot({...interviewSlot, end_time: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+            {!isTimeInRange(interviewSlot.end_time, interviewSlot.slot_date) && (
+              <p className="text-xs text-red-500 mt-1">
+                Time must be within job fair hours
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Max Interviews Per Slot *
+            </label>
+            <input
+              type="number"
+              min="1"
+              value={interviewSlot.max_interviews_per_slot}
+              onChange={(e) => setInterviewSlot({...interviewSlot, max_interviews_per_slot: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+          </div>
+
+          <div className="flex items-center space-x-4">
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={interviewSlot.is_break}
+                onChange={(e) => setInterviewSlot({...interviewSlot, is_break: e.target.checked, break_reason: e.target.checked ? interviewSlot.break_reason : null})}
+                className="mr-2"
+              />
+              <span className="text-sm text-gray-700">Is Break Slot</span>
+            </label>
+            
+            <label className="flex items-center">
+              <input
+                type="checkbox"
+                checked={interviewSlot.is_available}
+                onChange={(e) => setInterviewSlot({...interviewSlot, is_available: e.target.checked})}
+                className="mr-2"
+              />
+              <span className="text-sm text-gray-700">Is Available</span>
+            </label>
+          </div>
+        </div>
+
+        {interviewSlot.is_break && (
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Break Reason *
+            </label>
+            <input
+              type="text"
+              value={interviewSlot.break_reason || ''}
+              onChange={(e) => setInterviewSlot({...interviewSlot, break_reason: e.target.value})}
+              placeholder="e.g., Lunch break, Meeting, etc."
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required={interviewSlot.is_break}
+            />
+          </div>
+        )}
+
+        <div className="flex gap-4 mt-6">
+          <button 
+            type="submit" 
+            disabled={isLoading || !isCurrentStepValid()}
+            className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+          >
+            {isLoading ? 'Adding Slot...' : 'Add Interview Slot'}
+          </button>
+          
+          {interviewSlots.length > 0 && (
+            <button
+              type="button"
+              onClick={() => setCurrentStep(3)}
+              className="px-6 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+            >
+              Continue to Job Profiles
+            </button>
+          )}
+        </div>
+      </form>
+
+      {successMsg && (
+        <div className="p-4 bg-green-50 border border-green-200 rounded-md">
+          <p className="text-green-800">{successMsg}</p>
+        </div>
+      )}
+
+      {errorMsg && (
+        <div className="p-4 bg-red-50 border border-red-200 rounded-md">
+          <p className="text-red-800">{errorMsg}</p>
+        </div>
+      )}
+    </div>
+  );
+
+
+      case 3:
         return (
           <div className="space-y-6 max-w-xl mx-auto">
             <h2 className="text-2xl font-bold text-slate-800 mb-4 text-center">Add Candidate Job Profile</h2>
@@ -991,32 +1429,25 @@ const handleNext = async () => {
 
           {/* Navigation Buttons */}
           <div className="flex justify-between items-center mt-8 pt-6 border-t">
-            <button
-              onClick={() => setCurrentStep(Math.max(1, currentStep - 1))}
-              disabled={currentStep === 1}
-              className="flex items-center px-4 py-2 text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Previous
-            </button>
-
-            <button
-              onClick={handleNext}
-              disabled={!isCurrentStepValid() || isSubmitting || isLoading}
-              className="flex items-center px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting || isLoading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                  {currentStep === 1 ? 'Submitting...' : 'Saving...'}
-                </>
-              ) : (
-                <>
-                  {currentStep === steps.length ? 'Done' : 'Next'}
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </>
-              )}
-            </button>
+            {currentStep !== 2 && (
+              <button
+                onClick={handleNext}
+                disabled={!isCurrentStepValid() || isSubmitting || isLoading}
+                className="flex items-center px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isSubmitting || isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    Next
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </>
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>
