@@ -26,6 +26,8 @@ const MultiStepVerificationWithSetup = () => {
   const [stepLocked, setStepLocked] = useState(false);
   const [initialStepLoaded, setInitialStepLoaded] = useState(false);
   const [interviewSlots, setInterviewSlots] = useState([]);
+
+
   const [formData, setFormData] = useState({
   specialRequirements: '',
   needBranding: false,
@@ -36,6 +38,8 @@ const MultiStepVerificationWithSetup = () => {
   location: '',
   positions_available: '',
   tracks: [],
+
+  
 });
 const [interviewSlot, setInterviewSlot] = useState({
   slot_date: '',
@@ -48,56 +52,12 @@ const [interviewSlot, setInterviewSlot] = useState({
   is_available: true,
 });
 
+
 const steps = [
   { id: 1, title: 'Job Fair Participation', icon: Building, description: 'Complete company registration' },
   { id: 2, title: 'Interview Slot Setup', icon: Shield, description: 'Add interview slots' }, 
   { id: 3, title: 'Job Fair Profiles', icon: Mail, description: 'Add required job profiles' },
 ];
-
-////////////////////////////////////////////////////////////////
-
-
-
-
-const formatDateForInput = (dateString) => {
-  if (!dateString) return '';
-  const date = new Date(dateString);
-  return date.toISOString().split('T')[0]; 
-};
-
-const formatTimeForInput = (timeString) => {
-  if (!timeString) return '';
-  return timeString.split(':').slice(0, 2).join(':');
-};
-
-const getJobFairDateRange = () => {
-  if (!jobFairData) return { minDate: '', maxDate: '', minTime: '', maxTime: '' };
-  
-  return {
-    minDate: formatDateForInput(jobFairData.start_date),
-    maxDate: formatDateForInput(jobFairData.end_date),
-    minTime: formatTimeForInput(jobFairData.start_time),
-    maxTime: formatTimeForInput(jobFairData.end_time)
-  };
-};
-
-const isTimeInRange = (selectedTime, selectedDate) => {
-  if (!jobFairData || !selectedTime || !selectedDate) return true;
-  
-  const { minDate, maxDate, minTime, maxTime } = getJobFairDateRange();
-  
-  if (selectedDate === minDate && selectedTime < minTime) {
-    return false;
-  }
-  
-  if (selectedDate === maxDate && selectedTime > maxTime) {
-    return false;
-  }
-  
-  return true;
-};
-
-////////////////////////////////////////////////////////////////////////////////
 
 
 
@@ -117,39 +77,6 @@ const isTimeInRange = (selectedTime, selectedDate) => {
   console.log(`Setting step to: ${newStep}`);
   setCurrentStep(newStep);
 };
-
-  const isStepComplete = (stepId) => completedSteps.has(stepId);
-
-  const isCurrentStepValid = () => {
-  switch (currentStep) {
-    case 1:
-      return companyData && Object.keys(companyData).length > 0;
-      
-    case 2:
-      return (
-        interviewSlot?.slot_date && 
-        interviewSlot?.start_time && 
-        interviewSlot?.end_time && 
-        interviewSlot?.duration_minutes > 0 && 
-        interviewSlot?.max_interviews_per_slot > 0
-        
-      );
-      
-    case 3:
-      return (
-        formData.title.trim() &&
-        formData.description.trim() &&
-        formData.positions_available &&
-        formData.tracks.length > 0
-      );
-      
-    default:
-      return false;
-  }
-};
-
-/////////////////////////////////////////////////////////////////////
-
 
 const fetchParticipationStatus = async () => {
   const storedJobFairId = localStorage.getItem('jobFairId') || jobFairId;
@@ -205,6 +132,66 @@ const fetchParticipationStatus = async () => {
   }
 };
 
+
+const formatDateForInput = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return date.toISOString().split('T')[0]; 
+};
+
+const formatTimeForInput = (timeString) => {
+  if (!timeString) return '';
+  return timeString.split(':').slice(0, 2).join(':');
+};
+
+const getJobFairDateRange = () => {
+  if (!jobFairData) return { minDate: '', maxDate: '', minTime: '', maxTime: '' };
+  
+  return {
+    minDate: formatDateForInput(jobFairData.start_date),
+    maxDate: formatDateForInput(jobFairData.end_date),
+    minTime: formatTimeForInput(jobFairData.start_time),
+    maxTime: formatTimeForInput(jobFairData.end_time)
+  };
+};
+
+const isTimeInRange = (selectedTime, selectedDate) => {
+  if (!jobFairData || !selectedTime || !selectedDate) return true;
+  
+  const { minDate, maxDate, minTime, maxTime } = getJobFairDateRange();
+  
+  if (selectedDate === minDate && selectedTime < minTime) {
+    return false;
+  }
+  
+  if (selectedDate === maxDate && selectedTime > maxTime) {
+    return false;
+  }
+  
+  return true;
+};
+
+const addInterviewSlot = async () => {
+  const success = await submitInterviewSlot();
+  if (success) {
+    setInterviewSlots(prevSlots => [...prevSlots, interviewSlot]);
+
+    setInterviewSlot({
+      slot_date: '',
+      start_time: '',
+      end_time: '',
+      duration_minutes: 30,
+      max_interviews_per_slot: 3,
+      is_break: false,
+      break_reason: null,
+      is_available: true,
+    });
+
+    setSuccessMsg('Interview slot added successfully!');
+  }
+};
+
+
 const fetchExistingInterviewSlots = async () => {
   if (!participationId) return;
   
@@ -237,30 +224,7 @@ const fetchExistingJobProfiles = async (participationId) => {
   }
 };
 
-//////////////////////////////////////////////////////////////////////////////
-
-
-
-
-const addInterviewSlot = async () => {
-  const success = await submitInterviewSlot();
-  if (success) {
-    setInterviewSlots(prevSlots => [...prevSlots, interviewSlot]);
-
-    setInterviewSlot({
-      slot_date: '',
-      start_time: '',
-      end_time: '',
-      duration_minutes: 30,
-      max_interviews_per_slot: 3,
-      is_break: false,
-      break_reason: null,
-      is_available: true,
-    });
-
-    setSuccessMsg('Interview slot added successfully!');
-  }
-};
+  
 
 
 useEffect(() => {
@@ -290,19 +254,22 @@ useEffect(() => {
       const participated = await fetchParticipationStatus();
       setHasParticipated(participated);
 
-      if (participated) {
-        setCompletedSteps(new Set([1]));
-        
-        if (savedStepNumber === 1) {
-          console.log('Participated user on step 1, moving to step 2');
-          setCurrentStepProtected(2, true); 
-        }
-      } else {
-        if (savedStepNumber > 1) {
-          console.log('Non-participated user, forcing back to step 1');
-          setCurrentStepProtected(1, true); 
-        }
-      }
+if (participated) {
+  setHasParticipated(true);
+  setCompletedSteps(prev => new Set([...prev, 1]));
+
+  if (savedStepNumber === 1) {
+    console.log('Participated user on step 1, moving to step 2');
+    setCurrentStepProtected(2, true); 
+  } else {
+    console.log(`Participated user, staying at saved step: ${savedStepNumber}`);
+    setCurrentStepProtected(savedStepNumber, true);
+  }
+} else {
+  console.log('Non-participated user, forcing back to step 1');
+  setCurrentStepProtected(1, true);
+}
+
 
       try {
         const jobFairResponse = await api.get(`/job-fairs/${jobFairId}`);
@@ -765,11 +732,40 @@ const handleNext = async () => {
 
 
 
+  const isStepComplete = (stepId) => completedSteps.has(stepId);
   
+const isCurrentStepValid = () => {
+  switch (currentStep) {
+    case 1:
+      return companyData && Object.keys(companyData).length > 0;
+      
+    case 2:
+      return (
+        interviewSlot?.slot_date && 
+        interviewSlot?.start_time && 
+        interviewSlot?.end_time && 
+        interviewSlot?.duration_minutes > 0 && 
+        interviewSlot?.max_interviews_per_slot > 0
+        
+      );
+      
+    case 3:
+      return (
+        formData.title.trim() &&
+        formData.description.trim() &&
+        formData.positions_available &&
+        formData.tracks.length > 0
+      );
+      
+    default:
+      return false;
+  }
+};
 
 
-
-
+  const logoURL = companyData.logo_path?.startsWith('http')
+    ? companyData.logo_path
+    : `http://127.0.0.1:8000/storage/${companyData.logo_path}`;
 
   const renderStepContent = () => {
     switch (currentStep) {
