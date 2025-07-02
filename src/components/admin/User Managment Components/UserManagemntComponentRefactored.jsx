@@ -345,12 +345,12 @@ const UserManagementComponent = () => {
 
         {/* Track Filter */}
         <select
-          className="w-full sm:w-auto lg:w-32 xl:w-50 border border-[var(--gray-300)] rounded-md px-3 py-2 text-sm sm:text-base focus:outline-none focus:border-0 hover:shadow-md focus:border-[var(--primary-500)] transition-all duration-200 ease-out hover:border-[var(--gray-500)] focus:shadow-md"
+          className="w-full sm:w-auto lg:w-32 xl:w-52 border border-[var(--gray-300)] rounded-md px-3 py-2 text-sm sm:text-base focus:outline-none focus:border-0 hover:shadow-md focus:border-[var(--primary-500)] transition-all duration-200 ease-out hover:border-[var(--gray-500)] focus:shadow-md"
           value={selectedTrack}
           onChange={e => setSelectedTrack(e.target.value)}
           disabled={trackLoading}
         >
-          <option value="">{trackLoading ? 'Loading...' : 'All Tracks'}</option>
+          <option value="">All Tracks</option>
           {tracks.map(track => (
             <option key={track.id} value={track.id}>
               {track.name}
