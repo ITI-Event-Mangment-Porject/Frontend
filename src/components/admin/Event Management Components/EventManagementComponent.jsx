@@ -3,13 +3,12 @@ import {
   FaSearch,
   FaCalendarPlus,
   FaCalendar,
-  FaFilter,
   FaCalendarAlt,
 } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import Table from '../../common/Table.jsx';
 import Modal from '../../common/Modal.jsx';
 import Pagination from '../../common/Pagination.jsx';
-import LoadingSpinner from '../../common/LoadingSpinner.jsx';
 import TableSkeleton from '../../common/TableSkeleton.jsx';
 import EventForm from './EventForm.jsx';
 import { eventAPI } from '../../../services/api.js';
@@ -287,9 +286,24 @@ const EventManagementComponent = () => {
     ) {
       try {
         await eventAPI.delete(event.id);
+        toast.success('Event deleted successfully!');
         loadEvents();
       } catch (error) {
         console.error('Error deleting event:', error);
+
+        // Handle 409 conflict error (event related to session)
+        if (error.status === 409 && error.response?.data?.message) {
+          toast.error(error.response.data.message);
+        } else if (error.response?.data?.message) {
+          // Handle other API errors with message
+          toast.error(error.response.data.message);
+        } else if (error.message) {
+          // Handle general errors
+          toast.error(`Error deleting event: ${error.message}`);
+        } else {
+          // Fallback error message
+          toast.error('Failed to delete event. Please try again.');
+        }
       }
     }
   };
@@ -301,8 +315,6 @@ const EventManagementComponent = () => {
       description: event.description || '',
       start_date: event.start_date || '',
       end_date: event.end_date || '',
-      start_time: event.start_time || '',
-      end_time: event.end_time || '',
       location: event.location || '',
       capacity: event.capacity || '',
       status: event.status || 'draft',
@@ -532,16 +544,13 @@ const EventManagementComponent = () => {
                       {event.capacity || 'Unlimited'}
                     </div>
                     <div className="truncate">
-                      <span className="font-medium">Start:</span>{' '}
-                      {event.start_time
-                        ? new Date(event.start_time).toLocaleTimeString([], {
-                            hour: '2-digit',
-                            minute: '2-digit',
-                          })
+                      <span className="font-medium">Start Date:</span>{' '}
+                      {event.start_date
+                        ? new Date(event.start_date).toLocaleDateString()
                         : 'N/A'}
                     </div>
                     <div className="truncate text-right">
-                      <span className="font-medium">End:</span>{' '}
+                      <span className="font-medium">End Date:</span>{' '}
                       {event.end_date
                         ? new Date(event.end_date).toLocaleDateString()
                         : 'N/A'}

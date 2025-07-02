@@ -14,15 +14,12 @@ export const cleanEventData = eventData => {
     }
   });
 
-  // Handle dates and times
-  if (cleanedData.start_date && cleanedData.start_time) {
-    // Keep separate date and time fields as API expects them separately
-    // But clean them to ensure proper format
+  // Handle dates
+  if (cleanedData.start_date) {
     cleanedData.start_date = formatDateForAPI(cleanedData.start_date);
   }
 
-  if (cleanedData.end_date && cleanedData.end_time) {
-    // Keep separate date and time fields as API expects them separately
+  if (cleanedData.end_date) {
     cleanedData.end_date = formatDateForAPI(cleanedData.end_date);
   }
 
@@ -91,8 +88,6 @@ export const getInitialEventState = () => {
     description: '',
     start_date: '',
     end_date: '',
-    start_time: '',
-    end_time: '',
     location: '',
     capacity: '',
     status: 'draft',

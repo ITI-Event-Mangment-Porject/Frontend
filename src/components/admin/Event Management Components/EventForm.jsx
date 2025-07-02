@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import {
   FaImage,
   FaCalendarAlt,
-  FaClock,
   FaMapMarkerAlt,
   FaInfoCircle,
   FaUpload,
@@ -43,6 +42,7 @@ const EventForm = ({
             selector: 'input[type="date"]:first-of-type',
           },
           { pattern: 'end_date:', selector: 'input[type="date"]:last-of-type' },
+
           { pattern: 'location:', selector: 'input[name="location"]' },
           { pattern: 'capacity:', selector: 'input[name="capacity"]' },
           { pattern: 'visibility_type:', selector: 'select' },
@@ -143,10 +143,6 @@ const EventForm = ({
 
     if (!event.location || event.location.trim() === '') {
       newErrors.location = 'Location is required';
-    }
-
-    if (event.capacity && (isNaN(event.capacity) || event.capacity < 0)) {
-      newErrors.capacity = 'Capacity must be a positive number';
     }
 
     setErrors(newErrors);
@@ -284,6 +280,8 @@ const EventForm = ({
         visibility_type: event.visibility_type || 'role_based',
       };
 
+      console.log('Event data for submission:', eventData);
+
       // Properly handle visibility_config
       if (
         !eventData.visibility_config &&
@@ -337,23 +335,6 @@ const EventForm = ({
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return `${year}-${month}-${day}`;
-  };
-
-  const formatTimeForInput = timeString => {
-    if (!timeString) return '';
-
-    // If it's already in HH:MM format, return as is
-    if (timeString.match(/^\d{2}:\d{2}(:\d{2})?$/)) {
-      return timeString.substring(0, 5);
-    }
-
-    // Otherwise treat as date
-    const time = new Date(timeString);
-    if (isNaN(time.getTime())) return '';
-
-    const hours = String(time.getHours()).padStart(2, '0');
-    const minutes = String(time.getMinutes()).padStart(2, '0');
-    return `${hours}:${minutes}`;
   };
 
   // Parse API error message if it's in a specific format (field: message)
@@ -441,158 +422,96 @@ const EventForm = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Date & Time */}
+            {/* Start Date */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Date & Time <span className="text-red-500">*</span>
+                Start Date <span className="text-red-500">*</span>
               </label>
-              <div className="space-y-4">
-                <div className="relative">
-                  <input
-                    type="date"
-                    name="start_date"
-                    value={formatDateForInput(event.start_date)}
-                    onChange={e =>
-                      setEvent({ ...event, start_date: e.target.value })
-                    }
-                    className={`w-full p-2 border rounded-md focus:border-0 focus:border-blue-500 ${
-                      errors.start_date ||
-                      getFieldErrorFromApiError('start_date')
-                        ? 'border-red-500 bg-red-50'
-                        : 'border-gray-300'
-                    }`}
-                  />
-                  {(errors.start_date ||
-                    getFieldErrorFromApiError('start_date')) && (
-                    <p className="mt-1 text-sm text-red-600">
-                      {errors.start_date ||
-                        getFieldErrorFromApiError('start_date')}
-                    </p>
-                  )}
-                </div>
-
-                <div className="relative">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    End Date <span className="text-red-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    name="end_date"
-                    value={formatDateForInput(event.end_date)}
-                    onChange={e =>
-                      setEvent({ ...event, end_date: e.target.value })
-                    }
-                    className={`w-full p-2 border rounded-md focus:border-0 focus:border-blue-500 ${
-                      errors.end_date || getFieldErrorFromApiError('end_date')
-                        ? 'border-red-500 bg-red-50'
-                        : 'border-gray-300'
-                    }`}
-                  />
-                  {(errors.end_date ||
-                    getFieldErrorFromApiError('end_date')) && (
-                    <div className="mt-1 text-sm text-red-600">
-                      <p className="font-medium">
-                        {errors.end_date ||
-                          getFieldErrorFromApiError('end_date')}
-                      </p>
-                      {error && error.includes('"end_date"') && (
-                        <p className="text-xs mt-1 italic">
-                          {'{ "end_date": "End date is required" }'}
-                        </p>
-                      )}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex items-center space-x-3">
-                  <div className="relative flex-1">
-                    <input
-                      type="time"
-                      value={formatTimeForInput(event.start_time)}
-                      onChange={e =>
-                        setEvent({ ...event, start_time: e.target.value })
-                      }
-                      className="w-full p-2 border border-gray-300 rounded-md focus:border-0 focus:border-blue-500"
-                    />
-                  </div>
-                  <span className="text-gray-500">to</span>
-                  <div className="relative flex-1">
-                    <input
-                      type="time"
-                      value={formatTimeForInput(event.end_time)}
-                      onChange={e =>
-                        setEvent({ ...event, end_time: e.target.value })
-                      }
-                      className="w-full p-2 border border-gray-300 rounded-md focus:border-0 focus:border-blue-500"
-                    />
-                  </div>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <div className="flex items-center h-5">
-                    <input
-                      id="public-visibility"
-                      type="checkbox"
-                      checked={event.visibility_type === 'all'}
-                      onChange={e => {
-                        const visibilityType = e.target.checked
-                          ? 'all'
-                          : 'role_based';
-                        let visibilityConfig = null;
-
-                        // Set default visibility config if role_based
-                        if (visibilityType === 'role_based') {
-                          visibilityConfig = JSON.stringify({
-                            roles: ['student', 'alumni'],
-                          });
-                        }
-
-                        setEvent({
-                          ...event,
-                          visibility_type: visibilityType,
-                          visibility_config: visibilityConfig,
-                        });
-                      }}
-                      className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:border-0"
-                    />
-                  </div>
-                  <label
-                    htmlFor="public-visibility"
-                    className="text-sm text-gray-700"
-                  >
-                    Public Visibility
-                  </label>
-                </div>
+              <div className="relative">
+                <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" />
+                <input
+                  type="date"
+                  name="start_date"
+                  value={formatDateForInput(event.start_date)}
+                  onChange={e =>
+                    setEvent({ ...event, start_date: e.target.value })
+                  }
+                  className={`w-full pl-10 pr-4 py-2 border rounded-md focus:border-0 focus:border-blue-500 ${
+                    errors.start_date || getFieldErrorFromApiError('start_date')
+                      ? 'border-red-500 bg-red-50'
+                      : 'border-gray-300'
+                  }`}
+                />
               </div>
-            </div>
-
-            {/* Description */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Description <span className="text-red-500">*</span>
-              </label>
-              <textarea
-                name="description"
-                value={event.description || ''}
-                onChange={e =>
-                  setEvent({ ...event, description: e.target.value })
-                }
-                rows="4"
-                className={`w-full p-2 border rounded-md focus:border-0 ${
-                  errors.description || getFieldErrorFromApiError('description')
-                    ? 'border-red-500 bg-red-50'
-                    : 'border-gray-300'
-                }`}
-                placeholder="Provide a detailed description of the event."
-              />
-              {(errors.description ||
-                getFieldErrorFromApiError('description')) && (
+              {(errors.start_date ||
+                getFieldErrorFromApiError('start_date')) && (
                 <p className="mt-1 text-sm text-red-600">
-                  {errors.description ||
-                    getFieldErrorFromApiError('description')}
+                  {errors.start_date || getFieldErrorFromApiError('start_date')}
                 </p>
               )}
             </div>
+
+            {/* End Date */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                End Date <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <FaCalendarAlt className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 z-10" />
+                <input
+                  type="date"
+                  name="end_date"
+                  value={formatDateForInput(event.end_date)}
+                  onChange={e =>
+                    setEvent({ ...event, end_date: e.target.value })
+                  }
+                  className={`w-full pl-10 pr-4 py-2 border rounded-md focus:border-0 focus:border-blue-500 ${
+                    errors.end_date || getFieldErrorFromApiError('end_date')
+                      ? 'border-red-500 bg-red-50'
+                      : 'border-gray-300'
+                  }`}
+                />
+              </div>
+              {(errors.end_date || getFieldErrorFromApiError('end_date')) && (
+                <div className="mt-1 text-sm text-red-600">
+                  <p className="font-medium">
+                    {errors.end_date || getFieldErrorFromApiError('end_date')}
+                  </p>
+                  {error && error.includes('"end_date"') && (
+                    <p className="text-xs mt-1 italic">
+                      {'{ "end_date": "End date is required" }'}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Description */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Description <span className="text-red-500">*</span>
+            </label>
+            <textarea
+              name="description"
+              value={event.description || ''}
+              onChange={e =>
+                setEvent({ ...event, description: e.target.value })
+              }
+              rows="4"
+              className={`w-full p-2 border rounded-md focus:border-0 ${
+                errors.description || getFieldErrorFromApiError('description')
+                  ? 'border-red-500 bg-red-50'
+                  : 'border-gray-300'
+              }`}
+              placeholder="Provide a detailed description of the event."
+            />
+            {(errors.description ||
+              getFieldErrorFromApiError('description')) && (
+              <p className="mt-1 text-sm text-red-600">
+                {errors.description || getFieldErrorFromApiError('description')}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -651,6 +570,52 @@ const EventForm = ({
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Visibility Settings */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3">
+              Visibility Settings
+            </label>
+            <div className="flex items-center space-x-2">
+              <div className="flex items-center h-5">
+                <input
+                  id="public-visibility"
+                  type="checkbox"
+                  checked={event.visibility_type === 'all'}
+                  onChange={e => {
+                    const visibilityType = e.target.checked
+                      ? 'all'
+                      : 'role_based';
+                    let visibilityConfig = null;
+
+                    // Set default visibility config if role_based
+                    if (visibilityType === 'role_based') {
+                      visibilityConfig = JSON.stringify({
+                        roles: ['student', 'alumni'],
+                      });
+                    }
+
+                    setEvent({
+                      ...event,
+                      visibility_type: visibilityType,
+                      visibility_config: visibilityConfig,
+                    });
+                  }}
+                  className="h-4 w-4 text-blue-600 border-gray-300 rounded focus:border-0"
+                />
+              </div>
+              <label
+                htmlFor="public-visibility"
+                className="text-sm text-gray-700"
+              >
+                Public Visibility
+              </label>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+              When enabled, this event will be visible to all users. When
+              disabled, it will only be visible to students and alumni.
+            </p>
           </div>
 
           {/* Location */}
