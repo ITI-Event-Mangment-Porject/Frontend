@@ -30,7 +30,7 @@ const AppRoutes = () => {
 
       <Route path="/admin/events" element={<ManageEvents />} />
       <Route path="/admin/notifications" element={<Notifications />} />
-      <Route path="/admin/job-fair" element={<JobFairSetup />} />
+     
 
       <Route
         path="/admin"
