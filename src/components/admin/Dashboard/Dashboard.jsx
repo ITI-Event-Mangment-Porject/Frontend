@@ -116,7 +116,8 @@ const Dashboard = () => {
           ...prev,
           totalUsers: (usersResult && usersResult.data?.pagination?.total) || 0,
           totalEvents: (eventsResult && eventsResult.data?.result?.total) || 0,
-          totalCompanies: (companiesResult && companiesResult.length) || 0,
+          totalCompanies:
+            (companiesResult && companiesResult.data?.total_count) || 0,
           queueTime: 15, // Static value for now
         }));
 
