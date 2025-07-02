@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FaSearch, FaUser } from 'react-icons/fa';
+import { toast } from 'react-toastify';
 import Table from '../../common/Table.jsx';
 import Modal from '../../common/Modal.jsx';
 import Pagination from '../../common/Pagination.jsx';
@@ -79,6 +80,11 @@ const UserManagementComponent = () => {
 
       const result = await submitUser(() => userAPI.create(userData));
       if (result.success) {
+        // Show success toast
+        toast.success(
+          `User "${newUser.first_name} ${newUser.last_name}" created successfully!`
+        );
+
         setIsAddModalOpen(false);
         setNewUser(getInitialUserState());
         setProfileImagePreview(null);
@@ -147,6 +153,11 @@ const UserManagementComponent = () => {
         userAPI.update(selectedUser.id, userData)
       );
       if (result.success) {
+        // Show success toast
+        toast.success(
+          `User "${editUser.first_name} ${editUser.last_name}" updated successfully!`
+        );
+
         setIsEditModalOpen(false);
         setSelectedUser(null);
         setEditUser(getInitialUserState());
@@ -202,12 +213,31 @@ const UserManagementComponent = () => {
   const confirmDeleteUser = async () => {
     try {
       await userAPI.delete(userToDelete.id);
+      toast.success(
+        `User "${userToDelete.first_name} ${userToDelete.last_name}" deleted successfully!`
+      );
       loadUsers();
       setIsDeleteModalOpen(false);
       setUserToDelete(null);
     } catch (error) {
       console.error('Error deleting user:', error);
+
+      // Handle different error types
+      if (error.status === 409 && error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else if (error.response?.data?.message) {
+        // Handle other API errors with message
+        toast.error(error.response.data.message);
+      } else if (error.message) {
+        // Handle general errors
+        toast.error(`Error deleting user: ${error.message}`);
+      } else {
+        // Fallback error message
+        toast.error('Failed to delete user. Please try again.');
+      }
+
       setIsDeleteModalOpen(false);
+      setUserToDelete(null);
     }
   };
 
@@ -216,6 +246,7 @@ const UserManagementComponent = () => {
     setIsDeleteModalOpen(false);
     setUserToDelete(null);
   };
+
   const handleEditClick = user => {
     setSelectedUser(user);
     setEditUser({
@@ -246,13 +277,24 @@ const UserManagementComponent = () => {
         await userAPI.update(selectedUser.id, {
           is_active: !selectedUser.is_active,
         });
+        const newStatus = !selectedUser.is_active ? 'activated' : 'deactivated';
+        toast.success(
+          `User "${selectedUser.first_name} ${selectedUser.last_name}" ${newStatus} successfully!`
+        );
       } else if (action === 'delete') {
         await userAPI.delete(selectedUser.id);
+        toast.success(
+          `User "${selectedUser.first_name} ${selectedUser.last_name}" deleted successfully!`
+        );
       }
       setIsActionModalOpen(false);
       setSelectedUser(null);
       loadUsers();
     } catch (error) {
+      console.error('User action error:', error);
+      toast.error(
+        `Failed to perform action: ${error.message || 'An error occurred'}`
+      );
       setActionError(error.message || 'An error occurred');
     }
   };

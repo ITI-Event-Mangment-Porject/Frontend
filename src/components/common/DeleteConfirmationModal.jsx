@@ -1,7 +1,7 @@
 import React from 'react';
 import { FaTrash, FaExclamationTriangle } from 'react-icons/fa';
 
-const DeleteConfirmationModal = ({ user, onConfirm, onCancel }) => {
+const DeleteConfirmationModal = ({ object, onConfirm, onCancel }) => {
   return (
     <div className="fixed inset-0 backdrop-blur-md z-50 flex items-center justify-center animate-[fadeIn_0.2s_ease-in-out]">
       <div className="bg-white rounded-lg p-6 w-auto shadow-xl transform transition-all animate-[modalIn_0.3s_ease-out]">
@@ -12,7 +12,9 @@ const DeleteConfirmationModal = ({ user, onConfirm, onCancel }) => {
         <p className="mb-6 text-gray-600">
           Are you sure you want to delete{' '}
           <span className="font-semibold">
-            {user.first_name} {user.last_name}
+            {object?.first_name
+              ? `${object.first_name} ${object.last_name}`
+              : object?.title || 'this item'}
           </span>
           ?
           <br />
@@ -26,7 +28,7 @@ const DeleteConfirmationModal = ({ user, onConfirm, onCancel }) => {
             Cancel
           </button>
           <button
-            onClick={() => onConfirm(user)}
+            onClick={() => onConfirm(object)}
             className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors flex items-center"
           >
             <FaTrash className="w-3 h-3 mr-2" />

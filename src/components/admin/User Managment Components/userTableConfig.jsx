@@ -117,8 +117,6 @@ export const getUserTableColumns = (handleEditClick, handleDeleteClick) => {
               <button
                 onClick={e => {
                   e.stopPropagation();
-                  // Instead of using useState to manage modal visibility,
-                  // we'll call the handler directly, which should display a confirmation
                   handleDeleteClick(user);
                 }}
                 className="px-3 py-1 text-sm rounded-md bg-[var(--primary-500)] text-white hover:bg-[var(--primary-600)] flex items-center"

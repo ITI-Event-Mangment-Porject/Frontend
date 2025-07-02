@@ -13,6 +13,7 @@ import TableSkeleton from '../../common/TableSkeleton.jsx';
 import EventForm from './EventForm.jsx';
 import { eventAPI } from '../../../services/api.js';
 import { useEventManagement } from '../../../hooks/useEventManagement.js';
+import DeleteConfirmationModal from '../../common/DeleteConfirmationModal.jsx';
 import { getEventTableColumns } from './eventTableConfig.jsx';
 import {
   cleanEventData,
@@ -45,6 +46,8 @@ const EventManagementComponent = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [eventToDelete, setEventToDelete] = useState(null);
 
   // Form states
   const [newEvent, setNewEvent] = useState(getInitialEventState());
@@ -135,6 +138,9 @@ const EventManagementComponent = () => {
         if (result && (result.success || (result.data && !result.message))) {
           console.log('Event created successfully:', result);
 
+          // Show success toast
+          toast.success(`Event "${eventToSubmit.title}" created successfully!`);
+
           // Reset state and close modal
           setIsAddModalOpen(false);
           setNewEvent(getInitialEventState());
@@ -207,6 +213,48 @@ const EventManagementComponent = () => {
     }
   };
 
+  const handleDeleteEvent = async event => {
+    // Show the delete confirmation modal
+    setEventToDelete(event);
+    setIsDeleteModalOpen(true);
+  };
+
+  // Function to actually delete the event after confirmation
+  const confirmDeleteEvent = async () => {
+    try {
+      await eventAPI.delete(eventToDelete.id);
+      toast.success(`Event "${eventToDelete.title}" deleted successfully!`);
+      loadEvents();
+      setIsDeleteModalOpen(false);
+      setEventToDelete(null);
+    } catch (error) {
+      console.error('Error deleting event:', error);
+
+      // Handle 409 conflict error (event related to session)
+      if (error.status === 409 && error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else if (error.response?.data?.message) {
+        // Handle other API errors with message
+        toast.error(error.response.data.message);
+      } else if (error.message) {
+        // Handle general errors
+        toast.error(`Error deleting event: ${error.message}`);
+      } else {
+        // Fallback error message
+        toast.error('Failed to delete event. Please try again.');
+      }
+
+      setIsDeleteModalOpen(false);
+      setEventToDelete(null);
+    }
+  };
+
+  // Function to cancel event deletion
+  const cancelDeleteEvent = () => {
+    setIsDeleteModalOpen(false);
+    setEventToDelete(null);
+  };
+
   const handleEditEvent = async e => {
     e.preventDefault();
     setAddError('');
@@ -233,6 +281,9 @@ const EventManagementComponent = () => {
         eventAPI.update(selectedEvent.id, eventData)
       );
       if (result.success) {
+        // Show success toast
+        toast.success(`Event "${editEvent.title}" updated successfully!`);
+
         setIsEditModalOpen(false);
         setSelectedEvent(null);
         setEditEvent(getInitialEventState());
@@ -278,36 +329,6 @@ const EventManagementComponent = () => {
     }
   };
 
-  const handleDeleteEvent = async event => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete the event "${event.title}"?`
-      )
-    ) {
-      try {
-        await eventAPI.delete(event.id);
-        toast.success('Event deleted successfully!');
-        loadEvents();
-      } catch (error) {
-        console.error('Error deleting event:', error);
-
-        // Handle 409 conflict error (event related to session)
-        if (error.status === 409 && error.response?.data?.message) {
-          toast.error(error.response.data.message);
-        } else if (error.response?.data?.message) {
-          // Handle other API errors with message
-          toast.error(error.response.data.message);
-        } else if (error.message) {
-          // Handle general errors
-          toast.error(`Error deleting event: ${error.message}`);
-        } else {
-          // Fallback error message
-          toast.error('Failed to delete event. Please try again.');
-        }
-      }
-    }
-  };
-
   const handleEditClick = event => {
     setSelectedEvent(event);
     setEditEvent({
@@ -331,13 +352,21 @@ const EventManagementComponent = () => {
         const newStatus =
           selectedEvent.status === 'ongoing' ? 'draft' : 'ongoing';
         await eventAPI.update(selectedEvent.id, { status: newStatus });
+        toast.success(
+          `Event "${selectedEvent.title}" status changed to ${newStatus} successfully!`
+        );
       } else if (action === 'delete') {
         await eventAPI.delete(selectedEvent.id);
+        toast.success(`Event "${selectedEvent.title}" deleted successfully!`);
       }
       setIsActionModalOpen(false);
       setSelectedEvent(null);
       loadEvents();
     } catch (error) {
+      console.error('Event action error:', error);
+      toast.error(
+        `Failed to perform action: ${error.message || 'An error occurred'}`
+      );
       setActionError(error.message || 'An error occurred');
     }
   };
@@ -767,6 +796,14 @@ const EventManagementComponent = () => {
           isEdit={true}
         />
       </Modal>
+      {/* Delete Confirmation Modal */}
+      {isDeleteModalOpen && eventToDelete && (
+        <DeleteConfirmationModal
+          object={eventToDelete}
+          onConfirm={confirmDeleteEvent}
+          onCancel={cancelDeleteEvent}
+        />
+      )}
     </div>
   );
 };
