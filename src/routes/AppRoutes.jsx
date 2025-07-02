@@ -13,7 +13,7 @@ const AppRoutes = () => {
       {/* Admin routes - using absolute paths */}
       {/* <Route path="/admin/dashboard" element={<AdminDashboard />} /> */}
       <Route path="/admin/users" element={<UserManagement />} />
-      <Route path="/admin/job-fair" element={<JobFairSetup />} />
+      <Route path="/admin/companies" element={<JobFairSetup />} />
       <Route path='/admin/attendance' element={<AttendanceReports/>}/>
       {/* Default redirect to admin dashboard */}
       <Route
