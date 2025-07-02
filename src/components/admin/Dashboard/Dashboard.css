@@ -1,0 +1,122 @@
+/* Dashboard-specific styles */
+.dashboard-container {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Chart container styles */
+.chart-container {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.chart-container:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* Stat card animations */
+.stat-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(30deg);
+  animation: shimmer 4s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%) rotate(30deg);
+  }
+  100% {
+    transform: translateX(100%) rotate(30deg);
+  }
+}
+
+/* Counter animation */
+.counter-animation {
+  display: inline-block;
+  position: relative;
+}
+
+.counter-animation::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: var(--primary-500);
+  transform: scaleX(0);
+  transform-origin: bottom right;
+  transition: transform 0.5s ease-out;
+}
+
+.counter-animation.animated::after {
+  transform: scaleX(1);
+  transform-origin: bottom left;
+}
+
+/* Enhanced pie chart animation */
+.pie-chart-container {
+  position: relative;
+}
+
+.pie-chart-container::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 30%;
+  height: 30%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.8) 0%,
+    rgba(255, 255, 255, 0) 70%
+  );
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.pie-chart-container:hover::before {
+  opacity: 1;
+}
+
+/* Enhanced tooltip animation */
+.recharts-tooltip-wrapper {
+  transition: transform 0.2s ease !important;
+}
+
+.recharts-tooltip-wrapper:hover {
+  transform: scale(1.05) !important;
+}
+
+/* Glowing effect for highlighted data points */
+.recharts-dot.recharts-active-dot circle {
+  animation: glow 1.5s infinite alternate;
+}
+
+@keyframes glow {
+  from {
+    filter: drop-shadow(0 0 2px rgba(136, 132, 216, 0.7));
+  }
+  to {
+    filter: drop-shadow(0 0 5px rgba(136, 132, 216, 0.9));
+  }
+}

@@ -1,85 +1,91 @@
 import React, { useState } from 'react';
-import { FaSearch, FaUser } from 'react-icons/fa';
+import {
+  FaSearch,
+  FaCalendarPlus,
+  FaCalendar,
+  FaFilter,
+  FaCalendarAlt,
+} from 'react-icons/fa';
 import Table from '../../common/Table.jsx';
 import Modal from '../../common/Modal.jsx';
 import Pagination from '../../common/Pagination.jsx';
 import LoadingSpinner from '../../common/LoadingSpinner.jsx';
 import TableSkeleton from '../../common/TableSkeleton.jsx';
-import UserForm from './UserForm.jsx';
-import { userAPI } from '../../../services/api.js';
-import { useUserManagement } from '../../../hooks/useUserManagement.js';
-import { getUserTableColumns } from './userTableConfig.jsx';
+import EventForm from './EventForm.jsx';
+import { eventAPI } from '../../../services/api.js';
+import { useEventManagement } from '../../../hooks/useEventManagement.js';
+import { getEventTableColumns } from './eventTableConfig.jsx';
 import {
-  cleanUserData,
-  getInitialUserState,
-} from '../../../utils/userUtils.js';
+  cleanEventData,
+  getInitialEventState,
+} from '../../../utils/eventUtils.js';
 
-const UserManagementComponent = () => {
-  // Custom hook for user management logic
+const EventManagementComponent = () => {
+  // Custom hook for event management logic
   const {
-    users,
-    tracks,
+    events,
     searchTerm,
     setSearchTerm,
-    selectedTrack,
-    setSelectedTrack,
     selectedStatus,
     setSelectedStatus,
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
     pagination,
     loading,
     error,
     submitLoading,
-    trackLoading,
-    loadUsers,
+    loadEvents,
     handlePageChange,
-    submitUser,
-  } = useUserManagement();
+    submitEvent,
+  } = useEventManagement();
 
   // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState(null);
   const [isActionModalOpen, setIsActionModalOpen] = useState(false);
 
   // Form states
-  const [newUser, setNewUser] = useState(getInitialUserState());
-  const [editUser, setEditUser] = useState(getInitialUserState());
+  const [newEvent, setNewEvent] = useState(getInitialEventState());
+  const [editEvent, setEditEvent] = useState(getInitialEventState());
   const [actionError, setActionError] = useState('');
   const [addError, setAddError] = useState('');
-  const [profileImagePreview, setProfileImagePreview] = useState(null);
-  const [editProfileImagePreview, setEditProfileImagePreview] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+  const [editImagePreview, setEditImagePreview] = useState(null);
 
-  // User actions
-  const handleAddUser = async e => {
+  // Event actions
+  const handleAddEvent = async e => {
     e.preventDefault();
     setAddError('');
     try {
-      let userData;
+      let eventData;
 
-      // If there's a profile image file, use FormData
-      if (newUser.profile_image instanceof File) {
-        userData = new FormData();
-        const cleanedData = cleanUserData(newUser);
+      // If there's an image file, use FormData
+      if (newEvent.image instanceof File) {
+        eventData = new FormData();
+        const cleanedData = cleanEventData(newEvent);
         Object.keys(cleanedData).forEach(key => {
-          if (key === 'profile_image' && cleanedData[key] instanceof File) {
-            userData.append(key, cleanedData[key]);
+          if (key === 'image' && cleanedData[key] instanceof File) {
+            eventData.append('event_image', cleanedData[key]);
           } else if (cleanedData[key] !== null && cleanedData[key] !== '') {
-            userData.append(key, cleanedData[key]);
+            eventData.append(key, cleanedData[key]);
           }
         });
-        console.log('Sending FormData with profile image');
+        console.log('Sending FormData with image');
       } else {
         // Otherwise use regular JSON
-        userData = cleanUserData(newUser);
-        console.log('Sending JSON data:', userData);
+        eventData = cleanEventData(newEvent);
+        console.log('Sending JSON data:', eventData);
       }
 
-      const result = await submitUser(() => userAPI.create(userData));
+      const result = await submitEvent(() => eventAPI.create(eventData));
       if (result.success) {
         setIsAddModalOpen(false);
-        setNewUser(getInitialUserState());
-        setProfileImagePreview(null);
-        loadUsers();
+        setNewEvent(getInitialEventState());
+        setImagePreview(null);
+        loadEvents();
       } else {
         // Handle validation errors in API response
         if (result.errors && typeof result.errors === 'object') {
@@ -91,80 +97,11 @@ const UserManagementComponent = () => {
             .join('\n');
           setAddError(errorMessages || result.message || 'Validation failed');
         } else {
-          setAddError(result.message || 'Failed to add user');
+          setAddError(result.message || 'Failed to add event');
         }
       }
     } catch (error) {
-      console.error('Add user error:', error);
-      if (error.response && error.response.data) {
-        const responseData = error.response.data;
-        console.error('Error response:', responseData);
-
-        // Handle validation errors specifically
-        if (responseData.errors && typeof responseData.errors === 'object') {
-          // Format validation errors
-          const errorMessages = Object.entries(responseData.errors)
-            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
-            .join('\n');
-          setAddError(
-            errorMessages || responseData.message || 'Validation failed'
-          );
-        } else {
-          setAddError(responseData.message || 'Server validation error');
-        }
-      } else {
-        setAddError(error.message || 'An error occurred while adding the user');
-      }
-    }
-  };
-
-  const handleEditUser = async e => {
-    e.preventDefault();
-    setAddError('');
-    try {
-      let userData;
-
-      // If there's a profile image file, use FormData
-      if (editUser.profile_image instanceof File) {
-        userData = new FormData();
-        const cleanedData = cleanUserData(editUser);
-        Object.keys(cleanedData).forEach(key => {
-          if (key === 'profile_image' && cleanedData[key] instanceof File) {
-            userData.append(key, cleanedData[key]);
-          } else if (cleanedData[key] !== null && cleanedData[key] !== '') {
-            userData.append(key, cleanedData[key]);
-          }
-        });
-      } else {
-        // Otherwise use regular JSON
-        userData = cleanUserData(editUser);
-      }
-
-      const result = await submitUser(() =>
-        userAPI.update(selectedUser.id, userData)
-      );
-      if (result.success) {
-        setIsEditModalOpen(false);
-        setSelectedUser(null);
-        setEditUser(getInitialUserState());
-        setEditProfileImagePreview(null);
-        loadUsers();
-      } else {
-        // Handle validation errors in API response
-        if (result.errors && typeof result.errors === 'object') {
-          const errorMessages = Object.entries(result.errors)
-            .map(
-              ([field, messages]) =>
-                `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`
-            )
-            .join('\n');
-          setAddError(errorMessages || result.message || 'Validation failed');
-        } else {
-          setAddError(result.message || 'Failed to update user');
-        }
-      }
-    } catch (error) {
-      console.error('Edit user error:', error);
+      console.error('Add event error:', error);
       if (error.response && error.response.data) {
         const responseData = error.response.data;
         console.error('Error response:', responseData);
@@ -183,62 +120,129 @@ const UserManagementComponent = () => {
         }
       } else {
         setAddError(
-          error.message || 'An error occurred while updating the user'
+          error.message || 'An error occurred while adding the event'
         );
       }
     }
   };
 
-  const handleDeleteUser = async user => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete ${user.first_name} ${user.last_name}?`
-      )
-    ) {
-      try {
-        await userAPI.delete(user.id);
-        loadUsers();
-      } catch (error) {
-        console.error('Error deleting user:', error);
+  const handleEditEvent = async e => {
+    e.preventDefault();
+    setAddError('');
+    try {
+      let eventData;
+
+      // If there's an image file, use FormData
+      if (editEvent.image instanceof File) {
+        eventData = new FormData();
+        const cleanedData = cleanEventData(editEvent);
+        Object.keys(cleanedData).forEach(key => {
+          if (key === 'image' && cleanedData[key] instanceof File) {
+            eventData.append('event_image', cleanedData[key]);
+          } else if (cleanedData[key] !== null && cleanedData[key] !== '') {
+            eventData.append(key, cleanedData[key]);
+          }
+        });
+      } else {
+        // Otherwise use regular JSON
+        eventData = cleanEventData(editEvent);
+      }
+
+      const result = await submitEvent(() =>
+        eventAPI.update(selectedEvent.id, eventData)
+      );
+      if (result.success) {
+        setIsEditModalOpen(false);
+        setSelectedEvent(null);
+        setEditEvent(getInitialEventState());
+        setEditImagePreview(null);
+        loadEvents();
+      } else {
+        // Handle validation errors in API response
+        if (result.errors && typeof result.errors === 'object') {
+          const errorMessages = Object.entries(result.errors)
+            .map(
+              ([field, messages]) =>
+                `${field}: ${Array.isArray(messages) ? messages.join(', ') : messages}`
+            )
+            .join('\n');
+          setAddError(errorMessages || result.message || 'Validation failed');
+        } else {
+          setAddError(result.message || 'Failed to update event');
+        }
+      }
+    } catch (error) {
+      console.error('Edit event error:', error);
+      if (error.response && error.response.data) {
+        const responseData = error.response.data;
+        console.error('Error response:', responseData);
+
+        // Handle validation errors specifically
+        if (responseData.errors && typeof responseData.errors === 'object') {
+          // Format validation errors
+          const errorMessages = Object.entries(responseData.errors)
+            .map(([field, messages]) => `${field}: ${messages.join(', ')}`)
+            .join('\n');
+          setAddError(
+            errorMessages || responseData.message || 'Validation failed'
+          );
+        } else {
+          setAddError(responseData.message || 'Server validation error');
+        }
+      } else {
+        setAddError(
+          error.message || 'An error occurred while updating the event'
+        );
       }
     }
   };
-  const handleEditClick = user => {
-    setSelectedUser(user);
-    setEditUser({
-      portal_user_id: user.portal_user_id || '',
-      first_name: user.first_name || '',
-      last_name: user.last_name || '',
-      email: user.email || '',
-      phone: user.phone || '',
-      profile_image: user.profile_image || null,
-      cv_path: user.cv_path || null,
-      bio: user.bio || '',
-      linkedin_url: user.linkedin_url || '',
-      github_url: user.github_url || '',
-      portfolio_url: user.portfolio_url || '',
-      track_id: user.track_id || '',
-      intake_year: user.intake_year || '',
-      graduation_year: user.graduation_year || '',
-      is_active: user.is_active !== undefined ? user.is_active : true,
+
+  const handleDeleteEvent = async event => {
+    if (
+      window.confirm(
+        `Are you sure you want to delete the event "${event.title}"?`
+      )
+    ) {
+      try {
+        await eventAPI.delete(event.id);
+        loadEvents();
+      } catch (error) {
+        console.error('Error deleting event:', error);
+      }
+    }
+  };
+
+  const handleEditClick = event => {
+    setSelectedEvent(event);
+    setEditEvent({
+      title: event.title || '',
+      description: event.description || '',
+      start_date: event.start_date || '',
+      end_date: event.end_date || '',
+      start_time: event.start_time || '',
+      end_time: event.end_time || '',
+      location: event.location || '',
+      capacity: event.capacity || '',
+      status: event.status || 'draft',
+      type: event.type || 'general',
     });
-    // Set the existing profile image as preview for editing
-    setEditProfileImagePreview(user.profile_image || null);
+    // Set the existing image as preview for editing
+    setEditImagePreview(event.banner_image || event.image_url || null);
     setIsEditModalOpen(true);
   };
 
-  const handleUserAction = async action => {
+  const handleEventAction = async action => {
     try {
       if (action === 'toggleStatus') {
-        await userAPI.update(selectedUser.id, {
-          is_active: !selectedUser.is_active,
-        });
+        const newStatus =
+          selectedEvent.status === 'ongoing' ? 'draft' : 'ongoing';
+        await eventAPI.update(selectedEvent.id, { status: newStatus });
       } else if (action === 'delete') {
-        await userAPI.delete(selectedUser.id);
+        await eventAPI.delete(selectedEvent.id);
       }
       setIsActionModalOpen(false);
-      setSelectedUser(null);
-      loadUsers();
+      setSelectedEvent(null);
+      loadEvents();
     } catch (error) {
       setActionError(error.message || 'An error occurred');
     }
@@ -246,29 +250,33 @@ const UserManagementComponent = () => {
 
   // Clear filters
   const clearFilters = () => {
-    setSelectedTrack('');
     setSelectedStatus('');
     setSearchTerm('');
+    setStartDate('');
+    setEndDate('');
   };
-  const columns = getUserTableColumns(handleEditClick, handleDeleteUser);
+
+  const columns = getEventTableColumns(handleEditClick, handleDeleteEvent);
+
   return (
     <div className="p-4 m-1 sm:p-4 md:p-6 w-full min-h-screen bg-white flex flex-col animate-fade-in border border-[var(--gray-200)] rounded-lg shadow-md transition-all duration-300 ease-out">
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-6 w-full transform transition-all duration-300 ease-out">
-        <h1 className="text-xl sm:text-2xl  font-bold  leading-6 sm:leading-8 text-[var(--gray-900)] w-full sm:w-auto text-left">
-          User Management
+        <h1 className="text-xl sm:text-2xl font-bold leading-6 sm:leading-8 text-[var(--gray-900)] w-full sm:w-auto text-left">
+          Event Management
         </h1>
         <div className="w-full sm:w-auto flex justify-stretch sm:justify-end">
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="button w-full sm:w-auto hover:shadow-md text-sm sm:text-base px-3 sm:px-4 py-2"
           >
-            <FaUser className="w-3 h-3 sm:w-4 sm:h-4 mr-2 transition-transform duration-200 ease-out" />
-            <span className="hidden sm:inline">Add New User</span>
-            <span className="sm:hidden w-100 text-start">Add New User</span>
+            <FaCalendarPlus className="w-3 h-3 sm:w-4 sm:h-4 mr-2 transition-transform duration-200 ease-out" />
+            <span className="hidden sm:inline">Add New Event</span>
+            <span className="sm:hidden w-100 text-start">Add New Event</span>
           </button>
         </div>
       </div>
+
       {/* Filters */}
       <div
         className="flex flex-col sm:grid sm:grid-cols-2 lg:flex lg:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6 w-full animate-fade-in"
@@ -280,28 +288,13 @@ const UserManagementComponent = () => {
             <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 transition-colors duration-200 w-3 h-3 sm:w-4 sm:h-4" />
             <input
               type="text"
-              placeholder="Search users..."
+              placeholder="Search events..."
               className="w-full pl-8 sm:pl-10 pr-4 py-2 text-sm sm:text-base border border-[var(--gray-300)] rounded-md focus:outline-none focus:border-0 hover:shadow-md transition-all duration-200 ease-out focus:border-[var(--primary-500)] hover:border-[var(--gray-500)] focus:shadow-md"
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
           </div>
         </div>
-
-        {/* Track Filter */}
-        <select
-          className="w-full sm:w-auto lg:w-32 xl:w-50 border border-[var(--gray-300)] rounded-md px-3 py-2 text-sm sm:text-base focus:outline-none focus:border-0 hover:shadow-md focus:border-[var(--primary-500)] transition-all duration-200 ease-out hover:border-[var(--gray-500)] focus:shadow-md"
-          value={selectedTrack}
-          onChange={e => setSelectedTrack(e.target.value)}
-          disabled={trackLoading}
-        >
-          <option value="">{trackLoading ? 'Loading...' : 'All Tracks'}</option>
-          {tracks.map(track => (
-            <option key={track.id} value={track.id}>
-              {track.name}
-            </option>
-          ))}
-        </select>
 
         {/* Status Filter */}
         <select
@@ -310,9 +303,35 @@ const UserManagementComponent = () => {
           onChange={e => setSelectedStatus(e.target.value)}
         >
           <option value="">All Status</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
+          <option value="published">Published</option>
+          <option value="ongoing">Ongoing</option>
+          <option value="completed">Completed</option>
+          <option value="cancelled">Cancelled</option>
+          <option value="draft">Draft</option>
         </select>
+
+        {/* Date Filters */}
+        <div className="w-full sm:w-auto flex items-center space-x-2">
+          <FaCalendar className="text-gray-400 hidden sm:block" />
+          <input
+            type="date"
+            placeholder="Start date"
+            className="flex-1 px-3 py-2 text-sm sm:text-base border border-[var(--gray-300)] rounded-md focus:outline-none focus:border-0 hover:shadow-md transition-all duration-200 ease-out focus:border-[var(--primary-500)] hover:border-[var(--gray-500)] focus:shadow-md"
+            value={startDate}
+            onChange={e => setStartDate(e.target.value)}
+          />
+        </div>
+
+        <div className="w-full sm:w-auto flex items-center space-x-2">
+          <span className="text-gray-400 hidden sm:block">-</span>
+          <input
+            type="date"
+            placeholder="End date"
+            className="flex-1 px-3 py-2 text-sm sm:text-base border border-[var(--gray-300)] rounded-md focus:outline-none focus:border-0 hover:shadow-md transition-all duration-200 ease-out focus:border-[var(--primary-500)] hover:border-[var(--gray-500)] focus:shadow-md"
+            value={endDate}
+            onChange={e => setEndDate(e.target.value)}
+          />
+        </div>
 
         {/* Clear Filters Button */}
         <button
@@ -322,7 +341,8 @@ const UserManagementComponent = () => {
           <span className="hidden sm:inline">Clear Filters</span>
           <span className="sm:hidden">Clear</span>
         </button>
-      </div>{' '}
+      </div>
+
       {/* Content */}
       {loading ? (
         <div className="w-full animate-fade-in">
@@ -336,33 +356,33 @@ const UserManagementComponent = () => {
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-8 sm:py-12 animate-fade-in px-4">
           <div className="text-red-500 text-base sm:text-lg mb-2 animate-bounce text-center">
-            ⚠️ No Users Found
+            ⚠️ No Events Found
           </div>
           <p
             className="text-gray-600 mb-4 text-center text-sm sm:text-base animate-fade-in max-w-md"
             style={{ animationDelay: '0.2s' }}
           >
-            There was an error loading the users or no users match your
+            There was an error loading the events or no events match your
             criteria.
           </p>
           <button
-            onClick={loadUsers}
-            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700  focus:outline-none focus:ring-2  focus:ring-gray-500 transition-all duration-200 ease-out transform hover:scale-105 active:scale-95 animate-fade-in text-sm sm:text-base"
+            onClick={loadEvents}
+            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-all duration-200 ease-out transform hover:scale-105 active:scale-95 animate-fade-in text-sm sm:text-base"
             style={{ animationDelay: '0.4s' }}
           >
             Retry
           </button>
         </div>
-      ) : users.length === 0 ? (
+      ) : events.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 sm:py-12 animate-fade-in px-4">
           <div className="text-gray-500 text-base sm:text-lg mb-2 animate-bounce text-center">
-            👥 No Users Found
+            📅 No Events Found
           </div>
           <p
             className="text-gray-600 mb-4 text-center text-sm sm:text-base animate-fade-in max-w-md"
             style={{ animationDelay: '0.2s' }}
           >
-            No users match your current search and filter criteria.
+            No events match your current search and filter criteria.
           </p>
           <button
             onClick={clearFilters}
@@ -379,94 +399,99 @@ const UserManagementComponent = () => {
         >
           {/* Mobile Card View for small screens */}
           <div className="block md:hidden space-y-4 mb-4">
-            {users.map(user => (
-              <div
-                key={user.id}
-                className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-3">
-                    {user.profile_picture ? (
-                      <img
-                        src={user.profile_picture}
-                        alt={`${user.first_name} ${user.last_name}`}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                        <FaUser className="w-1/2 h-1/2 text-gray-600" />
+            {Array.isArray(events) &&
+              events.map(event => (
+                <div
+                  key={event.id}
+                  className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center space-x-3">
+                      {' '}
+                      {event.banner_image || event.image_url ? (
+                        <img
+                          src={event.banner_image || event.image_url}
+                          alt={event.title}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                          <FaCalendarAlt className="w-1/2 h-1/2 text-gray-600" />
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-gray-900 text-sm truncate">
+                          {event.title}
+                        </h3>
+                        <p className="text-xs text-gray-500 truncate">
+                          {new Date(event.start_date).toLocaleDateString()}
+                        </p>
                       </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-gray-900 text-sm truncate">
-                        {user.first_name} {user.last_name}
-                      </h3>
-                      <p className="text-xs text-gray-500 truncate">
-                        {user.email}
-                      </p>
                     </div>
-                  </div>
-                  <span
-                    className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${
-                      user.is_active
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    {user.is_active ? 'Active' : 'Inactive'}
-                  </span>
-                </div>
-                <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-3">
-                  <div className="truncate">
-                    <span className="font-medium">Intake Year:</span>{' '}
-                    {user.intake_year ? user.intake_year : 'N/A'}
-                  </div>
-                  <div className="flex justify-end">
                     <span
-                      className="px-2 py-1 rounded-full text-xs whitespace-nowrap"
-                      style={{
-                        backgroundColor: `${user.track.color}20`,
-                        color: user.track.color,
-                      }}
+                      className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${
+                        event.status === 'active'
+                          ? 'bg-green-100 text-green-800'
+                          : event.status === 'cancelled'
+                            ? 'bg-red-100 text-red-800'
+                            : 'bg-blue-100 text-blue-800'
+                      }`}
                     >
-                      {user.track.name}
+                      {event.status || 'Draft'}
                     </span>
                   </div>
-                  <div className="truncate">
-                    <span className="font-medium">Email:</span>{' '}
-                    {user.email || 'N/A'}
+                  <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-3">
+                    <div className="truncate">
+                      <span className="font-medium">Location:</span>{' '}
+                      {event.location ? event.location : 'N/A'}
+                    </div>
+                    <div className="truncate text-right">
+                      <span className="font-medium">Capacity:</span>{' '}
+                      {event.capacity || 'Unlimited'}
+                    </div>
+                    <div className="truncate">
+                      <span className="font-medium">Start:</span>{' '}
+                      {event.start_time
+                        ? new Date(event.start_time).toLocaleTimeString([], {
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })
+                        : 'N/A'}
+                    </div>
+                    <div className="truncate text-right">
+                      <span className="font-medium">End:</span>{' '}
+                      {event.end_date
+                        ? new Date(event.end_date).toLocaleDateString()
+                        : 'N/A'}
+                    </div>
                   </div>
-                  <div className="truncate text-right">
-                    <span className="font-medium">ID:</span>{' '}
-                    {user.portal_user_id || 'N/A'}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleEditClick(event)}
+                      className="flex-1 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 text-xs transition-colors min-h-[2rem]"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => {
+                        setSelectedEvent(event);
+                        setIsActionModalOpen(true);
+                      }}
+                      className="flex-1 py-2 bg-[var(--secondary-400)] text-white rounded text-xs hover:bg-[var(--secondary-500)] transition-colors min-h-[2rem]"
+                    >
+                      Actions
+                    </button>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleEditClick(user)}
-                    className="flex-1 py-2 bg-gray-600 text-white rounded- hover:bg-gray-700  text-xs transition-colors min-h-[2rem]"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => {
-                      setSelectedUser(user);
-                      setIsActionModalOpen(true);
-                    }}
-                    className="flex-1 py-2 bg-[var(--secondary-400)] text-white rounded text-xs hover:bg-[var(--secondary-500)] transition-colors min-h-[2rem]"
-                  >
-                    Actions
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-
+              ))}
+          </div>{' '}
           {/* Desktop Table View */}
           <div className="hidden md:block overflow-x-auto transform transition-all duration-300 ease-out hover:shadow-lg rounded-lg">
-            <Table columns={columns} data={users} />
+            <Table
+              columns={columns}
+              data={Array.isArray(events) ? events : []}
+            />
           </div>
-
           <div
             className="mt-4 animate-fade-in"
             style={{ animationDelay: '0.2s' }}
@@ -478,19 +503,19 @@ const UserManagementComponent = () => {
           </div>
         </div>
       )}
+
       {/* Action Modal */}
       <Modal
         isOpen={isActionModalOpen}
         onClose={() => {
           setIsActionModalOpen(false);
-          setSelectedUser(null);
+          setSelectedEvent(null);
           setActionError('');
         }}
-        title="User Actions"
+        title="Event Actions"
         size="sm"
         showFooter={false}
       >
-        {' '}
         <div className="space-y-4 animate-fade-in">
           {actionError && (
             <div className="p-2 text-red-600 bg-red-50 rounded-md text-sm animate-shake">
@@ -498,79 +523,79 @@ const UserManagementComponent = () => {
             </div>
           )}
           <button
-            onClick={() => handleUserAction('toggleStatus')}
+            onClick={() => handleEventAction('toggleStatus')}
             className="w-full flex items-center justify-between px-4 py-2 hover:bg-gray-100 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 ease-out transform hover:scale-[1.02] active:scale-[0.98]"
             disabled={submitLoading}
           >
             <span className="transition-colors duration-200">
-              {selectedUser?.is_active ? 'Deactivate User' : 'Activate User'}
+              {selectedEvent?.status === 'active'
+                ? 'Set as Draft'
+                : 'Set as Active'}
             </span>
             {submitLoading && (
               <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
             )}
           </button>
           <button
-            onClick={() => handleUserAction('delete')}
+            onClick={() => handleEventAction('delete')}
             className="w-full flex items-center justify-between px-4 py-2 hover:bg-red-100 text-red-600 rounded-md disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 ease-out transform hover:scale-[1.02] active:scale-[0.98]"
             disabled={submitLoading}
           >
-            <span className="transition-colors duration-200">Delete User</span>
+            <span className="transition-colors duration-200">Delete Event</span>
             {submitLoading && (
               <div className="w-4 h-4 border-2 border-red-400 border-t-transparent rounded-full animate-spin"></div>
             )}
           </button>
         </div>
       </Modal>
-      {/* Add User Modal */}
+
+      {/* Add Event Modal */}
       <Modal
         isOpen={isAddModalOpen}
         onClose={() => {
           setIsAddModalOpen(false);
-          setNewUser(getInitialUserState());
-          setProfileImagePreview(null);
+          setNewEvent(getInitialEventState());
+          setImagePreview(null);
           setAddError('');
         }}
-        title="Add New User"
+        title="Add New Event"
         size="lg"
         showFooter={false}
       >
-        <UserForm
-          user={newUser}
-          setUser={setNewUser}
-          tracks={tracks}
-          trackLoading={trackLoading}
-          onSubmit={handleAddUser}
+        <EventForm
+          event={newEvent}
+          setEvent={setNewEvent}
+          onSubmit={handleAddEvent}
           submitLoading={submitLoading}
           error={addError}
-          profileImagePreview={profileImagePreview}
-          setProfileImagePreview={setProfileImagePreview}
+          imagePreview={imagePreview}
+          setImagePreview={setImagePreview}
           isEdit={false}
         />
       </Modal>
-      {/* Edit User Modal */}
+
+      {/* Edit Event Modal */}
       <Modal
         isOpen={isEditModalOpen}
         onClose={() => {
           setIsEditModalOpen(false);
-          setSelectedUser(null);
-          setEditUser(getInitialUserState());
-          setEditProfileImagePreview(null);
+          setSelectedEvent(null);
+          setEditEvent(getInitialEventState());
+          setEditImagePreview(null);
           setAddError('');
         }}
-        title="Edit User"
+        title="Edit Event"
         size="lg"
         showFooter={false}
       >
-        <UserForm
-          user={editUser}
-          setUser={setEditUser}
-          tracks={tracks}
-          trackLoading={trackLoading}
-          onSubmit={handleEditUser}
+        <EventForm
+          event={editEvent}
+          setEvent={setEditEvent}
+          onSubmit={handleEditEvent}
           submitLoading={submitLoading}
           error={addError}
-          profileImagePreview={editProfileImagePreview}
-          setProfileImagePreview={setEditProfileImagePreview}
+          imagePreview={editImagePreview}
+          setImagePreview={setEditImagePreview}
           isEdit={true}
         />
       </Modal>
@@ -578,4 +603,4 @@ const UserManagementComponent = () => {
   );
 };
 
-export default UserManagementComponent;
+export default EventManagementComponent;
