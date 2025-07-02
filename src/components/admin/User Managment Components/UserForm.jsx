@@ -589,7 +589,7 @@ const UserForm = ({
                     : 'border-gray-300'
                 }`}
                 placeholder="2023"
-                min="2020"
+                min="2000"
                 max="2030"
               />
             </div>
@@ -634,7 +634,7 @@ const UserForm = ({
                     : 'border-gray-300'
                 }`}
                 placeholder="2024"
-                min="2020"
+                min="2000"
                 max="2035"
               />
             </div>
