@@ -3,6 +3,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import AppRoutes from './routes/AppRoutes';
 import './App.css';
+import Messenger from './components/student/MessageBot';
 
 function App() {
   return (
@@ -20,6 +21,7 @@ function App() {
         pauseOnHover
         theme="light"
       />
+      <Messenger />
     </Router>
   );
 }

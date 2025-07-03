@@ -2,6 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import UserManagement from '../pages/admin/UserManagement';
 import JobFairSetup from '../pages/admin/JobFairSetup';
+import AttendanceReports from '../pages/admin/AttendanceReports';
 import Help from '../components/common/Help';
 import FeedbackForm from '../pages/student/FeedbackForm';
 import EventDetails from '../pages/student/EventDetails';
@@ -10,6 +11,7 @@ import InterviewQueue from '../pages/student/InterviewQueue';
 import Profile from '../pages/student/Profile';
 import Login from '../pages/student/Login';
 import ShowEvents from '../pages/student/ShowEvents';
+
 
 // Admin Pages
 import AdminDashboard from '../pages/admin/Dashboard';
@@ -22,9 +24,14 @@ const AppRoutes = () => {
       {/* Admin routes - using absolute paths */}
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/users" element={<UserManagement />} />
+      <Route path="/admin/companies" element={<JobFairSetup />} />
+      <Route path='/admin/attendance' element={<AttendanceReports/>}/>
+      {/* Default redirect to admin dashboard */}
+
       <Route path="/admin/events" element={<ManageEvents />} />
       <Route path="/admin/notifications" element={<Notifications />} />
-      <Route path="/admin/job-fair" element={<JobFairSetup />} />
+     
+
       <Route
         path="/admin"
         element={<Navigate to="/admin/dashboard" replace />}
