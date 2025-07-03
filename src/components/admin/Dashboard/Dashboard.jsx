@@ -44,12 +44,12 @@ const queueData = [
   { name: '4 PM', time: 5 },
 ];
 
-const userTypeData = [
-  { name: 'Students', value: 65, color: '#8884d8' },
-  { name: 'Companies', value: 15, color: '#82ca9d' },
-  { name: 'Staff', value: 10, color: '#ffc658' },
-  { name: 'Admins', value: 10, color: '#ff8042' },
-];
+// Define colors for the system metrics pie chart
+const systemMetricsColors = {
+  users: '#8884d8', // Purple for users
+  events: '#82ca9d', // Green for events
+  companies: '#ffc658', // Yellow for companies
+};
 
 // Month mapping for date processing
 const months = [
@@ -77,8 +77,8 @@ const Dashboard = () => {
   // State for actual data
   const [actualData, setActualData] = useState({
     totalUsers: 0,
-    events: 0,
-    companies: 0,
+    totalEvents: 0,
+    totalCompanies: 0,
     queueTime: 0,
   });
 
@@ -115,8 +115,9 @@ const Dashboard = () => {
         setActualData(prev => ({
           ...prev,
           totalUsers: (usersResult && usersResult.data?.pagination?.total) || 0,
-          events: (eventsResult && eventsResult.data?.result?.total) || 0,
-          companies: (companiesResult && companiesResult.length) || 0,
+          totalEvents: (eventsResult && eventsResult.data?.result?.total) || 0,
+          totalCompanies:
+            (companiesResult && companiesResult.data?.total_count) || 0,
           queueTime: 15, // Static value for now
         }));
 
@@ -199,8 +200,8 @@ const Dashboard = () => {
         setActualData(prev => ({
           ...prev,
           totalUsers: 0,
-          events: 0,
-          companies: 0,
+          totalEvents: 0,
+          totalCompanies: 0,
           queueTime: 0,
         }));
         // Use sample data if there's an error
@@ -215,8 +216,8 @@ const Dashboard = () => {
   useEffect(() => {
     const targetValues = {
       users: actualData.totalUsers,
-      events: actualData.events,
-      companies: actualData.companies,
+      events: actualData.totalEvents,
+      companies: actualData.totalCompanies,
       queueTime: 30,
     };
 
@@ -604,40 +605,85 @@ const Dashboard = () => {
           </ResponsiveContainer>
         </div>
 
-        {/* User Type Distribution */}
+        {/* System Metrics Distribution */}
         <div
-          className="bg-white rounded-lg shadow-sm p-6 animate-fade-in chart-container pie-chart-container  border-primary"
+          className="bg-white rounded-lg shadow-sm p-6 animate-fade-in chart-container pie-chart-container border-primary"
           style={{ animationDelay: '0.8s' }}
         >
           <h2 className="text-lg font-medium text-gray-900 mb-4">
-            User Type Distribution
+            System Metrics Distribution
           </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <PieChart>
-              <Pie
-                data={userTypeData}
-                cx="50%"
-                cy="50%"
-                labelLine={false}
-                outerRadius={100}
-                innerRadius={40}
-                fill="#8884d8"
-                dataKey="value"
-                animationBegin={200}
-                animationDuration={1500}
-                animationEasing="ease-in-out"
-                label={({ name, percent }) =>
-                  `${name}: ${(percent * 100).toFixed(0)}%`
-                }
+          {usersApi.loading || eventsApi.loading || companiesApi.loading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="w-full h-64 animate-pulse bg-gray-200 rounded"></div>
+            </div>
+          ) : usersApi.error || eventsApi.error || companiesApi.error ? (
+            <div className="flex flex-col items-center justify-center h-64 text-red-500">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-12 w-12 mb-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                {userTypeData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <Tooltip content={<CustomTooltip />} />
-              <Legend />
-            </PieChart>
-          </ResponsiveContainer>
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+              <p className="text-center">Error loading chart data</p>
+              <p className="text-sm text-center mt-1">Please try again later</p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={[
+                    {
+                      name: 'Events',
+                      value: actualData.totalEvents || 0,
+                      color: systemMetricsColors.events,
+                    },
+                    {
+                      name: 'Companies',
+                      value: actualData.totalCompanies || 0,
+                      color: systemMetricsColors.companies,
+                    },
+                  ]}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  outerRadius={100}
+                  innerRadius={40}
+                  fill="#8884d8"
+                  dataKey="value"
+                  animationBegin={200}
+                  animationDuration={1500}
+                  animationEasing="ease-in-out"
+                  label={({ name, percent }) =>
+                    `${name}: ${(percent * 100).toFixed(0)}%`
+                  }
+                >
+                  {Object.values(systemMetricsColors).map((color, index) => (
+                    <Cell key={`cell-${index}`} fill={color} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  formatter={(value, name) => {
+                    const total =
+                      (actualData.totalEvents || 0) +
+                      (actualData.totalCompanies || 0);
+                    const percentage =
+                      total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                    return [`${value} (${percentage}%)`, name];
+                  }}
+                />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          )}
         </div>
       </div>
 
