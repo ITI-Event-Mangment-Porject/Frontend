@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import Navbar from '../../components/student/Navbar';
 import Sidebar from '../../components/student/Sidebar';
 import Footer from '../../components/student/Footer';
 
 const API_BASE_URL = 'http://127.0.0.1:8000';
 
-const FeedbackForm = ({ formId = 1, eventId = 2 }) => {
+const FeedbackForm = ({ formId = 1 }) => {
+  const { eventId } = useParams(); // اجلب eventId من الرابط
+
   const [orgRating, setOrgRating] = useState(0);
   const [speakerEffective, setSpeakerEffective] = useState(null);
   const [sessionFeedback, setSessionFeedback] = useState('');
@@ -31,7 +34,7 @@ const FeedbackForm = ({ formId = 1, eventId = 2 }) => {
         1: comments,
       },
       overall_rating: orgRating,
-      event_id: eventId,
+      event_id: Number(eventId), // تأكد أنه رقم
     };
 
     setSubmitting(true);
@@ -93,7 +96,9 @@ const FeedbackForm = ({ formId = 1, eventId = 2 }) => {
                       letterSpacing: '1px',
                     }}
                   >
-                    Your Voice Matters: Share Your Event Experience
+                    Your Voice Matters
+                    <br />
+                    Share Your Event Experience
                   </h1>
                 </div>
               </div>
