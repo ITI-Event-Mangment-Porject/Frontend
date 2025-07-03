@@ -9,6 +9,7 @@ import EventDetails from '../pages/student/EventDetails';
 import CompanyDirectory from '../pages/student/CompanyDirectory';
 import InterviewQueue from '../pages/student/InterviewQueue';
 import Profile from '../pages/student/Profile';
+import NotificationPage from './pages/student/notification';
 import Login from '../pages/student/Login';
 import ShowEvents from '../pages/student/ShowEvents';
 
@@ -41,6 +42,7 @@ const AppRoutes = () => {
       <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       <Route path="/support" element={<Help />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/notifications" element={<NotificationPage />} />
       <Route path="/feedback" element={<FeedbackForm />} />
       <Route path="/event-details/:id" element={<EventDetails />} />
       <Route path="/show-events" element={<ShowEvents />} />{' '}
