@@ -10,6 +10,7 @@ import {
 } from 'react-icons/fa';
 import Navbar from '../../components/student/Navbar';
 import Sidebar from '../../components/student/Sidebar';
+import Messenger from '../../components/student/MessageBot';
 import Footer from '../../components/student/Footer';
 
 const Profile = () => {
@@ -439,64 +440,6 @@ const Profile = () => {
                     >
                       <FaTrash />
                     </button>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Messages */}
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-xl font-bold mb-4">Messages</h3>
-            <div className="space-y-3">
-              {messages.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <p>No messages yet</p>
-                </div>
-              ) : (
-                messages.map(msg => (
-                  <div
-                    key={msg.id}
-                    className={`p-4 rounded border-l-4 ${
-                      msg.unread
-                        ? 'border-orange-500 bg-orange-50'
-                        : 'border-gray-300 bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <p className="font-medium">{msg.from}</p>
-                          {msg.unread && (
-                            <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
-                              New
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-gray-600 mb-1">{msg.text}</p>
-                        <span className="text-sm text-gray-500">
-                          {msg.date}
-                        </span>
-                      </div>
-                      <div className="flex gap-2 ml-4">
-                        {msg.unread && (
-                          <button
-                            onClick={() => markRead(msg.id)}
-                            className="text-orange-500 hover:text-orange-700"
-                            title="Mark as read"
-                          >
-                            <FaEye />
-                          </button>
-                        )}
-                        <button
-                          onClick={() => deleteMsg(msg.id)}
-                          className="text-red-500 hover:text-red-700"
-                          title="Delete message"
-                        >
-                          <FaTrash />
-                        </button>
-                      </div>
-                    </div>
                   </div>
                 ))
               )}

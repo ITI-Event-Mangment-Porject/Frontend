@@ -1,8 +1,26 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { FaBell } from 'react-icons/fa';
+import { useEffect, useState } from 'react';
+import axios from 'axios';
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    axios
+      .get('http://127.0.0.1:8000/api/notifications', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then(res => {
+        // Count notifications where read_at is null (unread)
+        const notifications = Array.isArray(res.data.data) ? res.data.data : [];
+        const count = notifications.filter(n => !n.read_at).length;
+        setUnreadCount(count);
+      })
+      .catch(() => setUnreadCount(0));
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -28,9 +46,14 @@ const Navbar = () => {
 
         <Link
           to="/notifications"
-          className="text-gray-500 hover:text-gray-700 transition"
+          className="relative text-gray-500 hover:text-gray-700 transition"
         >
           <FaBell className="w-6 h-6" />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 min-w-[18px] h-4 px-1 bg-red-500 text-white text-xs rounded-full flex items-center justify-center border-2 border-white">
+              {unreadCount}
+            </span>
+          )}
         </Link>
 
         <button

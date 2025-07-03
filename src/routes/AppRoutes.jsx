@@ -9,7 +9,7 @@ import EventDetails from '../pages/student/EventDetails';
 import CompanyDirectory from '../pages/student/CompanyDirectory';
 import InterviewQueue from '../pages/student/InterviewQueue';
 import Profile from '../pages/student/Profile';
-import NotificationPage from './pages/student/notification';
+import NotificationPage from '../pages/student/Notification'
 import Login from '../pages/student/Login';
 import ShowEvents from '../pages/student/ShowEvents';
 
