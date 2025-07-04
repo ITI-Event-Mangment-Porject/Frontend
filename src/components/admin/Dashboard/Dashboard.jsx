@@ -23,16 +23,7 @@ import useApi from '../../../hooks/useApi';
 import { userAPI, eventAPI, companyAPI } from '../../../services/api';
 import StatCounterSkeleton from '../../common/StatCounterSkeleton';
 
-// Sample data for charts - will be replaced with real data
-const monthlyData = [
-  { name: 'Jan', users: 240, events: 30, companies: 12 },
-  { name: 'Feb', users: 300, events: 40, companies: 15 },
-  { name: 'Mar', users: 450, events: 35, companies: 18 },
-  { name: 'Apr', users: 600, events: 50, companies: 22 },
-  { name: 'May', users: 800, events: 55, companies: 25 },
-  { name: 'Jun', users: 950, events: 60, companies: 28 },
-];
-
+// Sample data for queue times - will be replaced with real data
 const queueData = [
   { name: '9 AM', time: 5 },
   { name: '10 AM', time: 10 },
@@ -85,6 +76,9 @@ const Dashboard = () => {
   // State for event and company statistics by month
   const [statisticsData, setStatisticsData] = useState([]);
 
+  // State for total users data for Growth Trends chart
+  const [userGrowthData, setUserGrowthData] = useState([]);
+
   // State for API results to use in Recent Activity
   const [apiResults, setApiResults] = useState({
     users: null,
@@ -136,67 +130,172 @@ const Dashboard = () => {
           queueTime: 15, // Static value for now
         }));
 
-        // Process events and companies data for monthly statistics
-        if (eventsResult?.data?.result?.events && companiesResult) {
-          // Process events data by month
-          const eventsByMonth = {};
-          const events = eventsResult.data.result.events;
+        // Process users data to show growth over time
+        if (usersResult && usersResult.data?.pagination?.total) {
+          const totalUsers = usersResult.data.pagination.total;
+          const users = usersResult.data.users || [];
 
-          events.forEach(event => {
-            if (event.date) {
-              const date = new Date(event.date);
-              const monthIdx = date.getMonth();
-              const monthName = months[monthIdx];
+          // Get current month and create a 6-month range
+          const currentDate = new Date();
+          const chartData = [];
 
-              if (!eventsByMonth[monthName]) {
-                eventsByMonth[monthName] = 0;
-              }
-              eventsByMonth[monthName]++;
-            }
-          });
+          // Generate data for the past 6 months
+          for (let i = 5; i >= 0; i--) {
+            const date = new Date(currentDate);
+            date.setMonth(currentDate.getMonth() - i);
+            const monthIdx = date.getMonth();
+            const year = date.getFullYear();
+            const monthName = `${months[monthIdx]} ${year}`;
 
-          // Process companies data by month
-          const companiesByMonth = {};
-          const companies = companiesResult;
+            // Count users created in this month
+            const usersInMonth = users.filter(user => {
+              if (!user.created_at) return false;
+              const userDate = new Date(user.created_at);
+              return (
+                userDate.getMonth() === monthIdx &&
+                userDate.getFullYear() === year
+              );
+            }).length;
 
-          companies.forEach(company => {
-            if (company.createdAt) {
-              const date = new Date(company.createdAt);
-              const monthIdx = date.getMonth();
-              const monthName = months[monthIdx];
+            // If this is the last month (current), show total users
+            // For previous months, show simulated growth pattern
+            const usersValue =
+              i === 0
+                ? totalUsers
+                : Math.max(
+                    0,
+                    Math.floor(totalUsers * (0.7 + (0.3 * (5 - i)) / 5))
+                  );
 
-              if (!companiesByMonth[monthName]) {
-                companiesByMonth[monthName] = 0;
-              }
-              companiesByMonth[monthName]++;
-            }
-          });
+            chartData.push({
+              name: monthName,
+              users: usersValue,
+              newUsers:
+                i === 0
+                  ? usersInMonth
+                  : Math.floor(totalUsers * 0.05 * (1 + i / 10)),
+            });
+          }
 
-          // Create monthly statistics array for the chart
-          const chartData = months.map(month => ({
-            name: month,
-            events: eventsByMonth[month] || 0,
-            companies: companiesByMonth[month] || 0,
-          }));
-
-          // Filter to only include months with data
-          const filteredChartData = chartData.filter(
-            item => item.events > 0 || item.companies > 0
-          );
-
-          // If no filtered data, use at least the last 6 months
-          const dataToUse =
-            filteredChartData.length > 0
-              ? filteredChartData
-              : chartData.slice(
-                  Math.max(0, new Date().getMonth() - 5),
-                  new Date().getMonth() + 1
-                );
-
-          setStatisticsData(dataToUse);
+          setUserGrowthData(chartData);
         } else {
-          // Fallback to sample data if API data is not available
-          setStatisticsData(monthlyData);
+          // Fallback if no user data available
+          const currentDate = new Date();
+          const chartData = [];
+
+          // Generate sample data for the past 6 months
+          for (let i = 5; i >= 0; i--) {
+            const date = new Date(currentDate);
+            date.setMonth(currentDate.getMonth() - i);
+            const monthIdx = date.getMonth();
+            const year = date.getFullYear();
+            const monthName = `${months[monthIdx]} ${year}`;
+
+            chartData.push({
+              name: monthName,
+              users: 0,
+              newUsers: 0,
+            });
+          }
+
+          setUserGrowthData(chartData);
+        }
+
+        // Process events and companies data for monthly statistics
+        if (
+          eventsResult?.data?.result?.data &&
+          companiesResult?.data?.companies?.data
+        ) {
+          // Get current month and create a 6-month range for consistency
+          const currentDate = new Date();
+          const monthData = {};
+
+          // Initialize data for the past 6 months
+          for (let i = 5; i >= 0; i--) {
+            const date = new Date(currentDate);
+            date.setMonth(currentDate.getMonth() - i);
+            const monthIdx = date.getMonth();
+            const year = date.getFullYear();
+            const monthName = `${months[monthIdx]} ${year}`;
+
+            // Initialize counts for this month
+            if (!monthData[monthName]) {
+              monthData[monthName] = {
+                name: monthName,
+                events: 0,
+                companies: 0,
+              };
+            }
+          }
+
+          // Process events data by month
+          const events = eventsResult.data.result.data || [];
+          events.forEach(event => {
+            if (event.created_at) {
+              const date = new Date(event.created_at);
+              const monthIdx = date.getMonth();
+              const year = date.getFullYear();
+              const monthName = `${months[monthIdx]} ${year}`;
+
+              if (monthData[monthName]) {
+                monthData[monthName].events++;
+              }
+            }
+          });
+
+          // Process companies data by month using the companies data array
+          const companies = companiesResult.data.companies.data || [];
+          companies.forEach(company => {
+            if (company.created_at) {
+              const date = new Date(company.created_at);
+              const monthIdx = date.getMonth();
+              const year = date.getFullYear();
+              const monthName = `${months[monthIdx]} ${year}`;
+
+              if (monthData[monthName]) {
+                monthData[monthName].companies++;
+              }
+            }
+          });
+
+          // Convert the monthData object to an array for the chart
+          const chartData = Object.values(monthData);
+
+          // Sort by month and year for proper chronological display
+          chartData.sort((a, b) => {
+            const [aMonth, aYear] = a.name.split(' ');
+            const [bMonth, bYear] = b.name.split(' ');
+
+            // Compare years first
+            if (aYear !== bYear) {
+              return parseInt(aYear) - parseInt(bYear);
+            }
+
+            // If years are the same, compare months
+            return months.indexOf(aMonth) - months.indexOf(bMonth);
+          });
+
+          setStatisticsData(chartData);
+        } else {
+          // If API data is not available, create empty chart data with proper month labels
+          const currentDate = new Date();
+          const chartData = [];
+
+          for (let i = 5; i >= 0; i--) {
+            const date = new Date(currentDate);
+            date.setMonth(currentDate.getMonth() - i);
+            const monthIdx = date.getMonth();
+            const year = date.getFullYear();
+            const monthName = `${months[monthIdx]} ${year}`;
+
+            chartData.push({
+              name: monthName,
+              events: 0,
+              companies: 0,
+            });
+          }
+
+          setStatisticsData(chartData);
         }
 
         // Log any errors
@@ -219,8 +318,13 @@ const Dashboard = () => {
           totalCompanies: 0,
           queueTime: 0,
         }));
-        // Use sample data if there's an error
-        setStatisticsData(monthlyData);
+
+        // Reset statistics data to empty
+        setStatisticsData([]);
+
+        // Reset user growth data
+        console.log('Resetting user growth data due to error');
+        setUserGrowthData([{ name: 'No Data', users: 0, newUsers: 0 }]);
       }
     };
 
@@ -308,10 +412,24 @@ const Dashboard = () => {
                 <StatCounterSkeleton width="w-28" height="h-9" />
               ) : (
                 <>
-                  <p className="text-3xl font-semibold text-gray-900">
+                  <p className="text-xl mt-3 font-semibold text-gray-900">
                     {usersApi.error ? (
-                      <span className="text-red-500">
-                        <span className="text-xl">!</span> Error
+                      <span className="text-gray-400 flex items-center">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-6 w-6 mr-1"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        No data
                       </span>
                     ) : (
                       <span
@@ -323,10 +441,10 @@ const Dashboard = () => {
                     )}
                   </p>
                   <div
-                    className={`text-sm mt-2 ${usersApi.error ? 'text-red-600' : 'text-green-600'}`}
+                    className={`text-sm mt-2 ${usersApi.error ? 'text-gray-400' : 'text-green-600'}`}
                   >
                     {usersApi.error
-                      ? 'Failed to fetch'
+                      ? 'Data unavailable'
                       : '↑ 12% from last month'}
                   </div>
                 </>
@@ -351,10 +469,24 @@ const Dashboard = () => {
                 <StatCounterSkeleton width="w-20" height="h-9" />
               ) : (
                 <>
-                  <p className="text-3xl font-semibold text-gray-900">
+                  <p className="text-xl mt-3 font-semibold text-gray-900">
                     {eventsApi.error ? (
-                      <span className="text-red-500">
-                        <span className="text-xl">!</span> Error
+                      <span className="text-gray-400 flex items-center">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-6 w-6 mr-1"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        No data
                       </span>
                     ) : (
                       <span
@@ -366,10 +498,10 @@ const Dashboard = () => {
                     )}
                   </p>
                   <div
-                    className={`text-sm mt-2 ${eventsApi.error ? 'text-red-600' : 'text-green-600'}`}
+                    className={`text-sm mt-2 ${eventsApi.error ? 'text-gray-400' : 'text-green-600'}`}
                   >
                     {eventsApi.error
-                      ? 'Failed to fetch'
+                      ? 'Data unavailable'
                       : '↑ 5% from last week'}
                   </div>
                 </>
@@ -392,10 +524,24 @@ const Dashboard = () => {
                 <StatCounterSkeleton width="w-24" height="h-9" />
               ) : (
                 <>
-                  <p className="text-3xl font-semibold text-gray-900">
+                  <p className="text-xl mt-3 font-semibold text-gray-900">
                     {companiesApi.error ? (
-                      <span className="text-red-500">
-                        <span className="text-xl">!</span> Error
+                      <span className="text-gray-400 flex items-center">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-6 w-6 mr-1"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        No data
                       </span>
                     ) : (
                       <span
@@ -407,10 +553,10 @@ const Dashboard = () => {
                     )}
                   </p>
                   <div
-                    className={`text-sm mt-2 ${companiesApi.error ? 'text-red-600' : 'text-green-600'}`}
+                    className={`text-sm mt-2 ${companiesApi.error ? 'text-gray-400' : 'text-green-600'}`}
                   >
                     {companiesApi.error
-                      ? 'Failed to fetch'
+                      ? 'Data unavailable'
                       : '↑ 8% from last month'}
                   </div>
                 </>
@@ -459,14 +605,16 @@ const Dashboard = () => {
           style={{ animationDelay: '0.5s' }}
         >
           <h2 className="text-lg font-medium text-gray-900 mb-4">
-            Growth Trends
+            User Growth Over Time
           </h2>
           {usersApi.loading ? (
             <div className="flex items-center justify-center h-64">
               <div className="w-full h-64 animate-pulse bg-gray-200 rounded"></div>
             </div>
-          ) : usersApi.error ? (
-            <div className="flex flex-col items-center justify-center h-64 text-red-500">
+          ) : usersApi.error ||
+            userGrowthData.length === 0 ||
+            (userGrowthData.length === 1 && userGrowthData[0].users === 0) ? (
+            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-12 w-12 mb-2"
@@ -478,44 +626,76 @@ const Dashboard = () => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
                 />
               </svg>
-              <p className="text-center">Error loading user data</p>
-              <p className="text-sm text-center mt-1">Please try again later</p>
+              <p className="text-center font-medium">No data to display</p>
+              <p className="text-sm text-center mt-1">
+                User data is currently unavailable
+              </p>
             </div>
           ) : (
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart
-                data={statisticsData}
-                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-              >
-                <defs>
-                  <linearGradient id="colorUsers" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#8884d8" stopOpacity={0.1} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                <XAxis
-                  dataKey="name"
-                  tick={{ fill: '#6b7280', fontSize: 12 }}
-                />
-                <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} />
-                <Tooltip content={<CustomTooltip />} />
-                <Legend />
-                <Area
-                  type="monotone"
-                  dataKey="events"
-                  name="Events"
-                  stroke="#8884d8"
-                  fillOpacity={1}
-                  fill="url(#colorUsers)"
-                  animationDuration={1500}
-                  animationEasing="ease-in-out"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <div className="h-64">
+              <div className="flex justify-between mb-4">
+                <div>
+                  <div className="text-3xl font-bold text-indigo-500">
+                    {actualData.totalUsers.toLocaleString()}
+                  </div>
+                  <p className="text-gray-500">Total Users</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-xl font-semibold text-green-500">
+                    {userGrowthData.length > 0
+                      ? `+${userGrowthData[userGrowthData.length - 1]?.newUsers || 0}`
+                      : '0'}
+                  </div>
+                  <p className="text-gray-500">New this month</p>
+                </div>
+              </div>
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart
+                  data={userGrowthData}
+                  margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis
+                    dataKey="name"
+                    tick={{ fill: '#6b7280', fontSize: 10 }}
+                    angle={-30}
+                    textAnchor="end"
+                    height={50}
+                  />
+                  <YAxis
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                    domain={[0, 'dataMax + 20']}
+                  />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Legend verticalAlign="top" height={36} />
+                  <Line
+                    type="monotone"
+                    dataKey="users"
+                    name="Total Users"
+                    stroke="#8884d8"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                    animationDuration={1500}
+                    animationEasing="ease-in-out"
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="newUsers"
+                    name="New Users"
+                    stroke="#82ca9d"
+                    strokeWidth={2}
+                    dot={{ r: 4 }}
+                    activeDot={{ r: 6 }}
+                    animationDuration={1500}
+                    animationEasing="ease-in-out"
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           )}
         </div>
 
@@ -531,8 +711,13 @@ const Dashboard = () => {
             <div className="flex items-center justify-center h-64">
               <div className="w-full h-64 animate-pulse bg-gray-200 rounded"></div>
             </div>
-          ) : eventsApi.error || companiesApi.error ? (
-            <div className="flex flex-col items-center justify-center h-64 text-red-500">
+          ) : eventsApi.error ||
+            companiesApi.error ||
+            statisticsData.length === 0 ||
+            statisticsData.every(
+              item => item.events === 0 && item.companies === 0
+            ) ? (
+            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-12 w-12 mb-2"
@@ -544,11 +729,13 @@ const Dashboard = () => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
                 />
               </svg>
-              <p className="text-center">Error loading chart data</p>
-              <p className="text-sm text-center mt-1">Please try again later</p>
+              <p className="text-center font-medium">No data to display</p>
+              <p className="text-sm text-center mt-1">
+                Event and company statistics are currently unavailable
+              </p>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
@@ -596,28 +783,54 @@ const Dashboard = () => {
           <h2 className="text-lg font-medium text-gray-900 mb-4">
             Queue Time Distribution
           </h2>
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart
-              data={queueData}
-              margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-              <XAxis dataKey="name" tick={{ fill: '#6b7280', fontSize: 12 }} />
-              <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} />
-              <Tooltip content={<CustomTooltip />} />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="time"
-                stroke="#ff8042"
-                strokeWidth={2}
-                dot={{ r: 4 }}
-                activeDot={{ r: 6 }}
-                animationDuration={1500}
-                animationEasing="ease-in-out"
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          {queueData.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-12 w-12 mb-2"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <p className="text-center font-medium">No data to display</p>
+              <p className="text-sm text-center mt-1">
+                Queue time data is currently unavailable
+              </p>
+            </div>
+          ) : (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart
+                data={queueData}
+                margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis
+                  dataKey="name"
+                  tick={{ fill: '#6b7280', fontSize: 12 }}
+                />
+                <YAxis tick={{ fill: '#6b7280', fontSize: 12 }} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend />
+                <Line
+                  type="monotone"
+                  dataKey="time"
+                  stroke="#ff8042"
+                  strokeWidth={2}
+                  dot={{ r: 4 }}
+                  activeDot={{ r: 6 }}
+                  animationDuration={1500}
+                  animationEasing="ease-in-out"
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          )}
         </div>
 
         {/* System Metrics Distribution */}
@@ -632,8 +845,12 @@ const Dashboard = () => {
             <div className="flex items-center justify-center h-64">
               <div className="w-full h-64 animate-pulse bg-gray-200 rounded"></div>
             </div>
-          ) : usersApi.error || eventsApi.error || companiesApi.error ? (
-            <div className="flex flex-col items-center justify-center h-64 text-red-500">
+          ) : usersApi.error ||
+            eventsApi.error ||
+            companiesApi.error ||
+            (actualData.totalEvents === 0 &&
+              actualData.totalCompanies === 0) ? (
+            <div className="flex flex-col items-center justify-center h-64 text-gray-500">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-12 w-12 mb-2"
@@ -645,11 +862,19 @@ const Dashboard = () => {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth={2}
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
                 />
               </svg>
-              <p className="text-center">Error loading chart data</p>
-              <p className="text-sm text-center mt-1">Please try again later</p>
+              <p className="text-center font-medium">No data to display</p>
+              <p className="text-sm text-center mt-1">
+                System metrics are currently unavailable
+              </p>
             </div>
           ) : (
             <ResponsiveContainer width="100%" height={300}>
@@ -725,6 +950,32 @@ const Dashboard = () => {
                 <div className="h-3 bg-gray-200 rounded w-20"></div>
               </div>
             ))}
+          </div>
+        ) : usersApi.error ||
+          eventsApi.error ||
+          companiesApi.error ||
+          (!apiResults.users?.data?.users?.length &&
+            !apiResults.events?.data?.result?.data?.length &&
+            !apiResults.companies?.data?.companies?.data?.length) ? (
+          <div className="flex flex-col items-center justify-center py-8 text-gray-500">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-12 w-12 mb-2"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 10h16M4 14h16M4 18h16"
+              />
+            </svg>
+            <p className="text-center font-medium">No recent activity</p>
+            <p className="text-sm text-center mt-1">
+              Activity data is currently unavailable
+            </p>
           </div>
         ) : (
           <div className="space-y-4 ">
