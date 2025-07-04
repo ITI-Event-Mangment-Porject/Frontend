@@ -85,6 +85,13 @@ const Dashboard = () => {
   // State for event and company statistics by month
   const [statisticsData, setStatisticsData] = useState([]);
 
+  // State for API results to use in Recent Activity
+  const [apiResults, setApiResults] = useState({
+    users: null,
+    events: null,
+    companies: null,
+  });
+
   // State for animated counters
   const [counters, setCounters] = useState({
     users: 0,
@@ -108,8 +115,16 @@ const Dashboard = () => {
           eventsApi.execute(() => eventAPI.getAll()),
           companiesApi.execute(() => companyAPI.getAll()),
         ]);
+        console.log('userResult', usersResult);
         console.log('eventsResult', eventsResult);
         console.log('companiesResult', companiesResult);
+
+        // Store API results in state for use in Recent Activity
+        setApiResults({
+          users: usersResult,
+          events: eventsResult,
+          companies: companiesResult,
+        });
 
         // Update state with all results at once
         setActualData(prev => ({
@@ -695,49 +710,86 @@ const Dashboard = () => {
         <h2 className="text-lg font-medium text-gray-900 mb-4">
           Recent Activity
         </h2>
-        <div className="space-y-4 ">
-          {[
-            {
-              action: 'New user registration',
-              user: 'John Doe',
-              time: '5 minutes ago',
-              icon: <FaUsers className="text-indigo-500" />,
-            },
-            {
-              action: 'Event created',
-              user: 'Admin Alice',
-              time: '1 hour ago',
-              icon: <FaCalendarAlt className="text-green-500" />,
-            },
-            {
-              action: 'Company profile updated',
-              user: 'Tech Corp',
-              time: '2 hours ago',
-              icon: <FaBuilding className="text-blue-500" />,
-            },
-            {
-              action: 'Queue status changed',
-              user: 'Staff Bob',
-              time: '3 hours ago',
-              icon: <FaClock className="text-amber-500" />,
-            },
-          ].map((activity, index) => (
-            <div
-              key={index}
-              className="flex items-center p-3 border-b last:border-0 transition-colors duration-200 hover:scale-101 rounded animate-slide-in-right"
-              style={{ animationDelay: `${1.0 + index * 0.1}s` }}
-            >
-              <div className="mr-4">{activity.icon}</div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">
-                  {activity.action}
-                </p>
-                <p className="text-sm text-gray-500">{activity.user}</p>
+        {usersApi.loading || eventsApi.loading || companiesApi.loading ? (
+          <div className="space-y-4">
+            {[1, 2, 3, 4].map(index => (
+              <div
+                key={index}
+                className="flex items-center p-3 border-b last:border-0 animate-pulse"
+              >
+                <div className="mr-4 w-6 h-6 bg-gray-200 rounded-full"></div>
+                <div className="flex-1">
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div className="h-3 bg-gray-200 rounded w-20"></div>
               </div>
-              <span className="text-sm text-gray-500">{activity.time}</span>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4 ">
+            {[
+              {
+                action: 'New user registration',
+                user: apiResults.users?.data?.users?.[0]?.first_name
+                  ? `${apiResults.users.data.users[0].first_name} ${apiResults.users.data.users[0].last_name || ''}`.trim()
+                  : 'John Doe',
+                time: apiResults.users?.data?.users?.[0]?.created_at
+                  ? new Date(
+                      apiResults.users.data.users[0].created_at
+                    ).toLocaleDateString()
+                  : '5 minutes ago',
+                icon: <FaUsers className="text-indigo-500" />,
+              },
+              {
+                action: 'Event created',
+                user:
+                  apiResults.events?.data?.result?.data?.[0]?.title ||
+                  'Tech Conference',
+                time: apiResults.events?.data?.result?.data?.[0]?.created_at
+                  ? new Date(
+                      apiResults.events.data.result.data[0].created_at
+                    ).toLocaleDateString()
+                  : '1 hour ago',
+                icon: <FaCalendarAlt className="text-green-500" />,
+              },
+              {
+                action: 'Company registered',
+                user:
+                  apiResults.companies?.data?.companies?.data?.[0]?.name ||
+                  'Tech Corp',
+                time: apiResults.companies?.data?.companies?.data?.[0]
+                  ?.created_at
+                  ? new Date(
+                      apiResults.companies.data.companies.data[0].created_at
+                    ).toLocaleDateString()
+                  : '2 hours ago',
+                icon: <FaBuilding className="text-blue-500" />,
+              },
+              {
+                action: 'Queue status changed',
+                user: 'Staff Bob',
+                time: '3 hours ago',
+                icon: <FaClock className="text-amber-500" />,
+              },
+            ].map((activity, index) => (
+              <div
+                key={index}
+                className="flex items-center p-3 border-b last:border-0 transition-colors duration-200 hover:scale-101 rounded animate-slide-in-right"
+                style={{ animationDelay: `${1.0 + index * 0.1}s` }}
+              >
+                <div className="mr-4">{activity.icon}</div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-gray-900">
+                    {activity.action}
+                  </p>
+                  <p className="text-sm text-gray-500">{activity.user}</p>
+                </div>
+                <span className="text-sm text-gray-500">{activity.time}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
