@@ -1,4 +1,4 @@
-import { FaEdit, FaTrash } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaUser, FaUserAlt } from 'react-icons/fa';
 
 export const getUserTableColumns = (handleEditClick, handleDeleteClick) => {
   // Define column configurations
@@ -12,11 +12,11 @@ export const getUserTableColumns = (handleEditClick, handleDeleteClick) => {
             {user.profile_image ? (
               <img
                 src={user.profile_image}
-                alt={user.first_name}
+                alt={`${user.first_name.charAt(0)} `}
                 className="h-full w-full object-cover"
               />
             ) : (
-              <span>{user.first_name.charAt(0)}</span>
+              <FaUserAlt className="text-gray-500" />
             )}
           </div>
           <span className="ml-2 text-sm ">
