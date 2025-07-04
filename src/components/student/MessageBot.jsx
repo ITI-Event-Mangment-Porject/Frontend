@@ -37,7 +37,9 @@ const Messenger = () => {
           </div>
           <div className="flex-1 overflow-y-auto p-3 space-y-2">
             {messages.length === 0 ? (
-              <div className="text-gray-400 text-center py-8">No messages yet</div>
+              <div className="text-gray-400 text-center py-8">
+                No messages yet
+              </div>
             ) : (
               messages.map(msg => (
                 <div
@@ -48,7 +50,9 @@ const Messenger = () => {
                       : 'bg-gray-50 border-l-4 border-gray-300'
                   }`}
                 >
-                  <div className="font-medium">{msg.sender_name || 'Unknown'}</div>
+                  <div className="font-medium">
+                    {msg.sender_name || 'Unknown'}
+                  </div>
                   <div className="text-sm">{msg.message}</div>
                   <div className="text-xs text-gray-400">{msg.created_at}</div>
                 </div>

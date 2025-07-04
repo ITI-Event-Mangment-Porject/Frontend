@@ -35,12 +35,9 @@ const JobFairSetUp = () => {
     contact_phone: '',
     linkedin_url: '',
   });
- 
 
   const fetchCompanies = async (
-
     url = 'http://localhost:8001/api/companies?sort=-created_at&per_page=10'
-
   ) => {
     try {
       setLoading(true);
@@ -49,7 +46,7 @@ const JobFairSetUp = () => {
       if (statusFilter === 'approved') finalUrl += `&filter[is_approved]=1`;
       if (statusFilter === 'rejected') finalUrl += `&filter[is_approved]=0`;
       const res = await fetch(finalUrl);
-      console.log(res)
+      console.log(res);
       const data = await res.json();
 
       setCompanies(data.data.companies.data);
@@ -81,7 +78,6 @@ const JobFairSetUp = () => {
   const handleAddCompany = async e => {
     e.preventDefault();
     try {
-
       const response = await fetch('http://localhost:8001/api/companies', {
         method: 'POST',
         headers: {
