@@ -5,6 +5,10 @@ import {
   Edit3, Save, X, Briefcase, Mail, Phone, Globe, MapPin, Loader2
 } from 'lucide-react';
 import api from '../../api/axios'; 
+
+
+
+
 const CompanyProfilePage = () => {
   const { companyId } = useParams();
   const [companyData, setCompanyData] = useState({
