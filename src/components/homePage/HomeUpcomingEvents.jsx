@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { eventAPI } from '../../services/api';
 import CardSkeleton from '../common/CardSkeleton';
+import Modal from '../common/Modal';
 
 const HomeUpcomingEvents = () => {
   // Always initialize events as an empty array
@@ -10,6 +11,21 @@ const HomeUpcomingEvents = () => {
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
   const eventsPerPage = 4;
+  // Modal states
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+
+  // Function to open modal with event details
+  const openEventModal = event => {
+    setSelectedEvent(event);
+    setIsModalOpen(true);
+  };
+
+  // Function to close modal
+  const closeEventModal = () => {
+    setIsModalOpen(false);
+    setSelectedEvent(null);
+  };
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -309,12 +325,12 @@ const HomeUpcomingEvents = () => {
                     </div>
 
                     <div className="mt-auto">
-                      <Link
-                        to={`/event-details/${event.id}`}
-                        className="block text-center bg-[var(--primary-500)] text-white py-2 rounded-md hover:bg-[var(--primary-600)] transition-all duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[var(--primary-300)] focus:ring-offset-2"
+                      <button
+                        onClick={() => openEventModal(event)}
+                        className="block w-full text-center bg-[var(--primary-500)] text-white py-2 rounded-md hover:bg-[var(--primary-600)] transition-all duration-300 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-[var(--primary-300)] focus:ring-offset-2"
                       >
                         View Details
-                      </Link>
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -402,6 +418,238 @@ const HomeUpcomingEvents = () => {
               </Link>
             </div>
           </>
+        )}
+
+        {/* Modal for event details */}
+        {isModalOpen && selectedEvent && (
+          <Modal
+            isOpen={isModalOpen}
+            onClose={closeEventModal}
+            title={selectedEvent?.title || 'Event Details'}
+            size="lg"
+            showFooter={false}
+          >
+            {selectedEvent && (
+              <div className="event-details-modal animate-fadeIn">
+                {/* Event Image */}
+
+                <div
+                  className="mb-6 animate-scaleIn"
+                  style={{ animationDelay: '0.1s' }}
+                >
+                  <img
+                    src={`https://placehold.co/400x250?text=${encodeURIComponent(selectedEvent.title)}`}
+                    alt={selectedEvent.title}
+                    className="w-full h-64 object-cover rounded-lg shadow-md"
+                    onError={e => {
+                      e.target.onerror = null;
+                      e.target.src = `https://placehold.co/800x400?text=${encodeURIComponent(
+                        selectedEvent.title
+                      )}`;
+                    }}
+                  />
+                </div>
+
+                {/* Event Status Badge */}
+                {selectedEvent.status && (
+                  <div
+                    className="mb-4 animate-slideInRight"
+                    style={{ animationDelay: '0.2s' }}
+                  >
+                    <span
+                      className={`inline-block ${getStatusColor(
+                        selectedEvent.status
+                      )} text-white text-sm px-3 py-1 rounded-full`}
+                    >
+                      {selectedEvent.status}
+                    </span>
+                    {selectedEvent.type && (
+                      <span className="inline-block bg-[var(--primary-500)] text-white text-sm px-3 py-1 rounded-full ml-2">
+                        {selectedEvent.type}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Event Title and Description */}
+                <h3
+                  className="text-2xl font-bold mb-2 text-[var(--secondary-500)] animate-slideInLeft"
+                  style={{ animationDelay: '0.3s' }}
+                >
+                  {selectedEvent.title}
+                </h3>
+
+                {/* Event Meta Information */}
+                <div
+                  className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-fadeIn"
+                  style={{ animationDelay: '0.4s' }}
+                >
+                  <div className="flex items-center text-gray-600">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    <div>
+                      <div className="font-semibold">Date</div>
+                      <div>
+                        {formatDate(selectedEvent.start_date)}
+                        {selectedEvent.end_date &&
+                        selectedEvent.end_date !== selectedEvent.start_date
+                          ? ` - ${formatDate(selectedEvent.end_date)}`
+                          : ''}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center text-gray-600">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <div>
+                      <div className="font-semibold">Time</div>
+                      <div>
+                        {selectedEvent.start_time
+                          ? selectedEvent.start_time.substring(0, 5)
+                          : 'TBD'}
+                        {selectedEvent.end_time
+                          ? `- ${selectedEvent.end_time.substring(0, 5)}`
+                          : ''}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center text-gray-600">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                    <div>
+                      <div className="font-semibold">Location</div>
+                      <div>{selectedEvent.location || 'TBD'}</div>
+                    </div>
+                  </div>
+
+                  {selectedEvent.registration_deadline && (
+                    <div className="flex items-center text-gray-600">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 mr-2"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      <div>
+                        <div className="font-semibold">
+                          Registration Deadline
+                        </div>
+                        <div>
+                          {formatDate(selectedEvent.registration_deadline)}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Event Description */}
+                <div
+                  className="mb-6 animate-fadeIn"
+                  style={{ animationDelay: '0.5s' }}
+                >
+                  <h4 className="text-lg font-semibold mb-2 text-[var(--secondary-500)]">
+                    Description
+                  </h4>
+                  <div className="text-gray-700 whitespace-pre-line">
+                    {selectedEvent.description}
+                  </div>
+                </div>
+
+                {/* Event Creator */}
+                {selectedEvent.creator && (
+                  <div
+                    className="mb-6 animate-fadeIn"
+                    style={{ animationDelay: '0.6s' }}
+                  >
+                    <h4 className="text-lg font-semibold mb-2 text-[var(--secondary-500)]">
+                      Organized by
+                    </h4>
+                    <div className="text-gray-700">
+                      {selectedEvent.creator.first_name}{' '}
+                      {selectedEvent.creator.last_name}
+                    </div>
+                  </div>
+                )}
+
+                {/* Action Button */}
+                <div
+                  className="mt-8 flex justify-end animate-slideInUp"
+                  style={{ animationDelay: '0.7s' }}
+                >
+                  <Link
+                    to={`/event-details/${selectedEvent.id}`}
+                    className="inline-flex items-center px-6 py-3 bg-[var(--primary-500)] text-white font-medium rounded-md hover:bg-[var(--primary-600)] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[var(--primary-300)] focus:ring-offset-2"
+                  >
+                    Register for Event
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 ml-2"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </Link>
+                </div>
+              </div>
+            )}
+          </Modal>
         )}
       </div>
     </section>
