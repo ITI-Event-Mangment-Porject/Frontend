@@ -12,7 +12,6 @@ import Profile from '../pages/student/Profile';
 import Login from '../pages/student/Login';
 import ShowEvents from '../pages/student/ShowEvents';
 
-
 // Admin Pages
 import AdminDashboard from '../pages/admin/Dashboard';
 import ManageEvents from '../pages/admin/ManageEvents';
@@ -25,13 +24,10 @@ const AppRoutes = () => {
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/users" element={<UserManagement />} />
       <Route path="/admin/companies" element={<JobFairSetup />} />
-      <Route path='/admin/attendance' element={<AttendanceReports/>}/>
+      <Route path="/admin/attendance" element={<AttendanceReports />} />
       {/* Default redirect to admin dashboard */}
-
       <Route path="/admin/events" element={<ManageEvents />} />
       <Route path="/admin/notifications" element={<Notifications />} />
-     
-
       <Route
         path="/admin"
         element={<Navigate to="/admin/dashboard" replace />}

@@ -1,72 +1,68 @@
-import { NavLink } from 'react-router-dom';
+import React from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import {
   Home,
+  List,
   Calendar,
   Briefcase,
   Clock,
   MessageCircle,
   User,
-  List,
 } from 'lucide-react';
 
-function Sidebar() {
-  const linkStyle = ({ isActive }) =>
-    `text-lg px-3 py-2 rounded transition duration-300 w-full flex items-center ${
-      isActive
-        ? 'bg-red-800 text-white font-semibold'
-        : 'hover:underline hover:bg-red-800 hover:text-white'
-    }`;
+const Sidebar = () => {
+  const location = useLocation();
+
+  const navItems = [
+    { path: '/show-events', icon: List, label: 'Show Events' },
+    { path: '/company-directory', icon: Briefcase, label: 'Company Directory' },
+    { path: '/interview-queue', icon: Clock, label: 'Queue Status' },
+    { path: '/feedback', icon: MessageCircle, label: 'Feedback Form' },
+    { path: '/profile', icon: User, label: 'Profile' },
+  ];
 
   return (
-    <div className="sidebar">
-      <nav className="flex flex-col items-start p-4 border-r w-64 bg-white h-full">
-        <ul className="space-y-2 w-full">
-          {/* <li>
-            <NavLink to="/" className={linkStyle}>
-              <Home className="mr-3 w-5 h-5" />
-              Dashboard
-            </NavLink>
-          </li> */}
-          <li>
-            <NavLink to="/show-events" className={linkStyle}>
-              <List className="mr-3 w-5 h-5" />
-              Show Events
-            </NavLink>
-          </li>
-          {/* <li>
-            <NavLink to="/event-details" className={linkStyle}>
-              <Calendar className="mr-3 w-5 h-5" />
-              Event Details
-            </NavLink>
-          </li> */}
-          <li>
-            <NavLink to="/company-directory" className={linkStyle}>
-              <Briefcase className="mr-3 w-5 h-5" />
-              Directory
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/interview-queue" className={linkStyle}>
-              <Clock className="mr-3 w-5 h-5" />
-              Queue Status
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/feedback" className={linkStyle}>
-              <MessageCircle className="mr-3 w-5 h-5" />
-              Feedback Form
-            </NavLink>
-          </li>
-          <li>
-            <NavLink to="/profile" className={linkStyle}>
-              <User className="mr-3 w-5 h-5" />
-              Profile
-            </NavLink>
-          </li>
-        </ul>
-      </nav>
-    </div>
+    <aside className="fixed left-0 top-16 z-40 mt-3 w-14 sm:w-20 md:w-20 lg:w-60 bg-white shadow-lg h-[calc(100vh-4rem)] transition-all duration-300 ease-in-out border-r border-gray-200 rounded-lg overflow-hidden">
+      <div className="sm:p-2.5 h-full flex flex-col">
+        {/* Header - Hide text on small screens */}
+        <div className="mb-2 sm:mb-4 lg:mb-6 flex-shrink-0">
+          <div className="lg:hidden flex justify-center"></div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="space-y-0.5 sm:space-y-1 flex-1 overflow-y-auto">
+          {navItems.map(item => {
+            const Icon = item.icon;
+            const isActive = location.pathname === item.path;
+
+            return (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`group flex items-center justify-center lg:justify-start px-1.5 sm:px-3 lg:px-3 py-2 sm:py-2.5 text-sm font-medium rounded-md transition-all duration-200 relative sidebar-link ${
+                  isActive
+                    ? 'bg-red-50 text-red-700'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                }`}
+                title={item.label} // Fallback tooltip
+              >
+                <Icon
+                  className={`h-5 w-5 sm:h-6 sm:w-6 md:h-6 md:w-6 lg:h-5 lg:w-5 flex-shrink-0 ${
+                    isActive
+                      ? 'text-red-700'
+                      : 'text-gray-400 group-hover:text-gray-500'
+                  } lg:mr-3`}
+                />
+                <span className="hidden lg:block">{item.label}</span>
+                {/* Custom tooltip for collapsed sidebar */}
+                <div className="sidebar-tooltip lg:hidden">{item.label}</div>
+              </Link>
+            );
+          })}
+        </nav>
+      </div>
+    </aside>
   );
-}
+};
 
 export default Sidebar;

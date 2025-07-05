@@ -79,17 +79,17 @@ const Attendance_Reports = () => {
   const attendeeData = generateAttendeeData();
 
   const totalAttendees = attendeeData.length;
-  const presentAttendees = attendeeData.filter(
-    a => a.status === 'Present'
-  ).length;
-  const lateAttendees = attendeeData.filter(a => a.status === 'Late').length;
+  // // const presentAttendees = attendeeData.filter(
+  //   a => a.status === 'Present'
+  // ).length;
+  // const lateAttendees = attendeeData.filter(a => a.status === 'Late').length;
   const absentAttendees = attendeeData.filter(
     a => a.status === 'Absent'
   ).length;
-  const checkedInPercentage =
-    totalAttendees > 0
-      ? (((presentAttendees + lateAttendees) / totalAttendees) * 100).toFixed(1)
-      : 0;
+  // const checkedInPercentage =
+  //   totalAttendees > 0
+  //     ? (((presentAttendees + lateAttendees) / totalAttendees) * 100).toFixed(1)
+  //     : 0;
 
   const filteredAttendees = attendeeData.filter(attendee => {
     const matchesSearch =

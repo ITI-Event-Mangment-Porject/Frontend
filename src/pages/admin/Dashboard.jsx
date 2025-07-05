@@ -22,7 +22,7 @@ const Dashboard = () => {
           style={{ animationDelay: '0.3s' }}
         >
           <button
-            onClick={() => navigate('/admin/events/create')}
+            onClick={() => navigate('/admin/events')}
             className="p-4 bg-white rounded-lg shadow-md hover:bg-gray-50 hover:cursor-pointer  border-primary transition-all duration-200 transform hover:scale-105 hover:shadow-md"
           >
             <h3 className="text-lg font-medium text-gray-900 mb-2">

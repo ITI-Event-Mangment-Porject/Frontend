@@ -6,7 +6,7 @@ const JobFairSetup = () => {
   return (
     <Layout>
       <div className="min-h-screen ">
-        <JobFairSetUp/>
+        <JobFairSetUp />
       </div>
     </Layout>
   );

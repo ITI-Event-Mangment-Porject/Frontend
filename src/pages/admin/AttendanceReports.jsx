@@ -6,7 +6,7 @@ const AttendanceReports = () => {
   return (
     <Layout>
       <div className="min-h-screen ">
-       <Attendance_Reports/>
+        <Attendance_Reports />
       </div>
     </Layout>
   );

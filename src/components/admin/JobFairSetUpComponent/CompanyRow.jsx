@@ -1,11 +1,13 @@
+
 const CompanyRow = ({ company, onView, onApproveReject, actionLoading }) => {
   const getStatusStyle = (status) => {
+
     if (status === 'approved') return 'bg-green-100 text-green-700';
     if (status === 'rejected') return 'bg-red-100 text-red-700';
     return 'bg-yellow-100 text-yellow-700';
   };
 
-  const getStatusLabel = (status) => {
+  const getStatusLabel = status => {
     if (status === 'approved') return 'Approved';
     if (status === 'rejected') return 'Rejected';
     return 'Pending';
@@ -21,12 +23,17 @@ const CompanyRow = ({ company, onView, onApproveReject, actionLoading }) => {
 
  
 
+
   return (
     <tr className="hover:bg-gray-50">
       <td className="px-6 py-4 whitespace-nowrap">
         <div className="flex items-center">
           {company.logo_path ? (
-            <img className="h-10 w-10 rounded-full" src={company.logo_path} alt={company.name} />
+            <img
+              className="h-10 w-10 rounded-full"
+              src={company.logo_path}
+              alt={company.name}
+            />
           ) : (
             <div className="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-sm">
               {company.name.charAt(0)}
@@ -43,9 +50,11 @@ const CompanyRow = ({ company, onView, onApproveReject, actionLoading }) => {
         <div className="text-sm text-gray-500">{company.contact_phone}</div>
       </td>
       <td className="px-6 py-4 text-sm text-gray-500">{company.industry}</td>
-      
+
       <td className="px-6 py-4">
-        <span className={`px-2 py-1 inline-flex text-xs font-semibold rounded-full ${getStatusStyle(status)}`}>
+        <span
+          className={`px-2 py-1 inline-flex text-xs font-semibold rounded-full ${getStatusStyle(status)}`}
+        >
           {getStatusLabel(status)}
         </span>
       </td>
@@ -53,6 +62,8 @@ const CompanyRow = ({ company, onView, onApproveReject, actionLoading }) => {
         <div className="flex items-center space-x-2">
           {status === 'approved' || status==='rejected' ? (
             <button onClick={() => onView(company)} className="text-red-600 hover:text-red-800" title="View Details">
+
+  
               view
             </button>
           ) : (

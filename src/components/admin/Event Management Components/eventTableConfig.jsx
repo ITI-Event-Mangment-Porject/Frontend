@@ -4,8 +4,40 @@ import {
   FaTrash,
   FaCalendarAlt,
   FaMapMarkerAlt,
-  FaUserFriends,
+  FaCalendarPlus,
 } from 'react-icons/fa';
+
+// Helper function to format time for display (e.g., "9:00 AM", "10:30 PM")
+const formatTimeDisplay = timeString => {
+  if (!timeString) return 'N/A';
+
+  // If it's already in HH:MM format, convert to 12-hour format
+  if (timeString.match(/^\d{2}:\d{2}(:\d{2})?$/)) {
+    const [hours, minutes] = timeString.split(':');
+    const hour = parseInt(hours, 10);
+    const minute = parseInt(minutes, 10);
+
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+
+    return `${displayHour}:${String(minute).padStart(2, '0')} ${period}`;
+  }
+
+  // Otherwise try to parse as date
+  try {
+    const time = new Date(timeString);
+    if (isNaN(time.getTime())) return timeString; // Return original if can't parse
+
+    return time.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    });
+  } catch (e) {
+    console.error('Error formatting time:', e);
+    return timeString; // Return original if can't parse
+  }
+};
 
 export const getEventTableColumns = (handleEditClick, handleDeleteEvent) => [
   {
@@ -36,11 +68,7 @@ export const getEventTableColumns = (handleEditClick, handleDeleteEvent) => [
       <div className="text-left text-sm text-[#8C8D8BFF]">
         <div>{new Date(event.start_date).toLocaleDateString('en-GB')}</div>
         <div className="text-xs">
-          {new Date(event.start_time).toLocaleTimeString('en-US', {
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: true,
-          })}
+          {event.start_time ? formatTimeDisplay(event.start_time) : 'N/A'}
         </div>
       </div>
     ),
@@ -56,19 +84,14 @@ export const getEventTableColumns = (handleEditClick, handleDeleteEvent) => [
     ),
   },
   {
-    header: 'Capacity',
-    accessor: 'capacity',
+    header: 'Type',
+    accessor: 'type',
     render: event => (
       <div className="text-left text-sm text-[#8C8D8BFF]">
         <div className="flex items-center">
-          <FaUserFriends className="text-gray-400 mr-1" size={12} />
-          {event.capacity || 'Unlimited'}
+          <FaCalendarPlus className="text-gray-400 mr-1" size={12} />
+          {event.type || 'N/A'}
         </div>
-        {event.registered_count && (
-          <div className="text-xs mt-1">
-            {event.registered_count} registered
-          </div>
-        )}
       </div>
     ),
   },
