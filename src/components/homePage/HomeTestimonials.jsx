@@ -4,7 +4,7 @@ const testimonials = [
   {
     id: 1,
     quote:
-      'ITIvent completely transformed how we manage our tech conferences. The intuitive dashboard provided insights that helped us improve our attendee experience dramatically.',
+      'communITI completely transformed how we manage our tech conferences. The intuitive dashboard provided insights that helped us improve our attendee experience dramatically.',
     name: 'Sarah Chen',
     position: 'Event Director, TechCorp',
     avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
@@ -12,7 +12,7 @@ const testimonials = [
   {
     id: 2,
     quote:
-      "We use ITIvent across all countries for our workshops and seminars. The platform's flexibility and robust reporting capabilities make planning easier than ever before.",
+      "We use communITI across all countries for our workshops and seminars. The platform's flexibility and robust reporting capabilities make planning easier than ever before.",
     name: 'David Lee',
     position: 'Global Events Manager',
     avatar: 'https://randomuser.me/api/portraits/men/86.jpg',
@@ -20,7 +20,7 @@ const testimonials = [
   {
     id: 3,
     quote:
-      'The simple registration process and attendee management features saved us countless hours of manual work. ITIvent is now essential for all our events.',
+      'The simple registration process and attendee management features saved us countless hours of manual work. communITI is now essential for all our events.',
     name: 'Emily Carter',
     position: 'Marketing Director',
     avatar: 'https://randomuser.me/api/portraits/women/65.jpg',
