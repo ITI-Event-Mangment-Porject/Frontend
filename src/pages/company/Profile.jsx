@@ -6,9 +6,6 @@ import {
 } from 'lucide-react';
 import api from '../../api/axios'; 
 
-
-
-
 const CompanyProfilePage = () => {
   const { companyId } = useParams();
   const [companyData, setCompanyData] = useState({
@@ -37,15 +34,14 @@ const CompanyProfilePage = () => {
           },
         });
         const rawData = response.data.data || {};
-setCompanyData({
-  ...rawData,
-  logo_path: rawData.logo_path 
-    ? rawData.logo_path.startsWith('http')
-      ? rawData.logo_path
-      : `http://127.0.0.1:8000/storage/${rawData.logo_path}`
-    : ''
-});
-
+        setCompanyData({
+          ...rawData,
+          logo_path: rawData.logo_path 
+            ? rawData.logo_path.startsWith('http')
+              ? rawData.logo_path
+              : `http://127.0.0.1:8000/storage/${rawData.logo_path}`
+            : ''
+        });
       } catch (err) {
         setError("Failed to fetch company data");
       }
@@ -54,7 +50,6 @@ setCompanyData({
 
     fetchCompany();
   }, [companyId, token]);
-
 
   const handleInputChange = (field, value) => {
     setCompanyData(prev => ({ ...prev, [field]: value }));
@@ -101,50 +96,49 @@ setCompanyData({
     setLoading(false);
   };
 
-const handleLogoUpload = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  if (!file.type.startsWith('image/')) {
-    setError("Please select a valid image file");
-    return;
-  }
+    if (!file.type.startsWith('image/')) {
+      setError("Please select a valid image file");
+      return;
+    }
 
-  if (file.size > 5 * 1024 * 1024) {
-    setError("File size must be less than 5MB");
-    return;
-  }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("File size must be less than 5MB");
+      return;
+    }
 
-  const formData = new FormData();
-  formData.append('logo', file);
+    const formData = new FormData();
+    formData.append('logo', file);
 
-  try {
-    const response = await axios.post(
-      `http://127.0.0.1:8000/api/companies/${companyId}/logo`, // ✅ استخدمي البورت 8001
-      formData,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'multipart/form-data'
+    try {
+      const response = await axios.post(
+        `http://127.0.0.1:8000/api/companies/${companyId}/logo`,
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data'
+          }
         }
-      }
-    );
+      );
 
-    console.log("Upload response", response.data);
+      console.log("Upload response", response.data);
 
-const newLogoPath = response.data.logo_path;
+      const newLogoPath = response.data.logo_path;
 
-setCompanyData(prev => ({
-  ...prev,
-  logo_path: newLogoPath.replace('127.0.0.1', 'localhost')
-}));
+      setCompanyData(prev => ({
+        ...prev,
+        logo_path: newLogoPath.replace('127.0.0.1', 'localhost')
+      }));
 
-  } catch (err) {
-    console.log("Upload error:", err.response?.data || err.message);
-    setError("Logo upload failed");
-  }
-};
-
+    } catch (err) {
+      console.log("Upload error:", err.response?.data || err.message);
+      setError("Logo upload failed");
+    }
+  };
 
   const handleCancel = () => {
     setIsEditing(false);
@@ -160,48 +154,52 @@ setCompanyData(prev => ({
     return labels[size] || size;
   };
 
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-100 to-red-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50/50 via-white to-slate-50/30 relative overflow-hidden">
+      {/* Background decorative elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-1/4 w-64 h-64 bg-gradient-to-br from-[#901b20]/5 to-[#ad565a]/5 rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-20 right-1/4 w-48 h-48 bg-gradient-to-br from-[#203947]/5 to-[#901b20]/5 rounded-full blur-2xl animate-pulse delay-1000" />
+        <div className="absolute top-1/2 left-1/3 w-32 h-32 bg-gradient-to-br from-[#ad565a]/5 to-[#203947]/5 rounded-full blur-xl animate-pulse delay-500" />
+      </div>
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         
         {/* Main Profile Card */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl border border-gray-200/50 overflow-hidden mb-8 hover:shadow-3xl transition-all duration-500">
-          {/* Header Background - Fixed gradient visibility */}
-          <div className="h-40 bg-gradient-to-br from-slate-700 via-slate-800 to-red-700 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20"></div>
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(255,255,255,0.1),transparent)] animate-pulse"></div>
+        <div className="bg-white/10 backdrop-blur-3xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden mb-8 hover:shadow-3xl transition-all duration-500 transform hover:scale-[1.01] group">
+          {/* Header Background */}
+          <div className="h-48 bg-gradient-to-br from-[#203947]/80 via-[#901b20]/70 to-[#ad565a]/80 relative overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(255,255,255,0.1),transparent)] animate-pulse" />
+            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </div>
           
-          <div className="px-6 lg:px-12 pb-10 -mt-16 relative">
+          <div className="px-8 lg:px-16 pb-12 -mt-20 relative">
             <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start">
               
-              {/* Logo Section - Fixed image display */}
-              <div className="relative group">
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-700 to-red-700 rounded-3xl blur-xl opacity-20 group-hover:opacity-30 transition-opacity duration-300"></div>
+              {/* Logo Section */}
+              <div className="relative group/logo">
+                <div className="absolute inset-0 bg-gradient-to-br from-[#901b20]/30 to-[#ad565a]/30 rounded-3xl blur-xl opacity-0 group-hover/logo:opacity-100 transition-opacity duration-500" />
                 {companyData.logo_path ? (
-                  <div className="relative w-32 h-32 rounded-3xl border-4 border-white shadow-2xl bg-white overflow-hidden group-hover:scale-105 transition-transform duration-300">
-<img 
-  src={companyData.logo_path} 
-  alt="Company Logo" 
-  className="w-full h-full object-cover"
-/>
-
-                    <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-white flex items-center justify-center" style={{display: 'none'}}>
-                      <Briefcase className="w-12 h-12 text-red-700" />
-                    </div>
+                  <div className="relative w-36 h-36 rounded-3xl border-4 border-white/30 shadow-2xl bg-white/90 backdrop-blur-sm overflow-hidden group-hover/logo:scale-110 transition-all duration-500">
+                    <img 
+                      src={companyData.logo_path} 
+                      alt="Company Logo" 
+                      className="w-full h-full object-cover"
+                    />
                   </div>
                 ) : (
-                  <div className="relative w-32 h-32 bg-gradient-to-br from-gray-50 to-white border-4 border-white shadow-2xl rounded-3xl flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                    <Briefcase className="w-12 h-12 text-red-700" />
+                  <div className="relative w-36 h-36 bg-gradient-to-br from-white/90 to-white/70 border-4 border-white/30 shadow-2xl rounded-3xl flex items-center justify-center group-hover/logo:scale-110 transition-all duration-500 backdrop-blur-sm">
+                    <Briefcase className="w-16 h-16 text-[#901b20]" />
                   </div>
                 )}
                 {isEditing && (
-                  <div className="mt-4">
+                  <div className="mt-6">
                     <label 
                       htmlFor="logo-upload" 
-                      className="cursor-pointer inline-block bg-gradient-to-r from-red-700 to-red-800 hover:from-red-800 hover:to-red-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                      className="cursor-pointer inline-flex items-center gap-2 bg-gradient-to-r from-[#901b20]/90 to-[#ad565a]/90 hover:from-[#901b20] hover:to-[#ad565a] text-white px-6 py-3 rounded-2xl text-sm font-medium transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 hover:-translate-y-1"
                     >
+                      <Edit3 className="w-4 h-4" />
                       Upload Logo
                     </label>
                     <input 
@@ -215,32 +213,31 @@ setCompanyData(prev => ({
                 )}
               </div>
 
-              {/* Company Info - Fixed font visibility */}
+              {/* Company Info */}
               <div className="flex-1 text-center lg:text-left">
                 {isEditing ? (
                   <input
                     value={companyData.name || ''}
                     onChange={(e) => handleInputChange("name", e.target.value)}
-                    className="text-2xl lg:text-4xl font-bold border-2 border-gray-200 focus:border-red-700 p-3 w-full rounded-2xl bg-gray-50/50 focus:bg-white transition-all duration-300 text-slate-800 placeholder-gray-500"
+                    className="text-3xl lg:text-5xl font-bold border-2 border-white/30 focus:border-[#901b20]/50 p-4 w-full rounded-2xl bg-white/20 backdrop-blur-sm focus:bg-white/30 transition-all duration-300 text-white placeholder-white/60"
                     placeholder="Company Name"
                   />
                 ) : (
-                  <h1 className="text-2xl lg:text-4xl font-bold text-white drop-shadow-lg">
+                  <h1 className="text-3xl lg:text-5xl font-bold text-white drop-shadow-2xl tracking-tight">
                     {companyData.name || 'Company Name'}
                   </h1>
-                  
                 )}
                 
-                <div className="mt-3">
+                <div className="mt-6">
                   {isEditing ? (
                     <input
                       value={companyData.industry || ''}
                       onChange={(e) => handleInputChange("industry", e.target.value)}
-                      className="border-2 border-gray-200 focus:border-red-700 p-2 rounded-xl bg-gray-50/50 focus:bg-white transition-all duration-300 text-slate-800 placeholder-gray-500"
+                      className="border-2 border-white/30 focus:border-[#901b20]/50 p-3 rounded-2xl bg-white/20 backdrop-blur-sm focus:bg-white/30 transition-all duration-300 placeholder-white/60"
                       placeholder="Industry"
                     />
                   ) : (
-                    <span className="inline-flex items-center px-4 py-2 my-5 bg-gradient-to-r from-red-700/10 to-red-700/20 text-red-700 text-sm font-semibold rounded-full border border-red-700/30 shadow-sm hover:shadow-md transition-all duration-300">
+                    <span className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-white/20 to-white/10  text-sm font-semibold rounded-full border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
                       <Briefcase className="w-4 h-4 mr-2" />
                       {companyData.industry || 'Industry Not Specified'}
                     </span>
@@ -249,13 +246,13 @@ setCompanyData(prev => ({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-3 mt-4 lg:mt-0">
+              <div className="flex flex-col sm:flex-row gap-4 mt-6 lg:mt-0">
                 {!isEditing ? (
                   <button 
                     onClick={() => setIsEditing(true)} 
-                    className="bg-gradient-to-r from-red-700 to-red-800 hover:from-red-800 hover:to-red-700 text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-3 font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                    className="group/btn bg-gradient-to-r from-[#901b20]/90 to-[#ad565a]/90 hover:from-[#901b20] hover:to-[#ad565a] text-white px-8 py-4 rounded-2xl flex items-center justify-center gap-3 font-medium shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 backdrop-blur-sm"
                   >
-                    <Edit3 className="w-5 h-5" /> 
+                    <Edit3 className="w-5 h-5 transition-transform duration-300 group-hover/btn:rotate-12" /> 
                     Edit Profile
                   </button>
                 ) : (
@@ -263,16 +260,16 @@ setCompanyData(prev => ({
                     <button 
                       onClick={handleSave} 
                       disabled={loading} 
-                      className="bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-700 text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-3 font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                      className="group/btn bg-gradient-to-r from-[#203947]/90 to-[#203947] hover:from-[#203947] hover:to-[#1a2d38] text-white px-8 py-4 rounded-2xl flex items-center justify-center gap-3 font-medium shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none backdrop-blur-sm"
                     >
-                      {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                      {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5 transition-transform duration-300 group-hover/btn:scale-110" />}
                       {loading ? 'Saving...' : 'Save Changes'}
                     </button>
                     <button 
                       onClick={handleCancel} 
-                      className="bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-500 text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-3 font-medium shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                      className="group/btn bg-gradient-to-r from-slate-500/90 to-slate-600/90 hover:from-slate-600 hover:to-slate-700 text-white px-8 py-4 rounded-2xl flex items-center justify-center gap-3 font-medium shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 backdrop-blur-sm"
                     >
-                      <X className="w-5 h-5" /> 
+                      <X className="w-5 h-5 transition-transform duration-300 group-hover/btn:rotate-90" /> 
                       Cancel
                     </button>
                   </>
@@ -291,13 +288,13 @@ setCompanyData(prev => ({
             { label: "Office Location", field: "location", icon: MapPin, type: "text" },
             { label: "Company Size", field: "size", icon: Briefcase, isSelect: true }
           ].map(({ label, field, icon: Icon, isSelect, type }) => (
-            <div key={field} className="group">
-              <div className="bg-white/90 backdrop-blur-sm p-6 rounded-2xl shadow-lg border border-gray-200/50 hover:shadow-xl hover:border-red-700/20 transition-all duration-300 h-full">
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-red-700/10 to-red-700/20 rounded-2xl flex items-center justify-center mr-4 group-hover:from-red-700/20 group-hover:to-red-700/30 transition-all duration-300">
-                    <Icon className="w-6 h-6 text-red-700" />
+            <div key={field} className="group/card">
+              <div className="bg-white/10 backdrop-blur-3xl p-8 rounded-2xl shadow-xl border border-white/20 hover:shadow-2xl hover:border-[#901b20]/30 transition-all duration-500 h-full transform hover:scale-105 hover:-translate-y-1">
+                <div className="flex items-center mb-6">
+                  <div className="w-14 h-14 bg-gradient-to-br from-[#901b20]/20 to-[#ad565a]/20 rounded-2xl flex items-center justify-center mr-4 group-hover/card:from-[#901b20]/30 group-hover/card:to-[#ad565a]/30 transition-all duration-300 shadow-lg">
+                    <Icon className="w-7 h-7 text-[#901b20]" />
                   </div>
-                  <h3 className="font-semibold text-lg text-slate-800">{label}</h3>
+                  <h3 className="font-semibold text-xl text-slate-700">{label}</h3>
                 </div>
                 
                 {isEditing ? (
@@ -305,7 +302,7 @@ setCompanyData(prev => ({
                     <select
                       value={companyData[field] || ''}
                       onChange={(e) => handleInputChange(field, e.target.value)}
-                      className="w-full border-2 border-gray-200 focus:border-red-700 rounded-xl p-3 bg-gray-50/50 focus:bg-white transition-all duration-300 text-slate-800"
+                      className="w-full border-2 border-white/30 focus:border-[#901b20]/50 rounded-2xl p-4 bg-white/20 backdrop-blur-sm focus:bg-white/30 transition-all duration-300 text-slate-700"
                     >
                       <option value="">Select company size</option>
                       <option value="small">Small (1–50 employees)</option>
@@ -317,20 +314,20 @@ setCompanyData(prev => ({
                       type={type}
                       value={companyData[field] || ''}
                       onChange={(e) => handleInputChange(field, e.target.value)}
-                      className="w-full border-2 border-gray-200 focus:border-red-700 rounded-xl p-3 bg-gray-50/50 focus:bg-white transition-all duration-300 text-slate-800 placeholder-gray-500"
+                      className="w-full border-2 border-white/30 focus:border-[#901b20]/50 rounded-2xl p-4 bg-white/20 backdrop-blur-sm focus:bg-white/30 transition-all duration-300 text-slate-700 placeholder-slate-500"
                       placeholder={`Enter ${label.toLowerCase()}`}
                     />
                   )
                 ) : (
-                  <div className="text-base text-slate-800 leading-relaxed">
+                  <div className="text-base text-slate-700 leading-relaxed">
                     {isSelect ? (
-                      <span className="inline-flex items-center px-3 py-1 bg-slate-800/10 text-slate-800 rounded-lg font-medium">
+                      <span className="inline-flex items-center px-4 py-2 bg-[#203947]/10 text-[#203947] rounded-xl font-medium shadow-sm">
                         {getSizeLabel(companyData[field])}
                       </span>
                     ) : (
                       <p className="break-words">
                         {companyData[field] || (
-                          <span className="text-gray-400 italic">
+                          <span className="text-slate-400 italic">
                             No {label.toLowerCase()} provided
                           </span>
                         )}
@@ -344,27 +341,27 @@ setCompanyData(prev => ({
         </div>
 
         {/* Company Description */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-200/50 p-8 hover:shadow-xl transition-all duration-300">
-          <div className="flex items-center mb-6">
-            <div className="w-12 h-12 bg-gradient-to-br from-red-700/10 to-red-700/20 rounded-2xl flex items-center justify-center mr-4">
-              <Edit3 className="w-6 h-6 text-red-700" />
+        <div className="bg-white/10 backdrop-blur-3xl rounded-2xl shadow-xl border border-white/20 p-10 hover:shadow-2xl transition-all duration-500 transform hover:scale-[1.01] group/desc">
+          <div className="flex items-center mb-8">
+            <div className="w-14 h-14 bg-gradient-to-br from-[#901b20]/20 to-[#ad565a]/20 rounded-2xl flex items-center justify-center mr-4 group-hover/desc:from-[#901b20]/30 group-hover/desc:to-[#ad565a]/30 transition-all duration-300 shadow-lg">
+              <Edit3 className="w-7 h-7 text-[#901b20]" />
             </div>
-            <h2 className="text-2xl font-bold text-slate-800">Company Description</h2>
+            <h2 className="text-3xl font-bold text-slate-700">Company Description</h2>
           </div>
           
           {isEditing ? (
             <textarea
               value={companyData.description || ''}
               onChange={(e) => handleInputChange("description", e.target.value)}
-              className="w-full border-2 border-gray-200 focus:border-red-700 rounded-xl p-4 bg-gray-50/50 focus:bg-white transition-all duration-300 text-slate-800 resize-none placeholder-gray-500"
-              rows="6"
+              className="w-full border-2 border-white/30 focus:border-[#901b20]/50 rounded-2xl p-6 bg-white/20 backdrop-blur-sm focus:bg-white/30 transition-all duration-300 text-slate-700 resize-none placeholder-slate-500 min-h-[200px]"
+              rows="8"
               placeholder="Write a comprehensive description about your company, its mission, values, and what makes it unique..."
             />
           ) : (
             <div className="prose prose-lg max-w-none">
-              <p className="text-base text-slate-800 leading-relaxed">
+              <p className="text-lg text-slate-700 leading-relaxed">
                 {companyData.description || (
-                  <span className="text-gray-400 italic">
+                  <span className="text-slate-400 italic">
                     No company description available. Click edit to add one.
                   </span>
                 )}
@@ -375,14 +372,14 @@ setCompanyData(prev => ({
 
         {/* Error Message */}
         {error && (
-          <div className="mt-6 bg-gradient-to-r from-red-50 to-red-100 border border-red-200 text-red-800 p-4 rounded-2xl shadow-lg animate-fade-in">
+          <div className="mt-8 bg-gradient-to-r from-red-50/90 to-red-100/90 backdrop-blur-sm border border-red-200/50 text-red-800 p-6 rounded-2xl shadow-2xl animate-fade-in transform hover:scale-[1.01] transition-all duration-300">
             <div className="flex items-center">
-              <div className="w-10 h-10 bg-red-200 rounded-xl flex items-center justify-center mr-3">
-                <X className="w-5 h-5 text-red-600" />
+              <div className="w-12 h-12 bg-red-200/80 rounded-2xl flex items-center justify-center mr-4 shadow-lg">
+                <X className="w-6 h-6 text-red-600" />
               </div>
               <div>
-                <h4 className="font-semibold">Error</h4>
-                <p className="text-sm">{error}</p>
+                <h4 className="font-semibold text-lg">Error</h4>
+                <p className="text-sm mt-1">{error}</p>
               </div>
             </div>
           </div>
