@@ -107,7 +107,7 @@ const HomeCTA = () => {
             </Link>
             <Link
               to="/show-events"
-              className="px-8 py-3 bg-transparent border-2 border-white text-white font-bold rounded-lg hover:bg-white hover:text-[var(--primary-600)] transition duration-300 text-center transform hover:scale-105"
+              className="px-8 py-3 bg-transparent border-2 border-white text-white font-bold rounded-lg hover:bg-white hover:text-black transition duration-300 text-center transform hover:scale-105"
             >
               Browse Events
             </Link>
