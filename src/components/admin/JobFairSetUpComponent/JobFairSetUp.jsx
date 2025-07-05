@@ -153,254 +153,262 @@ const JobFairSetUp = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-6">
-      <div className="flex justify-between align-items-center mb-6">
-        <div className="font-bold text-3xl mb-6">Job Fair Setup</div>
-        <div>
-          <button
-            onClick={() => setShowAddform(true)}
-            className="bg-red-600 hover:bg-red-700 cursor-pointer text-white font-semibold px-8 py-2 rounded-lg"
-          >
-            Add New Company
-          </button>
+    <div className='p-4 m-1 sm:p-4 md:p-6 w-full min-h-screen bg-white flex flex-col animate-fade-in border border-[var(--gray-200)] rounded-lg shadow-md transition-all duration-300 ease-out'>
+      <div className="container  mx-auto px-4 py-6">
+        <div className="flex justify-between align-items-center mb-6">
+          <div className="font-bold text-3xl mb-6">Job Fair Setup</div>
+          <div>
+            <button
+              onClick={() => setShowAddform(true)}
+              className="bg-red-600 hover:bg-red-700 cursor-pointer text-white font-semibold px-8 py-2 rounded-lg"
+            >
+              Add New Company
+            </button>
+          </div>
         </div>
-      </div>
-      {showAddForm && (
-        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-          <h2 className="text-xl font-bold mb-4">Add New Company</h2>
-          <form onSubmit={handleAddCompany}>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Name
-              </label>
-              <input
-                type="text"
-                value={newCompany.name}
-                onChange={e =>
-                  setNewCompany({ ...newCompany, name: e.target.value })
-                }
-                className="w-full p-3 border border-gray-300 rounded-lg"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                value={newCompany.email}
-                onChange={e =>
-                  setNewCompany({ ...newCompany, email: e.target.value })
-                }
-                className="w-full p-3 border border-gray-300 rounded-lg"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Phone
-              </label>
-              <input
-                type="text"
-                value={newCompany.phone}
-                onChange={e =>
-                  setNewCompany({ ...newCompany, phone: e.target.value })
-                }
-                className="w-full p-3 border border-gray-300 rounded-lg"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Address
-              </label>
-              <input
-                type="text"
-                value={newCompany.address}
-                onChange={e =>
-                  setNewCompany({ ...newCompany, address: e.target.value })
-                }
-                className="w-full p-3 border border-gray-300 rounded-lg"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Contact Email
-              </label>
-              <input
-                type="email"
-                value={newCompany.contact_email}
-                onChange={e =>
-                  setNewCompany({
-                    ...newCompany,
-                    contact_email: e.target.value,
-                  })
-                }
-                className="w-full p-3 border border-gray-300 rounded-lg"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Contact Phone
-              </label>
-              <input
-                type="text"
-                value={newCompany.contact_phone}
-                onChange={e =>
-                  setNewCompany({
-                    ...newCompany,
-                    contact_phone: e.target.value,
-                  })
-                }
-                className="w-full p-3 border border-gray-300 rounded-lg"
-                required
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Location
-              </label>
-              <input
-                type="text"
-                value={newCompany.location}
-                onChange={e =>
-                  setNewCompany({ ...newCompany, location: e.target.value })
-                }
-                className="w-full p-3 border border-gray-300 rounded-lg"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Description
-              </label>
-              <textarea
-                value={newCompany.description}
-                onChange={e =>
-                  setNewCompany({ ...newCompany, description: e.target.value })
-                }
-                className="w-full p-3 border border-gray-300 rounded-lg"
-                rows="3"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Website
-              </label>
-              <input
-                type="url"
-                value={newCompany.website}
-                onChange={e =>
-                  setNewCompany({ ...newCompany, website: e.target.value })
-                }
-                className="w-full p-3 border border-gray-300 rounded-lg"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Industry
-              </label>
-              <input
-                type="text"
-                value={newCompany.industry}
-                onChange={e =>
-                  setNewCompany({ ...newCompany, industry: e.target.value })
-                }
-                className="w-full p-3 border border-gray-300 rounded-lg"
-              />
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Company Size
-              </label>
-              <select
-                value={newCompany.size}
-                onChange={e =>
-                  setNewCompany({ ...newCompany, size: e.target.value })
-                }
-                className="w-full p-3 border border-gray-300 rounded-lg"
-              >
-                <option value="">Select size</option>
-                <option value="small">Small (1-50 employees)</option>
-                <option value="medium">Medium (51-200 employees)</option>
-                <option value="large">Large (200+ employees)</option>
-              </select>
-            </div>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                LinkedIn URL
-              </label>
-              <input
-                type="url"
-                value={newCompany.linkedin_url}
-                onChange={e =>
-                  setNewCompany({ ...newCompany, linkedin_url: e.target.value })
-                }
-                className="w-full p-3 border border-gray-300 rounded-lg"
-              />
-            </div>
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={() => setShowAddform(false)} // Hide the form
-                className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg mr-2"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
-              >
-                Add Company
-              </button>
-            </div>
-          </form>
+        {showAddForm && (
+          <div className="bg-white p-6 rounded-lg shadow-md mb-6">
+            <h2 className="text-xl font-bold mb-4">Add New Company</h2>
+            <form onSubmit={handleAddCompany}>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={newCompany.name}
+                  onChange={e =>
+                    setNewCompany({ ...newCompany, name: e.target.value })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={newCompany.email}
+                  onChange={e =>
+                    setNewCompany({ ...newCompany, email: e.target.value })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Phone
+                </label>
+                <input
+                  type="text"
+                  value={newCompany.phone}
+                  onChange={e =>
+                    setNewCompany({ ...newCompany, phone: e.target.value })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Address
+                </label>
+                <input
+                  type="text"
+                  value={newCompany.address}
+                  onChange={e =>
+                    setNewCompany({ ...newCompany, address: e.target.value })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Contact Email
+                </label>
+                <input
+                  type="email"
+                  value={newCompany.contact_email}
+                  onChange={e =>
+                    setNewCompany({
+                      ...newCompany,
+                      contact_email: e.target.value,
+                    })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Contact Phone
+                </label>
+                <input
+                  type="text"
+                  value={newCompany.contact_phone}
+                  onChange={e =>
+                    setNewCompany({
+                      ...newCompany,
+                      contact_phone: e.target.value,
+                    })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Location
+                </label>
+                <input
+                  type="text"
+                  value={newCompany.location}
+                  onChange={e =>
+                    setNewCompany({ ...newCompany, location: e.target.value })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Description
+                </label>
+                <textarea
+                  value={newCompany.description}
+                  onChange={e =>
+                    setNewCompany({
+                      ...newCompany,
+                      description: e.target.value,
+                    })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                  rows="3"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Website
+                </label>
+                <input
+                  type="url"
+                  value={newCompany.website}
+                  onChange={e =>
+                    setNewCompany({ ...newCompany, website: e.target.value })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Industry
+                </label>
+                <input
+                  type="text"
+                  value={newCompany.industry}
+                  onChange={e =>
+                    setNewCompany({ ...newCompany, industry: e.target.value })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Company Size
+                </label>
+                <select
+                  value={newCompany.size}
+                  onChange={e =>
+                    setNewCompany({ ...newCompany, size: e.target.value })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                >
+                  <option value="">Select size</option>
+                  <option value="small">Small (1-50 employees)</option>
+                  <option value="medium">Medium (51-200 employees)</option>
+                  <option value="large">Large (200+ employees)</option>
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  LinkedIn URL
+                </label>
+                <input
+                  type="url"
+                  value={newCompany.linkedin_url}
+                  onChange={e =>
+                    setNewCompany({
+                      ...newCompany,
+                      linkedin_url: e.target.value,
+                    })
+                  }
+                  className="w-full p-3 border border-gray-300 rounded-lg"
+                />
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setShowAddform(false)} // Hide the form
+                  className="bg-gray-300 hover:bg-gray-400 text-gray-700 px-4 py-2 rounded-lg mr-2"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+                >
+                  Add Company
+                </button>
+              </div>
+            </form>
+          </div>
+        )}
+        <div className="grid grid-cols-1 mb-8 sm:grid-cols-2 md:grid-cols-4 gap-4">
+          <StatCard title="Total Companies" value={totalCompanies} icon="🏢" />
+          <StatCard
+            title="Approved Companies"
+            value={approvedCompanies}
+            icon="✅"
+          />
+          <StatCard title="Total Slots" value={totalSlots} icon="🗓️" />
+          <StatCard title="Filled Slots" value={totalFilled} icon="📌" />
         </div>
-      )}
-      <div className="grid grid-cols-1 mb-8 sm:grid-cols-2 md:grid-cols-4 gap-4">
-        <StatCard title="Total Companies" value={totalCompanies} icon="🏢" />
-        <StatCard
-          title="Approved Companies"
-          value={approvedCompanies}
-          icon="✅"
+
+        <Filters
+          searchTerm={searchTerm}
+          setSearchTerm={setSearchTerm}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          onSearch={handleSearch}
+          onRefresh={() => fetchCompanies()}
         />
-        <StatCard title="Total Slots" value={totalSlots} icon="🗓️" />
-        <StatCard title="Filled Slots" value={totalFilled} icon="📌" />
+
+        <CompanyTable
+          companies={companies}
+          loading={loading}
+          onView={company => {
+            setSelectedCompany(company);
+            setShowModal(true);
+          }}
+          onApproveReject={handleApproveReject}
+          actionLoading={actionLoading}
+        />
+
+        <Pagination
+          pagination={pagination}
+          onPageChange={fetchCompanies}
+          totalCompanies={totalCompanies}
+        />
+
+        {showModal && (
+          <CompanyModal
+            company={selectedCompany}
+            onClose={() => setShowModal(false)}
+          />
+        )}
       </div>
-
-      <Filters
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-        onSearch={handleSearch}
-        onRefresh={() => fetchCompanies()}
-      />
-
-      <CompanyTable
-        companies={companies}
-        loading={loading}
-        onView={company => {
-          setSelectedCompany(company);
-          setShowModal(true);
-        }}
-        onApproveReject={handleApproveReject}
-        actionLoading={actionLoading}
-      />
-
-      <Pagination
-        pagination={pagination}
-        onPageChange={fetchCompanies}
-        totalCompanies={totalCompanies}
-      />
-
-      {showModal && (
-        <CompanyModal
-          company={selectedCompany}
-          onClose={() => setShowModal(false)}
-        />
-      )}
     </div>
   );
 };
