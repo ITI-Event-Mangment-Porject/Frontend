@@ -1,11 +1,8 @@
 const CompanyModal = ({ company, onClose }) => {
     const getStatusStyle = isApproved => (
-      isApproved ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+      isApproved ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
     );
   
-    const progress = company.interview_requests_count > 0
-      ? (company.filled_interviews_count / company.interview_requests_count) * 100
-      : 0;
   
     return (
       <div className="fixed inset-0 bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50">
@@ -55,7 +52,7 @@ const CompanyModal = ({ company, onClose }) => {
                 <p className="text-sm text-gray-600">
                   Status:
                   <span className={`ml-1 px-2 py-1 text-xs rounded-full ${getStatusStyle(company.is_approved)}`}>
-                    {company.is_approved ? 'Approved' : 'Pending'}
+                    {company.status==='approved'? 'Approved' : 'Rejected'}
                   </span>
                 </p>
                 <p className="text-sm text-gray-600">Size: {company.size}</p>
@@ -65,9 +62,7 @@ const CompanyModal = ({ company, onClose }) => {
                 <h5 className="font-medium text-gray-900 mb-2">Interview Slots</h5>
                 <p className="text-sm text-gray-600">Total Slots: {company.interview_requests_count}</p>
                 <p className="text-sm text-gray-600">Filled Slots: {company.filled_interviews_count}</p>
-                <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
-                  <div className="bg-red-600 h-2 rounded-full" style={{ width: `${progress}%` }}></div>
-                </div>
+               
               </div>
             </div>
           </div>

@@ -1,4 +1,4 @@
-const CompanyRow = ({ company,statusAppr, onView, onApproveReject, actionLoading }) => {
+const CompanyRow = ({ company, onView, onApproveReject, actionLoading }) => {
   const getStatusStyle = (status) => {
     if (status === 'approved') return 'bg-green-100 text-green-700';
     if (status === 'rejected') return 'bg-red-100 text-red-700';
@@ -13,9 +13,9 @@ const CompanyRow = ({ company,statusAppr, onView, onApproveReject, actionLoading
 
   // Correctly determine the status
   const status =
-    company.is_approved === true
+    company.status === 'approved'
       ? 'approved'
-      : company.is_approved === false && statusAppr === 'pending'
+      : company.status === 'pending'
       ? 'pending'
       : 'rejected';
 
@@ -51,7 +51,7 @@ const CompanyRow = ({ company,statusAppr, onView, onApproveReject, actionLoading
       </td>
       <td className="px-6 py-4">
         <div className="flex items-center space-x-2">
-          {status === 'approved' ? (
+          {status === 'approved' || status==='rejected' ? (
             <button onClick={() => onView(company)} className="text-red-600 hover:text-red-800" title="View Details">
               view
             </button>
