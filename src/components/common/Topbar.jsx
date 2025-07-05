@@ -77,7 +77,7 @@ const Topbar = () => {
       const data = res.data.data;
 
       setCompanyData(prev => ({
-        ...prev, // عشان نحتفظ بالـ status من الـ API الأول
+        ...prev,
         logo_path: data.logo_path 
     ? data.logo_path.startsWith('http')
       ? data.logo_path

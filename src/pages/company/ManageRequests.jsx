@@ -18,6 +18,9 @@ const InterviewRequestsManager = () => {
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [selectedUserRequest, setSelectedUserRequest] = useState(null);
+
 
 
   const BASE_URL = 'http://127.0.0.1:8000/api';
@@ -75,6 +78,12 @@ console.log('participations fetched:', participationsData.data?.result);
       setLoadingRequests(true);
       const url = `${BASE_URL}/job-fairs/${jobFairId}/job-profiles/${jobProfileId}/interview-requests`;
       const response = await fetch(url);
+
+          if (response.status === 404) {
+      console.warn('No interview requests found for this job profile.');
+      setInterviewRequests([]);  
+      return;
+    }
 
       if (!response.ok) throw new Error('Failed to fetch interview requests');
 
@@ -141,6 +150,15 @@ console.log('participations fetched:', participationsData.data?.result);
     const getTrackColor = (trackColor) => {
     return trackColor || '#203947';
   };
+  const openProfileModal = (request) => {
+  setSelectedUserRequest(request);
+  setShowProfileModal(true);
+};
+const closeProfileModal = () => {
+  setSelectedUserRequest(null);
+  setShowProfileModal(false);
+};
+
 
 
   if (loading) {
@@ -446,6 +464,13 @@ console.log('participations fetched:', participationsData.data?.result);
                             {request.status === 'pending' && (
                               <div className="flex space-x-4">
                                 <button
+  onClick={() => openProfileModal(request)}
+  className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
+>
+  View Profile
+</button>
+
+                                <button
                                   onClick={() => reviewInterviewRequest(request.id, 'approved')}
                                   disabled={processingRequest === request.id}
                                   className="flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
@@ -509,7 +534,208 @@ console.log('participations fetched:', participationsData.data?.result);
           backdrop-filter: blur(4px);
         }
       `}</style>
+      {showProfileModal && selectedUserRequest && (
+<div className="fixed inset-0 z-50 bg-black bg-opacity-60 flex items-center justify-center backdrop-blur-sm animate-in fade-in duration-300">
+  <div className="bg-white w-full max-w-4xl rounded-3xl p-0 relative shadow-2xl overflow-hidden max-h-[90vh] animate-in zoom-in-95 slide-in-from-bottom-4 duration-500">
+    <div className="px-6 py-6 bg-gradient-to-br from-slate-900 via-[#203947] to-[#901b20] text-white relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/20"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.1),transparent_50%)]"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(144,27,32,0.3),transparent_50%)]"></div>
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_40%,rgba(255,255,255,0.05),transparent)] animate-pulse"></div>
+      <div className="absolute top-2 right-4 w-8 h-8 bg-white/5 rounded-full blur-sm animate-pulse"></div>
+      <div className="absolute bottom-2 left-4 w-12 h-12 bg-[#901b20]/10 rounded-full blur-lg animate-pulse delay-1000"></div>
+      
+      {/* Content inside header */}
+      <div className="relative z-10">
+        <button 
+          onClick={closeProfileModal} 
+          className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/20 p-2 rounded-full transition-all duration-300 hover:scale-110 backdrop-blur-sm"
+        >
+          <X className="h-5 w-5" />
+        </button>
+        <h2 className="text-3xl font-bold text-white mb-2">
+          {selectedUserRequest.user.first_name} {selectedUserRequest.user.last_name}
+        </h2>
+        <div className="flex items-center space-x-2 text-white/90">
+          <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse"></div>
+          <span className="text-sm font-medium">Student Profile</span>
+        </div>
+      </div>
     </div>
+
+      {/* Content area with enhanced spacing */}
+      <div className="p-8 overflow-auto max-h-[calc(90vh-200px)]">
+        {/* Profile information grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+          <div className="space-y-4">
+            <div className="group hover:bg-[#ebebeb]/50 p-4 rounded-2xl transition-all duration-300 hover:shadow-md">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full"></div>
+                <div>
+                  <span className="text-[#203947] font-semibold text-sm">Portal ID</span>
+                  <p className="text-[#203947] font-medium">{selectedUserRequest.user.portal_user_id}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="group hover:bg-[#ebebeb]/50 p-4 rounded-2xl transition-all duration-300 hover:shadow-md">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full"></div>
+                <div>
+                  <span className="text-[#203947] font-semibold text-sm">Email</span>
+                  <p className="text-[#203947] font-medium">{selectedUserRequest.user.email}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="group hover:bg-[#ebebeb]/50 p-4 rounded-2xl transition-all duration-300 hover:shadow-md">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full"></div>
+                <div>
+                  <span className="text-[#203947] font-semibold text-sm">Phone</span>
+                  <p className="text-[#203947] font-medium">{selectedUserRequest.user.phone || 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="group hover:bg-[#ebebeb]/50 p-4 rounded-2xl transition-all duration-300 hover:shadow-md">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full"></div>
+                <div>
+                  <span className="text-[#203947] font-semibold text-sm">Track ID</span>
+                  <p className="text-[#203947] font-medium">{selectedUserRequest.user.track_id}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="space-y-4">
+            <div className="group hover:bg-[#ebebeb]/50 p-4 rounded-2xl transition-all duration-300 hover:shadow-md">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full"></div>
+                <div>
+                  <span className="text-[#203947] font-semibold text-sm">Intake Year</span>
+                  <p className="text-[#203947] font-medium">{selectedUserRequest.user.intake_year}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="group hover:bg-[#ebebeb]/50 p-4 rounded-2xl transition-all duration-300 hover:shadow-md">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full"></div>
+                <div>
+                  <span className="text-[#203947] font-semibold text-sm">Graduation Year</span>
+                  <p className="text-[#203947] font-medium">{selectedUserRequest.user.graduation_year}</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="group hover:bg-[#ebebeb]/50 p-4 rounded-2xl transition-all duration-300 hover:shadow-md">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full"></div>
+                <div>
+                  <span className="text-[#203947] font-semibold text-sm">LinkedIn</span>
+                  <p className="text-[#203947] font-medium">
+                    {selectedUserRequest.user.linkedin_url ? (
+                      <a href={selectedUserRequest.user.linkedin_url} target="_blank" className="text-[#901b20] hover:text-[#ad565a] underline transition-colors duration-300">Profile</a>
+                    ) : 'N/A'}
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="group hover:bg-[#ebebeb]/50 p-4 rounded-2xl transition-all duration-300 hover:shadow-md">
+              <div className="flex items-center space-x-3">
+                <div className="w-3 h-3 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full"></div>
+                <div>
+                  <span className="text-[#203947] font-semibold text-sm">GitHub</span>
+                  <p className="text-[#203947] font-medium">
+                    {selectedUserRequest.user.github_url ? (
+                      <a href={selectedUserRequest.user.github_url} target="_blank" className="text-[#901b20] hover:text-[#ad565a] underline transition-colors duration-300">Repo</a>
+                    ) : 'N/A'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Additional links */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <div className="group hover:bg-[#ebebeb]/50 p-4 rounded-2xl transition-all duration-300 hover:shadow-md">
+            <div className="flex items-center space-x-3">
+              <div className="w-3 h-3 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full"></div>
+              <div>
+                <span className="text-[#203947] font-semibold text-sm">Portfolio</span>
+                <p className="text-[#203947] font-medium">
+                  {selectedUserRequest.user.portfolio_url ? (
+                    <a href={selectedUserRequest.user.portfolio_url} target="_blank" className="text-[#901b20] hover:text-[#ad565a] underline transition-colors duration-300">Website</a>
+                  ) : 'N/A'}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="group hover:bg-[#ebebeb]/50 p-4 rounded-2xl transition-all duration-300 hover:shadow-md">
+            <div className="flex items-center space-x-3">
+              <div className="w-3 h-3 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full"></div>
+              <div>
+                <span className="text-[#203947] font-semibold text-sm">CV</span>
+                <p className="text-[#203947] font-medium">
+                  {selectedUserRequest.user.cv_path ? (
+                    <a href={selectedUserRequest.user.cv_path} target="_blank" className="text-[#901b20] hover:text-[#ad565a] underline transition-colors duration-300">Download CV</a>
+                  ) : 'N/A'}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Application message */}
+        <div className="mb-8">
+          <h3 className="text-[#203947] font-bold text-lg mb-4 flex items-center">
+            <div className="w-4 h-4 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full mr-3"></div>
+            Application Message
+          </h3>
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#ebebeb]/80 to-[#cc9598]/20 p-6 border-l-4 border-[#901b20] shadow-inner">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -skew-x-12 animate-shimmer"></div>
+            <p className="text-[#203947] leading-relaxed relative z-10">
+              {selectedUserRequest.message || 'No message provided.'}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Action buttons with enhanced styling */}
+      <div className="bg-gradient-to-r from-[#ebebeb]/50 to-[#cc9598]/20 p-6 border-t border-[#ebebeb]">
+        <div className="flex space-x-4">
+          <button
+            onClick={() => {
+              reviewInterviewRequest(selectedUserRequest.id, 'approved');
+              closeProfileModal();
+            }}
+            className="flex items-center px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-2xl hover:from-emerald-600 hover:to-teal-600 transition-all duration-300 shadow-lg font-semibold hover:shadow-xl hover:scale-105 transform group"
+          >
+            <Check className="h-5 w-5 mr-3 group-hover:scale-110 transition-transform duration-300" /> 
+            Approve
+          </button>
+          <button
+            onClick={() => {
+              reviewInterviewRequest(selectedUserRequest.id, 'rejected');
+              closeProfileModal();
+            }}
+            className="flex items-center px-8 py-4 bg-gradient-to-r from-[#901b20] to-[#ad565a] text-white rounded-2xl hover:from-[#801418] hover:to-[#9c4a4e] transition-all duration-300 shadow-lg font-semibold hover:shadow-xl hover:scale-105 transform group"
+          >
+            <X className="h-5 w-5 mr-3 group-hover:scale-110 transition-transform duration-300" /> 
+            Reject
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+    </div>
+    
   );
 };
 
