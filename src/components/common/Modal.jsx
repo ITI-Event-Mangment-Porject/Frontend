@@ -46,7 +46,8 @@ const Modal = ({
     <div className="fixed inset-0 z-50 overflow-y-auto ">
       {/* Background overlay with blur only */}
       <div
-        className="fixed inset-0 backdrop-blur-md transition-all duration-300"
+        className="fixed inset-0 backdrop-blur-md transition-all duration-300 animate-fadeIn"
+        style={{ animation: 'fadeIn 0.3s ease-out forwards' }}
         onClick={onClose}
       ></div>
 
@@ -54,12 +55,19 @@ const Modal = ({
       <div className="flex items-center justify-center min-h-screen p-4 ">
         {/* Modal panel */}
         <div
-          className={`relative bg-white rounded-2xl shadow-2xl ${modalSize} w-full max-h-[90vh] overflow-hidden`}
+          className={`relative bg-white rounded-2xl shadow-2xl ${modalSize} w-full max-h-[90vh] overflow-hidden animate-scaleIn`}
+          style={{
+            animation:
+              'scaleIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+          }}
           onClick={e => e.stopPropagation()}
         >
           {' '}
           {/* Header */}
-          <div className="flex justify-between items-center p-6 pb-4">
+          <div
+            className="flex justify-between items-center p-6 pb-4 animate-slideInDown"
+            style={{ animation: 'slideInDown 0.4s ease-out forwards' }}
+          >
             <h2 className="text-xl font-semibold text-gray-900 text-left">
               {title}
             </h2>
@@ -72,12 +80,24 @@ const Modal = ({
             </button>
           </div>
           {/* Content */}
-          <div className="px-6 pb-6 overflow-y-auto max-h-[calc(90vh-120px)] text-left">
+          <div
+            className="px-6 pb-6 overflow-y-auto max-h-[calc(90vh-120px)] text-left animate-fadeIn"
+            style={{
+              animation: 'fadeIn 0.5s ease-out forwards',
+              animationDelay: '0.1s',
+            }}
+          >
             {children}
           </div>
           {/* Footer */}
           {showFooter && (
-            <div className="border-t border-gray-200 px-6 py-4 bg-gray-50 rounded-b-2xl">
+            <div
+              className="border-t border-gray-200 px-6 py-4 bg-gray-50 rounded-b-2xl animate-slideInUp"
+              style={{
+                animation: 'slideInUp 0.4s ease-out forwards',
+                animationDelay: '0.2s',
+              }}
+            >
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
