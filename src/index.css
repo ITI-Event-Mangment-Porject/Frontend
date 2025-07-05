@@ -94,6 +94,43 @@ select {
   animation: float 3s ease-in-out infinite;
 }
 
+.animate-float-slow {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float-reverse {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.animate-float-reverse {
+  animation: float-reverse 5s ease-in-out infinite;
+}
+
+@keyframes gradient-x {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient-x {
+  background-size: 200% 100%;
+  animation: gradient-x 15s ease infinite;
+}
+
 @keyframes skeletonWave {
   0% {
     transform: translateX(-100%);
@@ -116,6 +153,10 @@ select {
 
 .animate-modal-in {
   animation: modalIn 0.3s ease-out forwards;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.8s ease-out forwards;
 }
 
 /* ========================================

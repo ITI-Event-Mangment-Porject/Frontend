@@ -18,7 +18,6 @@ const HomePage = () => {
       <HomeHowItWorks />
       <HomeUpcomingEvents />
       <HomeTestimonials />
-      <HomePartners />
       <HomeCTA />
       <HomeFooter />
     </div>

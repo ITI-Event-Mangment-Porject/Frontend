@@ -77,8 +77,8 @@ const HomeUpcomingEvents = () => {
 
   // Empty state component
   const EmptyState = () => (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="w-20 h-20 mb-4 text-[var(--primary-500)] animate-float">
+    <div className="flex flex-col items-center justify-center py-8 text-center">
+      <div className="w-20 h-15 mb-4 text-[var(--primary-500)] animate-float">
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -101,7 +101,7 @@ const HomeUpcomingEvents = () => {
         new opportunities.
       </p>
       <Link
-        to="/contact"
+        to="/"
         className="mt-6 inline-flex items-center px-5 py-2 text-sm font-medium rounded-md text-white bg-[var(--primary-500)] hover:bg-[var(--primary-600)] transition-all duration-300"
       >
         Get Notified About New Events
