@@ -6,6 +6,7 @@ import api from '../../api/axios';
 const Sidebar = () => {
   const { companyId } = useParams();
   const [jobFairId, setJobFairId] = useState(localStorage.getItem('jobFairId'));
+  const [companyData, setCompanyData] = useState(null);
 
   useEffect(() => {
     const fetchLatestPublishedJobFair = async () => {
@@ -18,7 +19,6 @@ const Sidebar = () => {
         });
 
         const allFairs = response.data.data?.result || [];
-
         const publishedFairs = allFairs.filter(fair => fair.status === "published");
         const latestFair = publishedFairs[publishedFairs.length - 1];
 
@@ -39,6 +39,30 @@ const Sidebar = () => {
       fetchLatestPublishedJobFair();
     }
   }, [companyId, jobFairId]);
+
+  useEffect(() => {
+    const fetchCompanyStatus = async () => {
+      try {
+        if (!jobFairId || !companyId) return;
+
+        const token = localStorage.getItem('token');
+        const res = await api.get(`/job-fairs/${jobFairId}/companies`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+
+        const companies = res.data.data?.result || [];
+        const company = companies.find(c => String(c.companyId) === String(companyId));
+
+        setCompanyData(company || null);
+      } catch (err) {
+        console.error('Failed to fetch company status:', err);
+      }
+    };
+
+    fetchCompanyStatus();
+  }, [jobFairId, companyId]);
+
+  const isApproved = companyData?.status === 'approved';
 
   return (
     <aside className="fixed top-[4rem] text-gray-600 left-0 h-full w-64 bg-white shadow-lg z-40">
@@ -67,9 +91,10 @@ const Sidebar = () => {
             >
               <FaClipboardList /> Participation Form
             </NavLink>
-
-            <NavLink
-              to={`/company/${companyId}/requests`}
+            {isApproved && (
+              <>
+                          <NavLink
+              to={`/company/${companyId}/job-fairs/${jobFairId}/requests`}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-4 py-2 rounded-lg transition ease-in-out duration-200 ${
                   isActive ? 'bg-gray-700 text-white' : 'hover:bg-[#a72b2b] hover:text-white'
@@ -89,6 +114,9 @@ const Sidebar = () => {
             >
               <FaUserCheck /> Interview Tracking
             </NavLink>
+              </>
+            )}
+
           </>
         )}
 
