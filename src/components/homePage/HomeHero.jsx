@@ -191,15 +191,13 @@ const HomeHero = () => {
           <div className="flex flex-col sm:flex-row gap-4 mt-2">
             <Link
               to="/register"
-              className="btn px-8 py-3 bg-white text-[var(--primary-500)] hover:bg-gray-100 transition-all duration-300 font-semibold rounded-md text-center opacity-0 transform translate-y-4 hover:shadow-lg hover:-translate-y-1"
-              style={{ animation: 'fadeInUp 0.6s ease-out forwards 0.8s' }}
+              className="btn px-8 py-3 bg-white text-[var(--primary-500)] hover:bg-gray-100 transition-all duration-300 font-semibold rounded-md text-center hover:scale-105"
             >
               Get Started
             </Link>
             <Link
               to="/#how-it-works"
-              className="btn px-8 py-3 border-2 border-white text-white hover:bg-white hover:text-[var(--primary-500)] transition-all duration-300 font-semibold rounded-md text-center opacity-0 transform translate-y-4 hover:shadow-lg hover:-translate-y-1"
-              style={{ animation: 'fadeInUp 0.6s ease-out forwards 1s' }}
+              className="btn px-8 py-3 border-2 border-white text-white hover:bg-white hover:text-[var(--primary-500)] transition-all duration-300 font-semibold rounded-md text-center hover:scale-105"
             >
               Learn More
             </Link>
