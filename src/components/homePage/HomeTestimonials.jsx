@@ -43,7 +43,7 @@ const HomeTestimonials = () => {
     <section className="py-20 bg-[var(--primary-200)]">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold mb-4 text-secondary-500">
+          <h2 className="text-3xl font-bold mb-4 text-[var(--secondary-500)]">
             What Our Users Say
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
@@ -62,9 +62,9 @@ const HomeTestimonials = () => {
               >
                 {testimonials.map(testimonial => (
                   <div key={testimonial.id} className="min-w-full px-4">
-                    <div className="bg-white p-8 rounded-xl shadow-lg">
+                    <div className="bg-white p-8 rounded-xl shadow-xl border-primary">
                       {/* Quote icon */}
-                      <div className="text-primary-300 mb-6">
+                      <div className="text-[var(--primary-300)] mb-6">
                         <svg
                           width="45"
                           height="36"
@@ -91,7 +91,7 @@ const HomeTestimonials = () => {
                           className="w-12 h-12 rounded-full object-cover mr-4"
                         />
                         <div>
-                          <h4 className="font-semibold text-secondary-500">
+                          <h4 className="font-semibold text-[var(--secondary-500)]">
                             {testimonial.name}
                           </h4>
                           <p className="text-gray-500 text-sm">
@@ -112,7 +112,9 @@ const HomeTestimonials = () => {
                   key={index}
                   onClick={() => setActiveIndex(index)}
                   className={`mx-1 w-3 h-3 rounded-full transition-colors ${
-                    activeIndex === index ? 'bg-primary-500' : 'bg-gray-300'
+                    activeIndex === index
+                      ? 'bg-[var(--primary-500)]'
+                      : 'bg-gray-300'
                   }`}
                   aria-label={`Go to testimonial ${index + 1}`}
                 />
