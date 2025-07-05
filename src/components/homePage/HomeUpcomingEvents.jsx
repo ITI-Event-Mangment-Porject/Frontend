@@ -32,13 +32,17 @@ const HomeUpcomingEvents = () => {
       try {
         setLoading(true);
 
-        // Fetch all pages of events
+        // Fetch all pages of events with published status filter
         let allEvents = [];
-        // let currentPage = 1;
         let lastPage = 1;
 
+        // Create params object with the status filter
+        const params = {
+          'filter[status]': 'published',
+        };
+
         // First API call to get the first page and determine total pages
-        const firstResponse = await eventAPI.getAll();
+        const firstResponse = await eventAPI.getAll(params);
 
         if (firstResponse?.data?.data?.result) {
           const { result } = firstResponse.data.data;
@@ -57,7 +61,7 @@ const HomeUpcomingEvents = () => {
 
             // Create an array of promises for pages 2 to lastPage
             for (let page = 2; page <= lastPage; page++) {
-              remainingRequests.push(eventAPI.getAll({ page }));
+              remainingRequests.push(eventAPI.getAll({ ...params, page }));
             }
 
             // Wait for all requests to complete
@@ -72,8 +76,6 @@ const HomeUpcomingEvents = () => {
             });
           }
         }
-
-        console.log('All events from all pages:', allEvents);
         setEvents(allEvents);
         setError(null);
       } catch (err) {
@@ -201,14 +203,6 @@ const HomeUpcomingEvents = () => {
 
   return (
     <section className="py-20 bg-white" id="events">
-      {console.log(
-        'Rendering with events:',
-        events,
-        'isArray:',
-        Array.isArray(events),
-        'length:',
-        events?.length || 0
-      )}
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl font-bold mb-4 text-secondary-500">
