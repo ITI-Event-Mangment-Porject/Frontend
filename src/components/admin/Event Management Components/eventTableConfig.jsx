@@ -46,16 +46,7 @@ export const getEventTableColumns = (handleEditClick, handleDeleteEvent) => [
     render: event => (
       <div className="flex items-center">
         <div className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center overflow-hidden">
-          {' '}
-          {event.banner_image || event.image_url ? (
-            <img
-              src={event.banner_image || event.image_url}
-              alt={event.title}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <FaCalendarAlt className="text-gray-500" />
-          )}
+          <FaCalendarAlt className="text-gray-500" />
         </div>
         <span className="ml-2 text-sm font-medium">{event.title}</span>
       </div>

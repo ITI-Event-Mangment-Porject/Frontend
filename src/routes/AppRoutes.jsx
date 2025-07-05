@@ -12,6 +12,9 @@ import Profile from '../pages/student/Profile';
 import Login from '../pages/student/Login';
 import ShowEvents from '../pages/student/ShowEvents';
 
+// Home Page
+import HomePage from '../pages/homePage/HomePage';
+
 // Admin Pages
 import AdminDashboard from '../pages/admin/Dashboard';
 import ManageEvents from '../pages/admin/ManageEvents';
@@ -32,7 +35,8 @@ const AppRoutes = () => {
         path="/admin"
         element={<Navigate to="/admin/dashboard" replace />}
       />
-      <Route path="/" element={<Navigate to="/admin/dashboard" replace />} />
+      {/* Home route */}
+      <Route path="/" element={<HomePage />} />
       {/* Catch all route */}
       <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       <Route path="/support" element={<Help />} />
@@ -43,6 +47,7 @@ const AppRoutes = () => {
       <Route path="/company-directory" element={<CompanyDirectory />} />
       <Route path="/interview-queue" element={<InterviewQueue />} />
       <Route path="/profile" element={<Profile />} />
+      <Route path="/home" element={<HomePage />} />
     </Routes>
   );
 };
