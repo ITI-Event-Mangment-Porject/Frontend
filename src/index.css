@@ -4,6 +4,21 @@
 @import 'tailwindcss';
 /* @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'); */
 
+/* Remove red outline on all clickable elements */
+button,
+a,
+input[type='button'],
+input[type='submit'],
+input[type='reset'],
+[role='button'],
+.btn,
+.button,
+[type='checkbox'],
+[type='radio'],
+select {
+  outline: none !important;
+}
+
 /* ========================================
    CSS CUSTOM PROPERTIES (ROOT VARIABLES)
    ======================================== */
@@ -169,6 +184,10 @@
 }
 
 .button:focus {
+  outline: none;
+}
+
+.button:focus-visible {
   outline: 2px solid var(--primary-500);
   outline-offset: 2px;
 }
@@ -204,8 +223,13 @@ button {
   font-family: inherit;
 }
 
-/* Focus styles for accessibility */
+/* Focus styles for accessibility - only visible for keyboard navigation */
 *:focus {
+  outline: none;
+}
+
+/* This preserves focus indicators for keyboard navigation only */
+*:focus-visible {
   outline: 2px solid var(--primary-500);
   outline-offset: 2px;
 }
