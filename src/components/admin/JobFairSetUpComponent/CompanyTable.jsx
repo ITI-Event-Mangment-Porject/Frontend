@@ -33,25 +33,27 @@ const CompanyTable = ({
         <TableSkeleton rows={6} />
       ) : (
         <tbody className="bg-white divide-y divide-gray-200">
-          {companies.length > 0 ? (
-            companies.map(c => (
-              <CompanyRow
-                key={c.id}
-                company={c}
-                statusAppr={c.status}
-                onView={onView}
-                onApproveReject={onApproveReject}
-                actionLoading={actionLoading}
-              />
-            ))
-          ) : (
-            <tr>
-              <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
-                No companies found
-              </td>
-            </tr>
-          )}
-        </tbody>
+
+        {companies.length > 0 ? (
+          companies.map(c => (
+            
+            <CompanyRow
+              key={c.id}
+              company={c}
+              onView={onView}
+              onApproveReject={onApproveReject}
+              actionLoading={actionLoading}
+            />
+          ))
+        ) : (
+          <tr>
+            <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+              No companies found
+            </td>
+          </tr>
+        )}
+      </tbody>
+
       )}
     </table>
   </div>
