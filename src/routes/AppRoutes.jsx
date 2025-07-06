@@ -20,6 +20,9 @@ import AdminDashboard from '../pages/admin/Dashboard';
 import ManageEvents from '../pages/admin/ManageEvents';
 import Notifications from '../pages/admin/Notifications';
 
+// Not Found Page
+import NotFoundPage from '../pages/System/NotFoundPage';
+
 const AppRoutes = () => {
   return (
     <Routes>
@@ -37,8 +40,7 @@ const AppRoutes = () => {
       />
       {/* Home route */}
       <Route path="/" element={<HomePage />} />
-      {/* Catch all route */}
-      <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
+      {/* Catch all route - 404 Not Found Page */}
       <Route path="/support" element={<Help />} />
       <Route path="/login" element={<Login />} />
       <Route path="/feedback" element={<FeedbackForm />} />
@@ -48,6 +50,7 @@ const AppRoutes = () => {
       <Route path="/interview-queue" element={<InterviewQueue />} />
       <Route path="/profile" element={<Profile />} />
       <Route path="/home" element={<HomePage />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };

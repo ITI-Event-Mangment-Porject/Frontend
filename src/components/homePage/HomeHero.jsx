@@ -190,13 +190,13 @@ const HomeHero = () => {
 
           <div className="flex flex-col sm:flex-row gap-4 mt-2 w-full sm:w-auto sm:justify-center lg:justify-start">
             <Link
-              to="/register"
+              to="/login"
               className="btn px-8 py-3 bg-white text-[var(--primary-500)] hover:bg-gray-100 transition-all duration-300 font-semibold rounded-md text-center hover:scale-105"
             >
               Get Started
             </Link>
             <Link
-              to="/#how-it-works"
+              to="/about"
               className="btn px-8 py-3 border-2 border-white text-white hover:bg-white hover:text-[var(--primary-500)] transition-all duration-300 font-semibold rounded-md text-center hover:scale-105"
             >
               Learn More

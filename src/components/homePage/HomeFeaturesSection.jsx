@@ -153,6 +153,12 @@ const HomeFeaturesSection = () => {
           <h2 className="text-3xl font-bold mb-4 text-[var(--secondary-500)]">
             Why CommunITI?
           </h2>
+          <motion.div
+            className="h-1 w-20 bg-gradient-to-r from-[var(--primary-400)] to-[var(--secondary-400)] rounded-full  mx-auto mb-4"
+            initial={{ width: 0 }}
+            animate={{ width: '5rem' }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+          />
           <p className="text-gray-600 max-w-2xl mx-auto">
             Our comprehensive event management platform provides everything you
             need to create successful events
