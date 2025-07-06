@@ -6,7 +6,7 @@ import CompanyModal from './CompanyModal';
 import Pagination from './Pagination';
 import FullPageLoader from '../../FullPageLoader';
 
-const JobFairSetUp = () => {
+const CompaniesSetUp = () => {
   const [companies, setCompanies] = useState([]);
   const [totalCompanies, setTotalCompanies] = useState(0);
   const [approvedCompanies, setApprovedCompanies] = useState(0);
@@ -433,4 +433,4 @@ const JobFairSetUp = () => {
   );
 };
 
-export default JobFairSetUp;
+export default CompaniesSetUp;

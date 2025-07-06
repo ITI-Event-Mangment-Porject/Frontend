@@ -1,7 +1,7 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import UserManagement from '../pages/admin/UserManagement';
-import JobFairSetup from '../pages/admin/JobFairSetup';
+import CompaniesSetup from '../pages/admin/CompaniesSetup';
 import AttendanceReports from '../pages/admin/AttendanceReports';
 import Help from '../components/common/Help';
 import FeedbackForm from '../pages/student/FeedbackForm';
@@ -26,7 +26,7 @@ const AppRoutes = () => {
       {/* Admin routes - using absolute paths */}
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/users" element={<UserManagement />} />
-      <Route path="/admin/companies" element={<JobFairSetup />} />
+      <Route path="/admin/companies" element={<CompaniesSetup />} />
       <Route path="/admin/attendance" element={<AttendanceReports />} />
       {/* Default redirect to admin dashboard */}
       <Route path="/admin/events" element={<ManageEvents />} />
