@@ -1,4 +1,6 @@
 import React from 'react';
+// eslint-disable-next-line no-unused-vars
+import { motion } from 'framer-motion';
 
 const features = [
   {
@@ -140,34 +142,58 @@ const HomeFeaturesSection = () => {
     <section className="py-16 bg-white" id="features">
       <div className="container mx-auto px-4">
         {/* Section header */}
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold mb-4 text-secondary-500">
-            Why Comuniti?
+
+        <motion.div
+          className="text-center mb-12"
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.6 }}
+        >
+          <h2 className="text-3xl font-bold mb-4 text-[var(--secondary-500)]">
+            Why CommunITI?
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Our comprehensive event management platform provides everything you
             need to create successful events
           </p>
-        </div>
+        </motion.div>
 
         {/* Features grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 ">
           {features.map((feature, index) => (
-            <div
+            <motion.div
               key={index}
-              className="p-6 border border-gray-300 rounded-lg hover:shadow-lg shadow-md transition-all duration-300 bg-white hover:border-[var(--primary-500)] hover:translate-y-[-5px] group"
-              style={{
-                transition: 'all 0.3s ease',
+              className="p-6 border-2 border-gray-300  rounded-lg hover:shadow-lg shadow-md bg-white hover:border-[var(--primary-500)] hover:border-2 group"
+              initial={{ opacity: 0, y: 50, scale: 0.9 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{
+                duration: 0.6,
+                delay: index * 0.1,
+                ease: 'easeOut',
+              }}
+              whileHover={{
+                y: -8,
+                scale: 1.02,
+                transition: { duration: 0.2 },
               }}
             >
-              <div className="text-[var(--primary-500)] mb-4  ">
+              <motion.div
+                className="text-[var(--primary-500)] mb-4"
+                whileHover={{
+                  scale: 1.1,
+                  rotate: 5,
+                  transition: { duration: 0.2 },
+                }}
+              >
                 {feature.icon}
-              </div>
+              </motion.div>
               <h3 className="font-bold text-xl mb-2 text-[var(--secondary-500)]">
                 {feature.title}
               </h3>
               <p className="text-[var(--gray-600)]">{feature.description}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>

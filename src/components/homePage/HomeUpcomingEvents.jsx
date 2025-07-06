@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
+import { motion } from 'framer-motion';
 import { eventAPI } from '../../services/api';
 import CardSkeleton from '../common/CardSkeleton';
 import Modal from '../common/Modal';
@@ -204,14 +206,20 @@ const HomeUpcomingEvents = () => {
   return (
     <section className="py-20 bg-white" id="events">
       <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
+        <motion.div
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.6 }}
+        >
           <h2 className="text-3xl font-bold mb-4 text-secondary-500">
             Upcoming Events
           </h2>
           <p className="text-gray-600 max-w-2xl mx-auto">
             Discover and register for our featured upcoming events
           </p>
-        </div>
+        </motion.div>
 
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -223,29 +231,47 @@ const HomeUpcomingEvents = () => {
           <EmptyState />
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <motion.div
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true, amount: 0.1 }}
+              transition={{ duration: 0.6 }}
+            >
               {getCurrentEvents().map((event, index) => (
-                <div
+                <motion.div
                   key={event.id || index}
-                  className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:transform hover:translate-y-[-8px] flex flex-col"
+                  className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 flex flex-col"
+                  initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                  whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                  viewport={{ once: true, amount: 0.2 }}
+                  transition={{
+                    duration: 0.6,
+                    delay: index * 0.1,
+                    ease: 'easeOut',
+                  }}
+                  whileHover={{
+                    y: -8,
+                    scale: 1.02,
+                    transition: { duration: 0.3 },
+                  }}
                   style={{
-                    transition: 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)',
-                    animationDelay: `${index * 0.1}s`,
-                    animationName: 'fadeIn',
-                    animationDuration: '0.5s',
-                    animationFillMode: 'both',
                     height: '100%',
                   }}
                 >
                   <div className="relative">
                     {/* Event image */}
-                    <img
+                    <motion.img
                       src={
                         event.banner_image ||
                         `https://placehold.co/400x250?text=${encodeURIComponent(event.title)}`
                       }
                       alt={event.title}
                       className="w-full h-48 object-cover"
+                      initial={{ scale: 1.1 }}
+                      whileInView={{ scale: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.6, delay: index * 0.1 + 0.2 }}
                       onError={e => {
                         e.target.onerror = null;
                         e.target.src = `https://placehold.co/400x250?text=${encodeURIComponent(event.title)}`;
@@ -254,27 +280,51 @@ const HomeUpcomingEvents = () => {
 
                     {/* Event type badge */}
                     {event.type && (
-                      <span className="absolute top-4 right-4 bg-[var(--primary-500)] text-white text-xs px-2 py-1 rounded-full">
+                      <motion.span
+                        className="absolute top-4 right-4 bg-[var(--primary-500)] text-white text-xs px-2 py-1 rounded-full"
+                        initial={{ opacity: 0, x: 20 }}
+                        whileInView={{ opacity: 1, x: 0 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.4, delay: index * 0.1 + 0.4 }}
+                      >
                         {event.type}
-                      </span>
+                      </motion.span>
                     )}
 
                     {/* Event status badge */}
-                    {event.status && (
+                    {/* {event.status && (
                       <span
                         className={`absolute bottom-4 left-4 ${getStatusColor(event.status)} text-white text-xs px-2 py-1 rounded-full`}
                       >
                         {event.status}
                       </span>
-                    )}
+                    )} */}
                   </div>
 
-                  <div className="p-5 flex flex-col flex-grow">
-                    <h3 className="font-bold text-lg mb-2 text-[var(--secondary-500)] line-clamp-2">
+                  <motion.div
+                    className="p-5 flex flex-col flex-grow"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.5, delay: index * 0.1 + 0.3 }}
+                  >
+                    <motion.h3
+                      className="font-bold text-lg mb-2 text-[var(--secondary-500)] line-clamp-2"
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: index * 0.1 + 0.4 }}
+                    >
                       {event.title}
-                    </h3>
+                    </motion.h3>
 
-                    <div className="flex items-center mb-3 text-sm text-gray-500">
+                    <motion.div
+                      className="flex items-center mb-3 text-sm text-gray-500"
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: index * 0.1 + 0.5 }}
+                    >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         className="h-4 w-4 mr-2 flex-shrink-0"
@@ -290,9 +340,15 @@ const HomeUpcomingEvents = () => {
                         />
                       </svg>
                       {formatDate(event.start_date)}
-                    </div>
+                    </motion.div>
 
-                    <div className="flex items-center mb-4 text-sm text-gray-500">
+                    <motion.div
+                      className="flex items-center mb-4 text-sm text-gray-500"
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: index * 0.1 + 0.6 }}
+                    >
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         className="h-4 w-4 mr-2 flex-shrink-0"
@@ -316,7 +372,7 @@ const HomeUpcomingEvents = () => {
                       <span className="line-clamp-1">
                         {event.location || 'TBD'}
                       </span>
-                    </div>
+                    </motion.div>
 
                     <div className="mt-auto">
                       <button
@@ -326,15 +382,27 @@ const HomeUpcomingEvents = () => {
                         View Details
                       </button>
                     </div>
-                  </div>
-                </div>
+                  </motion.div>
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
 
-            <div className="text-center mt-12">
+            <motion.div
+              className="text-center mt-12"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.3 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
               {/* Pagination navigation */}
-              <div className="flex justify-center items-center mb-8 space-x-6">
-                <button
+              <motion.div
+                className="flex justify-center items-center mb-8 space-x-6"
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                <motion.button
                   onClick={prevPage}
                   disabled={currentPage === 0}
                   className={`p-2 rounded-full ${
@@ -343,6 +411,9 @@ const HomeUpcomingEvents = () => {
                       : 'text-[var(--primary-500)] hover:bg-[var(--primary-500)] hover:text-white'
                   } transition-all duration-300`}
                   aria-label="Previous page"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ duration: 0.2 }}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -358,14 +429,20 @@ const HomeUpcomingEvents = () => {
                       d="M15 19l-7-7 7-7"
                     />
                   </svg>
-                </button>
+                </motion.button>
 
-                <span className="text-gray-600">
+                <motion.span
+                  className="text-gray-600"
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: 0.4 }}
+                >
                   Page {currentPage + 1} of{' '}
                   {Math.max(1, Math.ceil(events.length / eventsPerPage))}
-                </span>
+                </motion.span>
 
-                <button
+                <motion.button
                   onClick={nextPage}
                   disabled={(currentPage + 1) * eventsPerPage >= events.length}
                   className={`p-2 rounded-full ${
@@ -374,6 +451,9 @@ const HomeUpcomingEvents = () => {
                       : 'text-[var(--primary-500)] hover:bg-[var(--primary-500)] hover:text-white'
                   } transition-all duration-300`}
                   aria-label="Next page"
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{ duration: 0.2 }}
                 >
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -389,28 +469,16 @@ const HomeUpcomingEvents = () => {
                       d="M9 5l7 7-7 7"
                     />
                   </svg>
-                </button>
-              </div>
+                </motion.button>
+              </motion.div>
 
-              <Link
-                to="/show-events"
-                className="inline-flex items-center text-[var(--primary-500)] hover:text-[var(--primary-600)] font-medium transition-all duration-300 hover:translate-x-2 group"
-              >
-                View all events
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-5 w-5 ml-1 transform transition-transform duration-300 group-hover:translate-x-1"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M12.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-2.293-2.293a1 1 0 010-1.414z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              </Link>
-            </div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+              ></motion.div>
+            </motion.div>
           </>
         )}
 

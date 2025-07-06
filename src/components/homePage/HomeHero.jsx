@@ -65,16 +65,16 @@ const animationStyles = `
 
 const HomeHero = () => {
   return (
-    <section className="relative bg-gradient-to-r from-[var(--secondary-500)] to-[var(--primary-500)] text-white pt-32 pb-20 overflow-hidden">
+    <section className="relative bg-gradient-to-r from-[var(--secondary-500)] to-[var(--primary-500)] text-white pt-40 pb-35 overflow-hidden">
       {/* Inject custom animations */}
       <style dangerouslySetInnerHTML={{ __html: animationStyles }} />
 
       {/* Enhanced Background Elements with Animation */}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden">
         {/* Floating Circles */}
-        <div className="absolute top-1/4 left-1/3 w-48 h-48 rounded-full bg-primary-400 opacity-20 animate-float"></div>
+        <div className="absolute top-1/4 left-1/3 w-48 h-48 rounded-full bg-[var(--primary-400)] opacity-20 animate-float"></div>
         <div
-          className="absolute bottom-1/4 right-1/3 w-64 h-64 rounded-full bg-secondary-400 opacity-10 animate-float"
+          className="absolute bottom-1/4 right-1/3 w-64 h-64 rounded-full bg-[var(--secondary-400)] opacity-10 animate-float"
           style={{ animationDelay: '1s' }}
         ></div>
         <div
@@ -148,7 +148,7 @@ const HomeHero = () => {
 
       <div className="container mx-auto px-4 flex flex-col lg:flex-row gap-12 relative z-10">
         {/* Hero Content with Enhanced Animation */}
-        <div className="flex-1 flex flex-col justify-center">
+        <div className="flex-1 flex flex-col justify-center items-center lg:items-start text-center lg:text-left mx-auto lg:mx-0">
           <div className="overflow-hidden">
             <h1
               className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 leading-tight transform transition-all duration-700"
@@ -176,19 +176,19 @@ const HomeHero = () => {
                   />
                 </svg>
               </span>{' '}
-              with Comuniti
+              with CommunITI
             </h1>
           </div>
 
           <p
-            className="text-lg md:text-xl opacity-0 mb-8 max-w-lg"
+            className="text-lg md:text-xl opacity-0 mb-8 max-w-lg mx-auto lg:mx-0"
             style={{ animation: 'fadeIn 0.8s ease-out forwards 0.4s' }}
           >
             Create and manage perfect event experiences for your attendees with
             our powerful planning platform.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 mt-2">
+          <div className="flex flex-col sm:flex-row gap-4 mt-2 w-full sm:w-auto sm:justify-center lg:justify-start">
             <Link
               to="/register"
               className="btn px-8 py-3 bg-white text-[var(--primary-500)] hover:bg-gray-100 transition-all duration-300 font-semibold rounded-md text-center hover:scale-105"
@@ -206,7 +206,7 @@ const HomeHero = () => {
 
         {/* Hero Image with Enhanced Animation */}
         <div
-          className="flex-1 flex items-center justify-center opacity-0"
+          className="flex-1 hidden lg:flex items-center justify-center opacity-0 "
           style={{ animation: 'fadeIn 1s ease-out forwards 0.6s' }}
         >
           <div className="relative bg-white p-3 rounded-lg shadow-xl transform rotate-3 transition-all duration-500 hover:rotate-0 hover:scale-105 hover:shadow-2xl">
@@ -216,7 +216,7 @@ const HomeHero = () => {
               className="rounded max-w-full h-auto"
             />
             <div
-              className="absolute -bottom-4 -left-4 bg-[var(--primary-500)] text-white py-2 px-4 rounded-lg text-sm font-medium shadow-lg transform -rotate-2 transition-all duration-300 hover:rotate-0 hover:scale-105 opacity-0"
+              className="absolute -bottom-4 -left-4 bg-[var(--primary-500)] text-white py-2 px-4 rounded-lg text-sm font-medium shadow-lg transform-rotate-2 transition-all duration-300 hover:rotate-0 hover:scale-105 opacity-0"
               style={{
                 animation: 'slideInFromBottom 0.5s ease-out forwards 1.5s',
               }}
