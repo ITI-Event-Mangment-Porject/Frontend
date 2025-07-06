@@ -74,7 +74,7 @@ const Topbar = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
 
-      const data = res.data.data;
+      const data = res.data.data || {};
 
       setCompanyData(prev => ({
         ...prev,

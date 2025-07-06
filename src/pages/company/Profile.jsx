@@ -34,6 +34,7 @@ const CompanyProfilePage = () => {
           },
         });
         const rawData = response.data.data || {};
+        
         setCompanyData({
           ...rawData,
           logo_path: rawData.logo_path 
