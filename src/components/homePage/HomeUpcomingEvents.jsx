@@ -430,8 +430,8 @@ const HomeUpcomingEvents = () => {
                   viewport={{ once: true }}
                   transition={{ duration: 0.4, delay: 0.4 }}
                 >
-                  Page {currentPage + 1} of{' '}
-                  {Math.max(1, Math.ceil(events.length / eventsPerPage))}
+                  {/* Page {currentPage + 1} of{' '} */}
+                  {/* {Math.max(1, Math.ceil(events.length / eventsPerPage))} */}
                 </motion.span>
 
                 <motion.button
