@@ -156,7 +156,7 @@ const JobFairSetUp = () => {
     <div className='p-4 m-1 sm:p-4 md:p-6 w-full min-h-screen bg-white flex flex-col animate-fade-in border border-[var(--gray-200)] rounded-lg shadow-md transition-all duration-300 ease-out'>
       <div className="container  mx-auto px-4 py-6">
         <div className="flex justify-between align-items-center mb-6">
-          <div className="font-bold text-3xl mb-6">Job Fair Setup</div>
+          <div className="font-bold text-3xl mb-6">Companies SetUp</div>
           <div>
             <button
               onClick={() => setShowAddform(true)}
