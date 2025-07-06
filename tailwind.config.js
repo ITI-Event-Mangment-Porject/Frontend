@@ -1,27 +1,34 @@
 // /** @type {import('tailwindcss').Config} */
-// export default {
-//   content: [
-//     "./index.html",
-//     "./src/**/*.{js,ts,jsx,tsx}",
-//   ],
+// const defaultConfig = require("shadcn/ui/tailwind.config")
+
+// module.exports = {
+//   ...defaultConfig,
+//   content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}", "*.{js,ts,jsx,tsx,mdx}"],
 //   theme: {
+//     ...defaultConfig.theme,
 //     extend: {
+//       ...defaultConfig.theme.extend,
 //       colors: {
+//         ...defaultConfig.theme.extend.colors,
 //         primary: {
-//           50: '#eff6ff',
-//           500: '#3b82f6',
-//           600: '#2563eb',
-//           700: '#1d4ed8',
+//           DEFAULT: "#901b20",
+//           foreground: "#ffffff",
 //         },
 //         secondary: {
-//           50: '#f0f9ff',
-//           500: '#0ea5e9',
-//         }
-//       }
+//           DEFAULT: "#203947",
+//           foreground: "#ffffff",
+//         },
+//         accent: {
+//           DEFAULT: "#ad565a",
+//           light: "#cc9598",
+//           foreground: "#ffffff",
+//         },
+//         destructive: {
+//           DEFAULT: "#ef4444",
+//           foreground: "#ffffff",
+//         },
+//       },
 //     },
 //   },
-//   plugins: [
-//     require('@tailwindcss/forms'),
-//     require('@tailwindcss/typography'),
-//   ],
+//   plugins: [...defaultConfig.plugins, require("tailwindcss-animate")],
 // }

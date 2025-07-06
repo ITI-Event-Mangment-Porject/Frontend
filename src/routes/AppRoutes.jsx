@@ -19,6 +19,7 @@ import HomePage from '../pages/homePage/HomePage';
 import AdminDashboard from '../pages/admin/Dashboard';
 import ManageEvents from '../pages/admin/ManageEvents';
 import Notifications from '../pages/admin/Notifications';
+import LiveEventMonitor from '../components/live-event/live-event-monitor';
 
 const AppRoutes = () => {
   return (
@@ -31,6 +32,7 @@ const AppRoutes = () => {
       {/* Default redirect to admin dashboard */}
       <Route path="/admin/events" element={<ManageEvents />} />
       <Route path="/admin/notifications" element={<Notifications />} />
+      <Route path="/admin/liveevents" element={<LiveEventMonitor />} />
       <Route
         path="/admin"
         element={<Navigate to="/admin/dashboard" replace />}
