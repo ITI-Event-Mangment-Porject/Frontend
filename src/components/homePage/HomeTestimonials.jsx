@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+// eslint-disable-next-line no-unused-vars
+import { motion, AnimatePresence } from 'framer-motion';
 
 const testimonials = [
   {
@@ -8,6 +10,8 @@ const testimonials = [
     name: 'Sarah Chen',
     position: 'Event Director, TechCorp',
     avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
+    rating: 5,
+    company: 'TechCorp',
   },
   {
     id: 2,
@@ -16,6 +20,8 @@ const testimonials = [
     name: 'David Lee',
     position: 'Global Events Manager',
     avatar: 'https://randomuser.me/api/portraits/men/86.jpg',
+    rating: 5,
+    company: 'EventsPro',
   },
   {
     id: 3,
@@ -24,6 +30,8 @@ const testimonials = [
     name: 'Emily Carter',
     position: 'Marketing Director',
     avatar: 'https://randomuser.me/api/portraits/women/65.jpg',
+    rating: 5,
+    company: 'CreativeHub',
   },
 ];
 
@@ -40,87 +48,398 @@ const HomeTestimonials = () => {
   }, []);
 
   return (
-    <section className="py-20 bg-[var(--primary-200)]">
-      <div className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl font-bold mb-4 text-[var(--secondary-500)]">
-            What Our Users Say
-          </h2>
-          <p className="text-gray-600 max-w-2xl mx-auto">
-            Hear from event planners who've transformed their events with our
-            platform
-          </p>
-        </div>
+    <section className="py-12 bg-gradient-to-br from-[var(--primary-200)] via-white to-[var(--primary-300)] relative overflow-hidden">
+      {/* Enhanced Background with multiple layers */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Primary gradient overlay */}
+        <div className="absolute inset-0 bg-gradient-to-r from-[var(--primary-300)] via-transparent to-[var(--primary-400)] opacity-40"></div>
+
+        {/* Animated geometric shapes - smaller sizes */}
+        <motion.div
+          className="absolute-top-10-left-10 w-20 h-20 bg-[var(--primary-200)] rounded-full opacity-20"
+          animate={{
+            x: [0, 20, 0],
+            y: [0, -20, 0],
+            rotate: [0, 360],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: 'linear',
+          }}
+        />
+        <motion.div
+          className="absolute-bottom-10-right-10 w-30 h-30 bg-[var(--secondary-200)] rounded-full opacity-15"
+          animate={{
+            x: [0, -20, 0],
+            y: [0, 20, 0],
+            rotate: [0, -360],
+          }}
+          transition={{
+            duration: 25,
+            repeat: Infinity,
+            ease: 'linear',
+          }}
+        />
+        <motion.div
+          className="absolute top-1/2 left-1/4 w-12 h-12 bg-[var(--primary-300)] rounded-full opacity-15"
+          animate={{
+            scale: [1, 1.1, 1],
+            opacity: [0.15, 0.25, 0.15],
+          }}
+          transition={{
+            duration: 4,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+
+        {/* Additional decorative elements - smaller */}
+        <motion.div
+          className="absolute top-20 right-1/3 w-8 h-8 bg-gradient-to-br from-[var(--primary-400)] to-[var(--primary-600)] rounded-lg opacity-15"
+          animate={{
+            rotate: [0, 90, 180, 270, 360],
+            scale: [1, 1.05, 1],
+          }}
+          transition={{
+            duration: 15,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+
+        <motion.div
+          className="absolute bottom-32 left-1/3 w-6 h-6 bg-[var(--secondary-400)] opacity-20"
+          style={{
+            clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)',
+          }}
+          animate={{
+            rotate: [0, -360],
+            y: [0, -10, 0],
+          }}
+          transition={{
+            duration: 12,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+
+        {/* Subtle pattern overlay */}
+        <div
+          className="absolute inset-0 opacity-3"
+          style={{
+            backgroundImage: `radial-gradient(circle at 25% 25%, var(--primary-500) 1px, transparent 1px),
+                             radial-gradient(circle at 75% 75%, var(--secondary-500) 0.5px, transparent 0.5px)`,
+            backgroundSize: '40px 40px, 25px 25px',
+          }}
+        />
+
+        {/* Floating particles - smaller */}
+        {[...Array(6)].map((_, i) => (
+          <motion.div
+            key={i}
+            className="absolute w-1 h-1 bg-[var(--primary-400)] rounded-full opacity-25"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+            animate={{
+              y: [0, -20, 0],
+              opacity: [0.25, 0.4, 0.25],
+              scale: [1, 1.1, 1],
+            }}
+            transition={{
+              duration: 3 + Math.random() * 2,
+              repeat: Infinity,
+              delay: Math.random() * 2,
+              ease: 'easeInOut',
+            }}
+          />
+        ))}
+
+        {/* Glowing orbs - smaller */}
+        <motion.div
+          className="absolute top-1/4 right-1/4 w-16 h-16 bg-gradient-radial from-[var(--primary-300)] to-transparent opacity-15 rounded-full blur-lg"
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.15, 0.25, 0.15],
+          }}
+          transition={{
+            duration: 6,
+            repeat: Infinity,
+            ease: 'easeInOut',
+          }}
+        />
+
+        <motion.div
+          className="absolute bottom-1/4 left-1/5 w-12 h-12 bg-gradient-radial from-[var(--secondary-300)] to-transparent opacity-10 rounded-full blur-md"
+          animate={{
+            scale: [1, 1.3, 1],
+            opacity: [0.1, 0.2, 0.1],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+            ease: 'easeInOut',
+            delay: 2,
+          }}
+        />
+      </div>
+
+      <div className="container mx-auto px-4 relative z-10">
+        <motion.div
+          className="text-center mb-10"
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.8 }}
+        >
+          <motion.div
+            className="inline-flex items-center justify-center w-12 h-12 bg-[var(--primary-500)] rounded-full mb-4"
+            initial={{ scale: 0, rotate: -180 }}
+            whileInView={{ scale: 1, rotate: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <svg
+              className="w-6 h-6 text-white"
+              fill="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
+            </svg>
+          </motion.div>
+          <motion.h2
+            className="text-3xl md:text-4xl font-bold mb-3 text-[var(--secondary-500)]"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+          >
+            Loved by{' '}
+            <span className="text-[var(--primary-500)]">Thousands</span>
+          </motion.h2>
+          <motion.p
+            className="text-lg text-gray-600 max-w-2xl mx-auto"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+          >
+            Don't just take our word for it - hear what companies are saying
+            about their experience with communITI
+          </motion.p>
+        </motion.div>
 
         <div className="max-w-4xl mx-auto">
-          {/* Testimonial Carousel */}
-          <div className="relative">
+          {/* Testimonial Cards */}
+          <motion.div
+            className="relative"
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.2 }}
+            transition={{ duration: 0.8, delay: 0.5 }}
+          >
             <div className="overflow-hidden">
-              <div
-                className="flex transition-transform duration-500 ease-in-out"
-                style={{ transform: `translateX(-${activeIndex * 100}%)` }}
-              >
-                {testimonials.map(testimonial => (
-                  <div key={testimonial.id} className="min-w-full px-4">
-                    <div className="bg-white p-8 rounded-xl shadow-xl border-primary">
-                      {/* Quote icon */}
-                      <div className="text-[var(--primary-300)] mb-6">
-                        <svg
-                          width="45"
-                          height="36"
-                          className="fill-current"
-                          xmlns="http://www.w3.org/2000/svg"
-                        >
-                          <path
-                            d="M13.415.43c-2.523 0-4.121 1.438-4.795 2.693C7.505 5.434 6.846 8.052 6.57 9.676c-.407 2.427-.475 4.163-.21 6.106.907 6.62 6.033 7.957 9.27 8.137 3.478.192 6.013-1.397 7.526-3.953 1.62-2.739 1.928-5.887.888-8.605-1.045-2.727-3.306-4.483-5.863-5.23.468-2.994-1.548-5.7-4.764-5.7zm22.665 0c-2.523 0-4.121 1.438-4.795 2.693-1.115 2.311-1.774 4.929-2.05 6.553-.407 2.427-.476 4.163-.21 6.106.907 6.62 6.033 7.957 9.27 8.137 3.478.192 6.013-1.397 7.526-3.953 1.62-2.739 1.928-5.887.888-8.605-1.045-2.727-3.306-4.483-5.864-5.23.47-2.994-1.547-5.7-4.764-5.7z"
-                            fill-rule="nonzero"
-                          />
-                        </svg>
-                      </div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeIndex}
+                  className="flex justify-center"
+                  initial={{ opacity: 0, x: 100, rotateY: 90 }}
+                  animate={{ opacity: 1, x: 0, rotateY: 0 }}
+                  exit={{ opacity: 0, x: -100, rotateY: -90 }}
+                  transition={{ duration: 0.6, ease: 'easeInOut' }}
+                >
+                  <div className="w-full max-w-3xl">
+                    <motion.div
+                      className="bg-white p-6 md:p-8 rounded-2xl shadow-xl border border-gray-100 relative overflow-hidden"
+                      whileHover={{ scale: 1.02 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {/* Decorative elements */}
+                      <div className="absolute -top-3 -right-3 w-16 h-16 bg-gradient-to-br from-[var(--primary-400)] to-[var(--primary-600)] rounded-full opacity-10"></div>
+                      <div className="absolute -bottom-3 -left-3 w-20 h-20 bg-gradient-to-br from-[var(--secondary-400)] to-[var(--secondary-600)] rounded-full opacity-10"></div>
 
-                      {/* Testimonial */}
-                      <p className="text-gray-600 text-lg italic mb-6">
-                        "{testimonial.quote}"
-                      </p>
+                      {/* Star Rating */}
+                      <motion.div
+                        className="flex justify-center mb-4"
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                      >
+                        {[...Array(testimonials[activeIndex].rating)].map(
+                          (_, i) => (
+                            <motion.div
+                              key={i}
+                              initial={{ opacity: 0, y: -20 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              transition={{ duration: 0.3, delay: 0.1 * i }}
+                            >
+                              <svg
+                                className="w-6 h-6 text-yellow-400 mx-1"
+                                fill="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                              </svg>
+                            </motion.div>
+                          )
+                        )}
+                      </motion.div>
+
+                      {/* Quote */}
+                      <motion.div
+                        className="text-center mb-6"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.3 }}
+                      >
+                        <div className="text-4xl text-[var(--primary-300)] mb-3 font-serif">
+                          "
+                        </div>
+                        <p className="text-lg md:text-xl text-gray-700 font-medium leading-relaxed italic">
+                          {testimonials[activeIndex].quote}
+                        </p>
+                        <div className="text-4xl text-[var(--primary-300)] mt-3 font-serif rotate-180 inline-block">
+                          "
+                        </div>
+                      </motion.div>
 
                       {/* Author */}
-                      <div className="flex items-center">
-                        <img
-                          src={testimonial.avatar}
-                          alt={testimonial.name}
-                          className="w-12 h-12 rounded-full object-cover mr-4"
-                        />
-                        <div>
-                          <h4 className="font-semibold text-[var(--secondary-500)]">
-                            {testimonial.name}
+                      <motion.div
+                        className="flex items-center justify-center"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.4 }}
+                      >
+                        <motion.div
+                          className="relative mr-6"
+                          whileHover={{ scale: 1.1 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--primary-400)] to-[var(--primary-600)] p-1">
+                            <img
+                              src={testimonials[activeIndex].avatar}
+                              alt={testimonials[activeIndex].name}
+                              className="w-full h-full rounded-full object-cover"
+                            />
+                          </div>
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-2 border-white flex items-center justify-center">
+                            <svg
+                              className="w-2 h-2 text-white"
+                              fill="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
+                            </svg>
+                          </div>
+                        </motion.div>
+                        <div className="text-left">
+                          <h4 className="font-bold text-lg text-[var(--secondary-500)] mb-1">
+                            {testimonials[activeIndex].name}
                           </h4>
-                          <p className="text-gray-500 text-sm">
-                            {testimonial.position}
+                          <p className="text-[var(--primary-600)] font-medium text-sm">
+                            {testimonials[activeIndex].position}
+                          </p>
+                          <p className="text-gray-500 text-xs">
+                            {testimonials[activeIndex].company}
                           </p>
                         </div>
-                      </div>
-                    </div>
+                      </motion.div>
+                    </motion.div>
                   </div>
-                ))}
-              </div>
+                </motion.div>
+              </AnimatePresence>
             </div>
 
-            {/* Navigation dots */}
-            <div className="flex justify-center mt-8">
-              {testimonials.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setActiveIndex(index)}
-                  className={`mx-1 w-3 h-3 rounded-full transition-colors ${
-                    activeIndex === index
-                      ? 'bg-[var(--primary-500)]'
-                      : 'bg-gray-300'
-                  }`}
-                  aria-label={`Go to testimonial ${index + 1}`}
-                />
-              ))}
-            </div>
-          </div>
+            {/* Navigation */}
+            <motion.div
+              className="flex justify-center items-center mt-8 space-x-4"
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.6 }}
+            >
+              <motion.button
+                onClick={() =>
+                  setActiveIndex(
+                    activeIndex === 0
+                      ? testimonials.length - 1
+                      : activeIndex - 1
+                  )
+                }
+                className="p-3 rounded-full bg-white shadow-lg hover:shadow-xl border border-gray-200 text-[var(--primary-500)] transition-all duration-300"
+                whileHover={{
+                  scale: 1.1,
+                  backgroundColor: 'var(--primary-500)',
+                  color: 'white',
+                }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+              </motion.button>
+
+              <div className="flex space-x-2">
+                {testimonials.map((_, index) => (
+                  <motion.button
+                    key={index}
+                    onClick={() => setActiveIndex(index)}
+                    className={`w-3 h-3 rounded-full transition-all duration-300 ${
+                      activeIndex === index
+                        ? 'bg-[var(--primary-500)] scale-125'
+                        : 'bg-gray-300 hover:bg-gray-400'
+                    }`}
+                    whileHover={{ scale: 1.2 }}
+                    whileTap={{ scale: 0.8 }}
+                    aria-label={`Go to testimonial ${index + 1}`}
+                  />
+                ))}
+              </div>
+
+              <motion.button
+                onClick={() =>
+                  setActiveIndex(
+                    activeIndex === testimonials.length - 1
+                      ? 0
+                      : activeIndex + 1
+                  )
+                }
+                className="p-3 rounded-full bg-white shadow-lg hover:shadow-xl border border-gray-200 text-[var(--primary-500)] transition-all duration-300"
+                whileHover={{
+                  scale: 1.1,
+                  backgroundColor: 'var(--primary-500)',
+                  color: 'white',
+                }}
+                whileTap={{ scale: 0.9 }}
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </motion.button>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
     </section>

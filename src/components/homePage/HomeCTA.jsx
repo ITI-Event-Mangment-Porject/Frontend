@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+// eslint-disable-next-line no-unused-vars
+import { motion } from 'framer-motion';
 
 const HomeCTA = () => {
   // Reference to the stats section for intersection observer
@@ -86,55 +88,154 @@ const HomeCTA = () => {
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
-        <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white leading-tight animate-fadeIn">
+        <motion.div
+          className="max-w-4xl mx-auto text-center"
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.3 }}
+          transition={{ duration: 0.8 }}
+        >
+          <motion.h2
+            className="text-3xl md:text-4xl lg:text-5xl font-bold mb-6 text-white leading-tight"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
             Ready to streamline your events?
-          </h2>
-          <p
-            className="text-xl text-white opacity-90 mb-8 md:mb-10 animate-fadeIn"
-            style={{ animationDelay: '0.3s' }}
+          </motion.h2>
+          <motion.p
+            className="text-xl text-white opacity-90 mb-8 md:mb-10"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.4 }}
           >
             Join thousands of successful event organizers who transformed their
-            events management with Comuniti.
-          </p>
+            events management with CommunITI.
+          </motion.p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link
-              to="/login"
-              className="px-8 py-3 bg-white text-primary-600 border-primary font-bold rounded-lg shadow-lg hover:bg-gray-100 transition duration-300 text-center transform hover:scale-105 hover:shadow-xl"
+          <motion.div
+            className="flex flex-col sm:flex-row sm:items-center gap-4 justify-center w-full"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.6 }}
+          >
+            <motion.div
+              className="w-full sm:w-auto"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.2 }}
             >
-              Get Started
-            </Link>
-            <Link
-              to="/show-events"
-              className="px-8 py-3 bg-transparent border-2 border-white text-white font-bold rounded-lg hover:bg-white hover:text-black transition duration-300 text-center transform hover:scale-105"
+              <Link
+                to="/login"
+                className="w-full block px-8 py-3 bg-white text-primary-600 font-bold rounded-lg shadow-lg hover:bg-gray-100 transition duration-300 text-center transform hover:shadow-xl"
+              >
+                Get Started
+              </Link>
+            </motion.div>
+            <motion.div
+              className="w-full sm:w-auto"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              transition={{ duration: 0.2 }}
             >
-              Browse Events
-            </Link>
-          </div>
+              <Link
+                to="/show-events"
+                className="w-full block px-8 py-3 bg-transparent border-2 border-white text-white font-bold rounded-lg hover:bg-white hover:text-black transition duration-300 text-center"
+              >
+                Browse Events
+              </Link>
+            </motion.div>
+          </motion.div>
 
-          <div
+          <motion.div
             className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-8 text-white"
             ref={statsRef}
+            initial={{ opacity: 0, y: 50 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.8, delay: 0.8 }}
           >
-            <div className="flex flex-col items-center transform transition-transform duration-300 hover:scale-110">
-              <div className="text-4xl font-bold mb-2">{eventCount}+</div>
+            <motion.div
+              className="flex flex-col items-center transform transition-transform duration-300"
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 1.0 }}
+              whileHover={{ scale: 1.1 }}
+            >
+              <motion.div
+                className="text-4xl font-bold mb-2"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 1.2 }}
+              >
+                {eventCount}+
+              </motion.div>
               <div className="text-sm opacity-80">Events Managed</div>
-            </div>
-            <div className="flex flex-col items-center transform transition-transform duration-300 hover:scale-110">
-              <div className="text-4xl font-bold mb-2">{attendeeCount}+</div>
+            </motion.div>
+            <motion.div
+              className="flex flex-col items-center transform transition-transform duration-300"
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 1.1 }}
+              whileHover={{ scale: 1.1 }}
+            >
+              <motion.div
+                className="text-4xl font-bold mb-2"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 1.3 }}
+              >
+                {attendeeCount}+
+              </motion.div>
               <div className="text-sm opacity-80">Attendees</div>
-            </div>
-            <div className="flex flex-col items-center transform transition-transform duration-300 hover:scale-110">
-              <div className="text-4xl font-bold mb-2">{satisfactionRate}%</div>
+            </motion.div>
+            <motion.div
+              className="flex flex-col items-center transform transition-transform duration-300"
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 1.2 }}
+              whileHover={{ scale: 1.1 }}
+            >
+              <motion.div
+                className="text-4xl font-bold mb-2"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 1.4 }}
+              >
+                {satisfactionRate}%
+              </motion.div>
               <div className="text-sm opacity-80">Satisfaction Rate</div>
-            </div>
-            <div className="flex flex-col items-center transform transition-transform duration-300 hover:scale-110">
-              <div className="text-4xl font-bold mb-2">{supportHours}/7</div>
+            </motion.div>
+            <motion.div
+              className="flex flex-col items-center transform transition-transform duration-300"
+              initial={{ opacity: 0, scale: 0.8 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 1.3 }}
+              whileHover={{ scale: 1.1 }}
+            >
+              <motion.div
+                className="text-4xl font-bold mb-2"
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 1.5 }}
+              >
+                {supportHours}/7
+              </motion.div>
               <div className="text-sm opacity-80">Support</div>
-            </div>
-          </div>
-        </div>
+            </motion.div>
+          </motion.div>
+        </motion.div>
       </div>
     </section>
   );
