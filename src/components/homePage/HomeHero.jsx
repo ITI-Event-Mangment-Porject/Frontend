@@ -211,7 +211,7 @@ const HomeHero = () => {
         >
           <div className="relative bg-white p-3 rounded-lg shadow-xl transform rotate-3 transition-all duration-500 hover:rotate-0 hover:scale-105 hover:shadow-2xl">
             <img
-              src="/event.png"
+              src="/home.jpg"
               alt="Event Management Dashboard"
               className="rounded max-w-full h-auto"
             />
