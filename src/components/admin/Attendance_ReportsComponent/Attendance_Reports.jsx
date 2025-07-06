@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, Search, ChevronDown, Users } from 'lucide-react';
+import { Calendar, Search, ChevronDown, Users, FileText } from 'lucide-react';
 
 const Attendance_Reports = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [eventsData, setEventsData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedEvent, setSelectedEvent] = useState('');
+  const [activeEventTab, setActiveEventTab] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const attendeesPerPage = 10;
 
@@ -20,6 +20,10 @@ const Attendance_Reports = () => {
         const data = await response.json();
         if (data.success) {
           setEventsData(data.data.result);
+          // Set first event as active by default
+          if (data.data.result.length > 0) {
+            setActiveEventTab(data.data.result[0].event);
+          }
         }
       } catch (error) {
         console.error('Error fetching attendance data:', error);
@@ -34,7 +38,7 @@ const Attendance_Reports = () => {
   const handleExportAttendance = async () => {
     try {
       const response = await fetch(
-        'http://127.0.0.1:8001/api/reports/export?type=xlsx&report=events'
+        'http://127.0.0.1:8001/api/reports/export?type=json&report=attendance'
       );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -54,9 +58,27 @@ const Attendance_Reports = () => {
     }
   };
 
-  const generateAttendeeData = () => {
-    const allAttendees = [];
+  const getActiveEventData = () => {
+    return eventsData.find(event => event.event === activeEventTab);
+  };
 
+  const getActiveEventAttendees = () => {
+    const activeEvent = getActiveEventData();
+    if (!activeEvent) return [];
+
+    return activeEvent.attendees.map(attendee => ({
+      id: attendee.id,
+      name: attendee.name,
+      email: attendee.email,
+      phone: attendee.phone,
+      eventTitle: activeEvent.event,
+      date: new Date(activeEvent.event_date).toLocaleDateString(),
+      
+    }));
+  };
+
+  const getAllAttendeesData = () => {
+    const allAttendees = [];
     eventsData.forEach(event => {
       event.attendees.forEach(attendee => {
         allAttendees.push({
@@ -66,30 +88,15 @@ const Attendance_Reports = () => {
           phone: attendee.phone,
           eventTitle: event.event,
           date: new Date(event.event_date).toLocaleDateString(),
-          status: attendee.status || 'Unknown',
-          checkInTime: attendee.checkInTime || 'N/A',
-          notes: attendee.notes || '',
+         
         });
       });
     });
-
     return allAttendees;
   };
 
-  const attendeeData = generateAttendeeData();
-
-  const totalAttendees = attendeeData.length;
-  // // const presentAttendees = attendeeData.filter(
-  //   a => a.status === 'Present'
-  // ).length;
-  // const lateAttendees = attendeeData.filter(a => a.status === 'Late').length;
-  const absentAttendees = attendeeData.filter(
-    a => a.status === 'Absent'
-  ).length;
-  // const checkedInPercentage =
-  //   totalAttendees > 0
-  //     ? (((presentAttendees + lateAttendees) / totalAttendees) * 100).toFixed(1)
-  //     : 0;
+  const attendeeData = activeEventTab === 'all' ? getAllAttendeesData() : getActiveEventAttendees();
+  const activeEvent = getActiveEventData();
 
   const filteredAttendees = attendeeData.filter(attendee => {
     const matchesSearch =
@@ -98,10 +105,8 @@ const Attendance_Reports = () => {
       attendee.email.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = !statusFilter || attendee.status === statusFilter;
-    const matchesEvent =
-      !selectedEvent || attendee.eventTitle === selectedEvent;
 
-    return matchesSearch && matchesStatus && matchesEvent;
+    return matchesSearch && matchesStatus;
   });
 
   const totalPages = Math.ceil(filteredAttendees.length / attendeesPerPage);
@@ -110,11 +115,16 @@ const Attendance_Reports = () => {
     currentPage * attendeesPerPage
   );
 
+  // Reset pagination when changing tabs
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeEventTab]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Loading attendance data...</p>
         </div>
       </div>
@@ -122,243 +132,217 @@ const Attendance_Reports = () => {
   }
 
   return (
-    <div className="p-4 m-1 sm:p-4 md:p-6 w-full min-h-screen bg-white flex flex-col animate-fade-in border border-[var(--gray-200)] rounded-lg shadow-md transition-all duration-300 ease-out">
-      <div className="min-h-screen  p-6">
+    <div className="p-4 m-1 sm:p-4 md:p-6 w-full min-h-screen bg-white flex flex-col animate-fade-in border border-gray-200 rounded-lg shadow-md transition-all duration-300 ease-out">
+      <div className="min-h-screen p-6">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900">
-              Attendance & Reports
+              Attendance  Reports
             </h1>
+            <button
+              onClick={handleExportAttendance}
+              className="bg-(--primary-500) hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors flex items-center gap-2"
+            >
+              <FileText className="w-4 h-4" />
+              Export Attendance
+            </button>
           </div>
 
-          {/* Stats */}
-          <div className="grid justify-center grid-cols-4 gap-6 mb-8">
-            <div className="bg-white p-6 rounded-xl shadow-sm border">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-gray-500">Total Attendees</div>
-                <Users className="w-5 h-5 text-gray-400" />
-              </div>
-              <div className="text-3xl font-bold text-gray-900 mb-1">
-                {totalAttendees.toLocaleString()}
-              </div>
-              <div className="text-sm text-green-600">
-                +{Math.floor(totalAttendees * 0.15)} from last month
-              </div>
+          {/* Event Tabs */}
+          <div className="mb-6">
+            <div className="border-b border-gray-200">
+              <nav className="flex space-x-8 overflow-x-auto">
+                <button
+                  onClick={() => setActiveEventTab('all')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                    activeEventTab === 'all'
+                      ? 'border-(--primary-600) text-(--primary-600)'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  All Events ({getAllAttendeesData().length})
+                </button>
+                {eventsData.map((event, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setActiveEventTab(event.event)}
+                    className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap ${
+                      activeEventTab === event.event
+                        ? 'border-(--primary-500) text-(--primary-500)'
+                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                    }`}
+                  >
+                    {event.event} ({event.attendees.length})
+                  </button>
+                ))}
+              </nav>
             </div>
+          </div>
 
-            <div className="bg-white p-6 rounded-xl shadow-sm border">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-gray-500">No-Shows</div>
-                <div className="w-5 h-5 rounded-full border-2 border-gray-300 flex items-center justify-center">
-                  <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+         
+
+          {/* Event Details (only show when specific event is selected) */}
+          {activeEventTab !== 'all' && activeEvent && (
+            <div className="bg-white p-6 rounded-xl shadow-sm border mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Event Details</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Event Name</label>
+                  <p className="text-gray-900">{activeEvent.event}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Date</label>
+                  <p className="text-gray-900">{new Date(activeEvent.event_date).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Total Registered</label>
+                  <p className="text-gray-900">{activeEvent.attendees.length} attendees</p>
                 </div>
               </div>
-              <div className="text-3xl font-bold text-gray-900 mb-1">
-                {absentAttendees}
-              </div>
-              <div className="text-sm text-gray-600">
-                -{Math.floor(absentAttendees * 0.1)} from last event
-              </div>
             </div>
-
-            <div className="bg-white p-6 rounded-xl shadow-sm border">
-              <div className="flex items-center justify-between mb-2">
-                <div className="text-sm text-gray-500">Events Today</div>
-                <Calendar className="w-5 h-5 text-gray-400" />
-              </div>
-              <div className="text-3xl font-bold text-gray-900 mb-1">
-                {eventsData.length}
-              </div>
-              <div className="text-sm text-gray-600">Active events</div>
-            </div>
-          </div>
+          )}
 
           {/* Filters */}
           <div className="bg-white p-6 rounded-xl shadow-sm border mb-6">
-            <div className="grid grid-cols-12 gap-4 items-end">
-              <div className="col-span-3">
+            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+              
+              <div className="md:col-span-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Event
+                  Search
                 </label>
                 <div className="relative">
-                  <select
-                    className="w-full p-3 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
-                    value={selectedEvent}
-                    onChange={e => setSelectedEvent(e.target.value)}
-                  >
-                    <option value="">All Events</option>
-                    {eventsData.map((event, index) => (
-                      <option key={index} value={event.event}>
-                        {event.event}
-                      </option>
-                    ))}
-                  </select>
-                  <ChevronDown className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                </div>
-              </div>
-
-              <div className="col-span-3">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Date Range
-                </label>
-                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Select date range"
-                    className="w-full p-3 border border-gray-300 rounded-lg"
+                    placeholder="Search by name, email, or event..."
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500"
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
                   />
-                  <Calendar className="absolute right-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 </div>
               </div>
 
-              <div className="col-span-3 flex justify-end">
+              <div className="md:col-span-3">
                 <button
-                  className="w-full bg-red-600 rounded-lg text-white font-medium py-3"
+                  className="w-full bg-(--primary-500) rounded-lg text-white font-medium py-3 transition-colors"
                   onClick={() => {
-                    setSelectedEvent('');
                     setStatusFilter('');
                     setSearchTerm('');
+                    setCurrentPage(1);
                   }}
                 >
                   Clear Filters
                 </button>
               </div>
             </div>
-
-            <div className="mt-4 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search attendee or event..."
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg"
-                value={searchTerm}
-                onChange={e => setSearchTerm(e.target.value)}
-              />
-            </div>
           </div>
 
-          <div className="min-h-screen  p-6">
-            <div className="max-w-7xl mx-auto">
-              <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                <div className="px-6 py-4 border-b ">
-                  <h2 className="text-lg font-semibold text-gray-900">
-                    Attendees ({filteredAttendees.length})
-                  </h2>
-                </div>
+          {/* Attendees Table */}
+          <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <div className="px-6 py-4 border-b">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Attendees ({filteredAttendees.length})
+              </h2>
+            </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className=" border-b">
-                      <tr>
-                        <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">
-                          ID
-                        </th>
-                        <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">
-                          Name
-                        </th>
-                        <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">
-                          Email
-                        </th>
-                        <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">
-                          Phone
-                        </th>
-                        <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">
-                          Event
-                        </th>
-                        <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">
-                          Date
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                      {paginatedAttendees.map(attendee => (
-                        <tr key={attendee.id}>
-                          <td className="py-4 px-6 text-sm text-gray-900">
-                            {attendee.id}
-                          </td>
-                          <td className="py-4 px-6 text-sm text-gray-900">
-                            {attendee.name}
-                          </td>
-                          <td className="py-4 px-6 text-sm text-gray-600">
-                            {attendee.email}
-                          </td>
-                          <td className="py-4 px-6 text-sm text-gray-600">
-                            {attendee.phone}
-                          </td>
-                          <td className="py-4 px-6 text-sm text-gray-900">
-                            {attendee.eventTitle}
-                          </td>
-                          <td className="py-4 px-6 text-sm text-gray-600">
-                            {attendee.date}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {totalPages > 1 && (
-                  <div className="flex justify-between items-center px-6 py-4 border-t bg-gray-50">
-                    <button
-                      onClick={() =>
-                        setCurrentPage(prev => Math.max(prev - 1, 1))
-                      }
-                      disabled={currentPage === 1}
-                      className={`px-3 py-1 rounded border ${
-                        currentPage === 1
-                          ? 'bg-gray-100 text-gray-400'
-                          : 'bg-white text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      Previous
-                    </button>
-
-                    <div className="space-x-1">
-                      {Array.from({ length: totalPages }, (_, i) => i + 1).map(
-                        page => (
-                          <button
-                            key={page}
-                            onClick={() => setCurrentPage(page)}
-                            className={`px-3 py-1 rounded border ${
-                              currentPage === page
-                                ? 'bg-red-600 text-white'
-                                : 'bg-white text-gray-700 hover:bg-gray-100'
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        )
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="border-b">
+                  <tr>
+                   
+                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">
+                      Name
+                    </th>
+                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">
+                      Email
+                    </th>
+                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">
+                      Phone
+                    </th>
+                    {activeEventTab === 'all' && (
+                      <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">
+                        Event
+                      </th>
+                    )}
+                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">
+                      Date
+                    </th>
+                   
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {paginatedAttendees.map(attendee => (
+                    <tr key={`${attendee.id}-${attendee.eventTitle}`}>
+                     
+                      <td className="py-4 px-6 text-sm text-gray-900">
+                        {attendee.name}
+                      </td>
+                      <td className="py-4 px-6 text-sm text-gray-600">
+                        {attendee.email}
+                      </td>
+                      <td className="py-4 px-6 text-sm text-gray-600">
+                        {attendee.phone}
+                      </td>
+                      {activeEventTab === 'all' && (
+                        <td className="py-4 px-6 text-sm text-gray-900">
+                          {attendee.eventTitle}
+                        </td>
                       )}
-                    </div>
+                      <td className="py-4 px-6 text-sm text-gray-600">
+                        {attendee.date}
+                      </td>
+                      
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex justify-between items-center px-6 py-4 border-t bg-gray-50">
+                <button
+                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                  className={`px-3 py-1 rounded border ${
+                    currentPage === 1
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  Previous
+                </button>
+
+                <div className="flex space-x-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
                     <button
-                      onClick={() =>
-                        setCurrentPage(prev => Math.min(prev + 1, totalPages))
-                      }
-                      disabled={currentPage === totalPages}
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
                       className={`px-3 py-1 rounded border ${
-                        currentPage === totalPages
-                          ? 'bg-gray-100 text-gray-400'
+                        currentPage === page
+                          ? 'bg-(--primary-600) text-white'
                           : 'bg-white text-gray-700 hover:bg-gray-100'
                       }`}
                     >
-                      Next
+                      {page}
                     </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+                  ))}
+                </div>
 
-          {/* Export Button */}
-          <div className="flex justify-end">
-            <button
-              onClick={handleExportAttendance}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
-            >
-              Export Attendance
-            </button>
+                <button
+                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                  className={`px-3 py-1 rounded border ${
+                    currentPage === totalPages
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                      : 'bg-white text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
         </div>
       </div>
