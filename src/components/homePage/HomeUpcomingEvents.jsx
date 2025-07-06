@@ -144,14 +144,6 @@ const HomeUpcomingEvents = () => {
     switch (status.toLowerCase()) {
       case 'published':
         return 'bg-[var(--success-500)]';
-      case 'ongoing':
-        return 'bg-[var(--primary-500)]';
-      case 'completed':
-        return 'bg-[var(--gray-500)]';
-      case 'cancelled':
-        return 'bg-[var(--error-500)]';
-      case 'draft':
-        return 'bg-[var(--warning-500)]';
       default:
         return 'bg-[var(--gray-500)]';
     }
@@ -492,144 +484,264 @@ const HomeUpcomingEvents = () => {
             showFooter={false}
           >
             {selectedEvent && (
-              <div className="event-details-modal animate-fadeIn">
-                {/* Event Image */}
+              <motion.div
+                className="event-details-modal relative overflow-hidden rounded-lg"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+              >
+                {/* Enhanced Background with animated gradient overlay */}
+                <div className="absolute inset-0  opacity-50 "></div>
 
-                <div
-                  className="mb-6 animate-scaleIn"
-                  style={{ animationDelay: '0.1s' }}
-                >
-                  <img
-                    src={`https://placehold.co/400x250?text=${encodeURIComponent(selectedEvent.title)}`}
-                    alt={selectedEvent.title}
-                    className="w-full h-64 object-cover rounded-lg shadow-md"
-                    onError={e => {
-                      e.target.onerror = null;
-                      e.target.src = `https://placehold.co/800x400?text=${encodeURIComponent(
-                        selectedEvent.title
-                      )}`;
-                    }}
-                  />
-                </div>
+                {/* Decorative elements with enhanced animations */}
+                <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full bg-[var(--primary-300)] opacity-10 animate-float-slow"></div>
+                <div className="absolute bottom-5 -left-10 w-24 h-24 rounded-full bg-[var(--secondary-300)] opacity-10 animate-float"></div>
+                <div className="absolute top-1/3 -left-5 w-16 h-16 rounded-full bg-[var(--primary-400)] opacity-5 animate-float-reverse"></div>
+                <div className="absolute bottom-1/4 right-5 w-20 h-20 rounded-full bg-[var(--secondary-400)] opacity-5 animate-float-slow"></div>
 
-                {/* Event Status Badge */}
-                {selectedEvent.status && (
-                  <div
-                    className="mb-4 animate-slideInRight"
-                    style={{ animationDelay: '0.2s' }}
+                {/* Additional decorative elements */}
+                <div className="absolute top-1/2 right-0 w-1 h-20 bg-gradient-to-b from-[var(--primary-300)] to-transparent opacity-30"></div>
+                <div className="absolute bottom-0 left-1/4 w-32 h-1 bg-gradient-to-r from-transparent via-[var(--secondary-300)] to-transparent opacity-30"></div>
+
+                {/* Content container with relative position */}
+                <div className="relative z-10 p-2">
+                  {/* Event Image with enhanced animation */}
+                  <motion.div
+                    className="mb-6 overflow-hidden rounded-lg shadow-lg"
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, delay: 0.1 }}
+                    whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
                   >
-                    <span
-                      className={`inline-block ${getStatusColor(
-                        selectedEvent.status
-                      )} text-white text-sm px-3 py-1 rounded-full`}
-                    >
-                      {selectedEvent.status}
-                    </span>
-                    {selectedEvent.type && (
-                      <span className="inline-block bg-[var(--primary-500)] text-white text-sm px-3 py-1 rounded-full ml-2">
-                        {selectedEvent.type}
-                      </span>
+                    <img
+                      src={
+                        selectedEvent.banner_image ||
+                        `https://placehold.co/800x400?text=${encodeURIComponent(selectedEvent.title)}`
+                      }
+                      alt={selectedEvent.title}
+                      className="w-full h-64 object-cover rounded-lg transition-all duration-700 hover:saturate-150"
+                      onError={e => {
+                        e.target.onerror = null;
+                        e.target.src = `https://placehold.co/800x400?text=${encodeURIComponent(
+                          selectedEvent.title
+                        )}`;
+                      }}
+                    />
+                    {/* Gradient overlay on image for depth */}
+                    {/* <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-lg opacity-60"></div> */}
+                  </motion.div>
+
+                  {/* Event Status Badge with enhanced styling */}
+                  <motion.div
+                    className="mb-4 flex flex-wrap gap-2"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                  >
+                    {selectedEvent.status && (
+                      <motion.span
+                        className={`inline-block ${getStatusColor(
+                          selectedEvent.status
+                        )} text-white text-sm px-4 py-1.5 rounded-full shadow-md`}
+                        whileHover={{
+                          y: -2,
+                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                        }}
+                        transition={{ type: 'spring', stiffness: 300 }}
+                      >
+                        {selectedEvent.status}
+                      </motion.span>
                     )}
-                  </div>
-                )}
 
-                {/* Event Title and Description */}
-                <h3
-                  className="text-2xl font-bold mb-2 text-[var(--secondary-500)] animate-slideInLeft"
-                  style={{ animationDelay: '0.3s' }}
-                >
-                  {selectedEvent.title}
-                </h3>
+                    {selectedEvent.type && (
+                      <motion.span
+                        className="inline-block bg-[var(--primary-500)] text-white text-sm px-4 py-1.5 rounded-full shadow-md"
+                        whileHover={{
+                          y: -2,
+                          boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                        }}
+                        transition={{ type: 'spring', stiffness: 300 }}
+                      >
+                        {selectedEvent.type}
+                      </motion.span>
+                    )}
+                  </motion.div>
 
-                {/* Event Meta Information */}
-                <div
-                  className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-fadeIn"
-                  style={{ animationDelay: '0.4s' }}
-                >
-                  <div className="flex items-center text-gray-600">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-2"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                  {/* Event Title with enhanced animation and styling */}
+                  <motion.div
+                    className="relative mb-6"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: 0.3 }}
+                  >
+                    <h3 className="text-2xl md:text-3xl font-bold mb-2 text-[var(--secondary-600)]">
+                      {selectedEvent.title}
+                    </h3>
+                    <motion.div
+                      className="h-1 w-20 bg-gradient-to-r from-[var(--primary-400)] to-[var(--secondary-400)] rounded-full"
+                      initial={{ width: 0 }}
+                      animate={{ width: '5rem' }}
+                      transition={{ duration: 0.8, delay: 0.5 }}
+                    />
+                  </motion.div>
+
+                  {/* Event Meta Information with enhanced layout and animation */}
+                  <motion.div
+                    className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 bg-white/80 backdrop-blur-sm p-5 rounded-lg shadow-md border border-gray-100"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, delay: 0.4 }}
+                  >
+                    <motion.div
+                      className="flex items-center text-gray-700"
+                      whileHover={{ x: 5 }}
+                      transition={{ type: 'spring', stiffness: 400 }}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                      />
-                    </svg>
-                    <div>
-                      <div className="font-semibold">Date</div>
-                      <div>
-                        {formatDate(selectedEvent.start_date)}
-                        {selectedEvent.end_date &&
-                        selectedEvent.end_date !== selectedEvent.start_date
-                          ? ` - ${formatDate(selectedEvent.end_date)}`
-                          : ''}
+                      <div className="p-3 rounded-full bg-[var(--primary-100)] mr-4 text-[var(--primary-500)]">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-6 w-6"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
                       </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center text-gray-600">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-2"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    <div>
-                      <div className="font-semibold">Time</div>
                       <div>
-                        {selectedEvent.start_time
-                          ? selectedEvent.start_time.substring(0, 5)
-                          : 'TBD'}
-                        {selectedEvent.end_time
-                          ? `- ${selectedEvent.end_time.substring(0, 5)}`
-                          : ''}
+                        <div className="font-semibold text-[var(--secondary-500)]">
+                          Date
+                        </div>
+                        <div className="text-gray-600">
+                          {formatDate(selectedEvent.start_date)}
+                          {selectedEvent.end_date &&
+                          selectedEvent.end_date !== selectedEvent.start_date
+                            ? ` - ${formatDate(selectedEvent.end_date)}`
+                            : ''}
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    </motion.div>
 
-                  <div className="flex items-center text-gray-600">
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 mr-2"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                    <motion.div
+                      className="flex items-center text-gray-700"
+                      whileHover={{ x: 5 }}
+                      transition={{ type: 'spring', stiffness: 400 }}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
-                    <div>
-                      <div className="font-semibold">Location</div>
-                      <div>{selectedEvent.location || 'TBD'}</div>
-                    </div>
-                  </div>
+                      <div className="p-3 rounded-full bg-[var(--primary-100)] mr-4 text-[var(--primary-500)]">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-6 w-6"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-[var(--secondary-500)]">
+                          Time
+                        </div>
+                        <div className="text-gray-600">
+                          {selectedEvent.start_time
+                            ? selectedEvent.start_time.substring(0, 5)
+                            : 'TBD'}
+                          {selectedEvent.end_time
+                            ? ` - ${selectedEvent.end_time.substring(0, 5)}`
+                            : ''}
+                        </div>
+                      </div>
+                    </motion.div>
 
-                  {selectedEvent.registration_deadline && (
-                    <div className="flex items-center text-gray-600">
+                    <motion.div
+                      className="flex items-center text-gray-700"
+                      whileHover={{ x: 5 }}
+                      transition={{ type: 'spring', stiffness: 400 }}
+                    >
+                      <div className="p-3 rounded-full bg-[var(--primary-100)] mr-4 text-[var(--primary-500)]">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-6 w-6"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                          />
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                          />
+                        </svg>
+                      </div>
+                      <div>
+                        <div className="font-semibold text-[var(--secondary-500)]">
+                          Location
+                        </div>
+                        <div className="text-gray-600">
+                          {selectedEvent.location || 'TBD'}
+                        </div>
+                      </div>
+                    </motion.div>
+
+                    {selectedEvent.registration_deadline && (
+                      <motion.div
+                        className="flex items-center text-gray-700"
+                        whileHover={{ x: 5 }}
+                        transition={{ type: 'spring', stiffness: 400 }}
+                      >
+                        <div className="p-3 rounded-full bg-[var(--primary-100)] mr-4 text-[var(--primary-500)]">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            className="h-6 w-6"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            stroke="currentColor"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        </div>
+                        <div>
+                          <div className="font-semibold text-[var(--secondary-500)]">
+                            Registration Deadline
+                          </div>
+                          <div className="text-gray-600">
+                            {formatDate(selectedEvent.registration_deadline)}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </motion.div>
+
+                  {/* Event Description with enhanced styling */}
+                  <motion.div
+                    className="mb-8 bg-white/80 backdrop-blur-sm p-6 rounded-lg shadow-md border border-gray-100"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, delay: 0.5 }}
+                  >
+                    <h4 className="text-xl font-semibold mb-4 text-[var(--secondary-500)] flex items-center">
                       <svg
                         xmlns="http://www.w3.org/2000/svg"
                         className="h-5 w-5 mr-2"
@@ -641,75 +753,88 @@ const HomeUpcomingEvents = () => {
                           strokeLinecap="round"
                           strokeLinejoin="round"
                           strokeWidth={2}
-                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                         />
                       </svg>
+                      Description
+                    </h4>
+                    <div className="text-gray-700 whitespace-pre-line leading-relaxed">
+                      {selectedEvent.description}
+                    </div>
+                  </motion.div>
+
+                  {/* Event Creator with enhanced styling */}
+                  {selectedEvent.creator && (
+                    <motion.div
+                      className="mb-8 bg-white/80 backdrop-blur-sm p-6 rounded-lg shadow-md border border-gray-100 flex items-center"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.7, delay: 0.6 }}
+                      whileHover={{
+                        boxShadow: '0 10px 25px -5px rgba(0, 0, 0, 0.1)',
+                      }}
+                    >
+                      <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--primary-300)] to-[var(--primary-500)] flex items-center justify-center text-white mr-4 shadow-md">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-6 w-6"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                          />
+                        </svg>
+                      </div>
                       <div>
-                        <div className="font-semibold">
-                          Registration Deadline
-                        </div>
-                        <div>
-                          {formatDate(selectedEvent.registration_deadline)}
+                        <h4 className="text-lg font-semibold text-[var(--secondary-500)]">
+                          Organized by
+                        </h4>
+                        <div className="text-gray-700">
+                          {selectedEvent.creator.first_name}{' '}
+                          {selectedEvent.creator.last_name}
                         </div>
                       </div>
-                    </div>
+                    </motion.div>
                   )}
-                </div>
 
-                {/* Event Description */}
-                <div
-                  className="mb-6 animate-fadeIn"
-                  style={{ animationDelay: '0.5s' }}
-                >
-                  <h4 className="text-lg font-semibold mb-2 text-[var(--secondary-500)]">
-                    Description
-                  </h4>
-                  <div className="text-gray-700 whitespace-pre-line">
-                    {selectedEvent.description}
-                  </div>
-                </div>
-
-                {/* Event Creator */}
-                {selectedEvent.creator && (
-                  <div
-                    className="mb-6 animate-fadeIn"
-                    style={{ animationDelay: '0.6s' }}
+                  {/* Action Button with enhanced animation and styling */}
+                  <motion.div
+                    className="mt-8 flex justify-end"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.7, delay: 0.7 }}
                   >
-                    <h4 className="text-lg font-semibold mb-2 text-[var(--secondary-500)]">
-                      Organized by
-                    </h4>
-                    <div className="text-gray-700">
-                      {selectedEvent.creator.first_name}{' '}
-                      {selectedEvent.creator.last_name}
-                    </div>
-                  </div>
-                )}
-
-                {/* Action Button */}
-                <div
-                  className="mt-8 flex justify-end animate-slideInUp"
-                  style={{ animationDelay: '0.7s' }}
-                >
-                  <Link
-                    to={`/event-details/${selectedEvent.id}`}
-                    className="inline-flex items-center px-6 py-3 bg-[var(--primary-500)] text-white font-medium rounded-md hover:bg-[var(--primary-600)] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[var(--primary-300)] focus:ring-offset-2"
-                  >
-                    Register for Event
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5 ml-2"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
+                    <motion.div
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                     >
-                      <path
-                        fillRule="evenodd"
-                        d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </Link>
+                      <Link
+                        to={`/event-details/${selectedEvent.id}`}
+                        className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-[var(--primary-500)] to-[var(--primary-600)] text-white font-medium rounded-md shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[var(--primary-300)] focus:ring-offset-2 group"
+                      >
+                        <span className="mr-2">Register for Event</span>
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-5 w-5 transform transition-transform duration-300 group-hover:translate-x-1"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </Link>
+                    </motion.div>
+                  </motion.div>
                 </div>
-              </div>
+              </motion.div>
             )}
           </Modal>
         )}

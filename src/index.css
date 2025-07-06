@@ -184,32 +184,25 @@ select {
   animation: gradient-x 15s ease infinite;
 }
 
-@keyframes skeletonWave {
+@keyframes scaleXIn {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes pulse-shadow {
   0% {
-    transform: translateX(-100%);
+    box-shadow: 0 0 0 0 rgba(144, 27, 32, 0.4);
   }
-  50%,
+  70% {
+    box-shadow: 0 0 0 10px rgba(144, 27, 32, 0);
+  }
   100% {
-    transform: translateX(100%);
+    box-shadow: 0 0 0 0 rgba(144, 27, 32, 0);
   }
-}
-
-.skeleton-wave {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0),
-    rgba(255, 255, 255, 0.3),
-    rgba(255, 255, 255, 0)
-  );
-  animation: skeletonWave 1.5s infinite;
-}
-
-.animate-modal-in {
-  animation: modalIn 0.3s ease-out forwards;
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.8s ease-out forwards;
 }
 
 /* ========================================
