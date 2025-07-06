@@ -23,7 +23,7 @@ const Pagination = ({ pagination, onPageChange, totalCompanies }) => (
             disabled={!link.url || link.active}
             className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
               link.active
-                ? 'z-10 bg-blue-50 border-red-500 text-red-600'
+                ? 'z-10 bg-blue-50 border-(--primary-600) text-(--primary-600) cursor-default'
                 : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
             } ${index === 0 ? 'rounded-l-md' : ''} ${index === pagination.links.length - 1 ? 'rounded-r-md' : ''}`}
             dangerouslySetInnerHTML={{ __html: link.label }}

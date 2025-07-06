@@ -6,7 +6,7 @@ import CompanyModal from './CompanyModal';
 import Pagination from './Pagination';
 import FullPageLoader from '../../FullPageLoader';
 
-const JobFairSetUp = () => {
+const CompaniesSetUp = () => {
   const [companies, setCompanies] = useState([]);
   const [totalCompanies, setTotalCompanies] = useState(0);
   const [approvedCompanies, setApprovedCompanies] = useState(0);
@@ -26,13 +26,16 @@ const JobFairSetUp = () => {
   const [showAddForm, setShowAddform] = useState(false);
   const [newCompany, setNewCompany] = useState({
     name: '',
+    email: '',
+    phone: '',
+    address: '',
+    contact_email: '',
+    contact_phone: '',
+    location: '',
     description: '',
     website: '',
     industry: '',
     size: '',
-    location: '',
-    contact_email: '',
-    contact_phone: '',
     linkedin_url: '',
   });
 
@@ -98,13 +101,16 @@ const JobFairSetUp = () => {
         setShowAddform(false);
         setNewCompany({
           name: '',
+          email: '',
+          phone: '',
+          address: '',
+          contact_email: '',
+          contact_phone: '',
+          location: '',
           description: '',
           website: '',
           industry: '',
           size: '',
-          location: '',
-          contact_email: '',
-          contact_phone: '',
           linkedin_url: '',
         });
         console.log('Company added successfully');
@@ -116,16 +122,30 @@ const JobFairSetUp = () => {
     }
   };
 
-  const handleApproveReject = async (companyId, action) => {
+  const handleApproveReject = async (companyId, action, reason = null) => {
     try {
-      // setActionLoading(`${companyId}-${action}`);
+      setActionLoading(`${companyId}-${action}`);
+
+      // Prepare the request body
+      const requestBody = {};
+
+      // Add reason to request body only for reject action when reason is provided
+      if (action === 'reject' && reason) {
+        requestBody.reason = reason;
+      }
+
       const response = await fetch(
         `http://localhost:8001/api/companies/${companyId}/${action}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          // Only send body if there's data to send
+          ...(Object.keys(requestBody).length > 0 && {
+            body: JSON.stringify(requestBody),
+          }),
         }
       );
+
       if (response.ok) {
         fetchCompanies();
         console.log(`Company ${action}d successfully`);
@@ -153,14 +173,14 @@ const JobFairSetUp = () => {
   }
 
   return (
-    <div className='p-4 m-1 sm:p-4 md:p-6 w-full min-h-screen bg-white flex flex-col animate-fade-in border border-[var(--gray-200)] rounded-lg shadow-md transition-all duration-300 ease-out'>
+    <div className="p-4 m-1 sm:p-4 md:p-6 w-full min-h-screen bg-white flex flex-col animate-fade-in border border-[var(--gray-200)] rounded-lg shadow-md transition-all duration-300 ease-out">
       <div className="container  mx-auto px-4 py-6">
         <div className="flex justify-between align-items-center mb-6">
-          <div className="font-bold text-3xl mb-6">Job Fair Setup</div>
+          <div className="font-bold text-3xl mb-6">Companies SetUp</div>
           <div>
             <button
               onClick={() => setShowAddform(true)}
-              className="bg-red-600 hover:bg-red-700 cursor-pointer text-white font-semibold px-8 py-2 rounded-lg"
+              className="bg-(--primary-600)  cursor-pointer text-white font-semibold px-8 py-2 rounded-lg"
             >
               Add New Company
             </button>
@@ -357,7 +377,7 @@ const JobFairSetUp = () => {
                 </button>
                 <button
                   type="submit"
-                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
+                  className="cursor-pointer bg-(--primary-600) text-white px-4 py-2 rounded-lg"
                 >
                   Add Company
                 </button>
@@ -413,4 +433,4 @@ const JobFairSetUp = () => {
   );
 };
 
-export default JobFairSetUp;
+export default CompaniesSetUp;

@@ -37,50 +37,37 @@ const HomeNavbar = () => {
       <div className="container mx-auto px-4 flex items-center justify-between">
         {/* Logo */}
         <CustomLink to="/" className="flex items-center gap-2">
-          <img src="/logo.png" alt="ITIvent" className="h-20 w-25" />
-          {/* <span className={`font-bold text-xl ${isScrolled ? 'text-secondary-500' : 'text-white'}`}>
-            Communiti
-          </span> */}
+          <img src="/logo.png" alt="ITIvent" className="h-20 w-30" />
         </CustomLink>
 
         {/* Desktop Navigation */}
         <div className="hidden md:flex items-center gap-8">
           <CustomLink
-            to="/#features"
-            className={`hover:text-[var(--primary-500)] font-medium transition-colors ${
-              isScrolled ? 'text-[var(--gray-700)]' : 'text-white'
+            to="/"
+            className={`hover:text-[var(--gray-300)] font-medium transition-colors ${
+              isScrolled
+                ? 'text-[var(--gray-700)] hover:text-[var(--primary-500)]'
+                : 'text-white'
             }`}
           >
-            Features
-          </CustomLink>
-          <CustomLink
-            to="/#how-it-works"
-            className={`hover:text-[var(--primary-500)] font-medium transition-colors ${
-              isScrolled ? 'text-gray-700' : 'text-white'
-            }`}
-          >
-            How It Works
-          </CustomLink>
-          <CustomLink
-            to="/#events"
-            className={`hover:text-[var(--primary-500)] font-medium transition-colors ${
-              isScrolled ? 'text-gray-700' : 'text-white'
-            }`}
-          >
-            Events
+            Home
           </CustomLink>
           <CustomLink
             to="/about"
-            className={`hover:text-[var(--primary-500)] font-medium transition-colors ${
-              isScrolled ? 'text-gray-700' : 'text-white'
+            className={`hover:text-[var(--gray-300)] font-medium transition-colors ${
+              isScrolled
+                ? 'text-gray-700 hover:text-[var(--primary-500)]'
+                : 'text-white'
             }`}
           >
             About Us
           </CustomLink>
           <CustomLink
             to="/contact"
-            className={`hover:text-[var(--primary-500)] font-medium transition-colors ${
-              isScrolled ? 'text-gray-700' : 'text-white'
+            className={`hover:text-[var(--gray-300)] font-medium transition-colors ${
+              isScrolled
+                ? 'text-gray-700 hover:text-[var(--primary-500)]'
+                : 'text-white'
             }`}
           >
             Contact Us
@@ -93,8 +80,8 @@ const HomeNavbar = () => {
             to="/login"
             className={`px-4 py-2 rounded-md font-medium transition-colors ${
               isScrolled
-                ? 'text-[var(--primary-500)] hover:text-primary-600'
-                : 'text-white hover:text-[var(--primary-300)]'
+                ? 'text-[var(--gray-700)] hover:text-[var(--primary-600)]'
+                : 'text-white hover:text-[var(--gray-300)]'
             }`}
           >
             Login
@@ -138,22 +125,16 @@ const HomeNavbar = () => {
         <div className="md:hidden bg-white border-t animate-slide-in-right">
           <div className="container mx-auto px-4 py-3 space-y-3">
             <CustomLink
-              to="/#features"
+              to="/"
               className="block py-2 text-gray-700 hover:text-[var(--primary-500)]"
             >
-              Features
+              Home
             </CustomLink>
             <CustomLink
               to="/#how-it-works"
               className="block py-2 text-gray-700 hover:text-[var(--primary-500)]"
             >
               How It Works
-            </CustomLink>
-            <CustomLink
-              to="/#events"
-              className="block py-2 text-gray-700 hover:text-[var(--primary-500)]"
-            >
-              Events
             </CustomLink>
             <CustomLink
               to="/about"

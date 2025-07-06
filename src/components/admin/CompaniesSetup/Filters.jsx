@@ -32,7 +32,7 @@ const Filters = ({
         </select>
         <button
           onClick={onRefresh}
-          className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+          className="bg-(--primary-600) cursor-pointer text-white px-4 py-2 rounded-lg transition-colors"
         >
           Refresh
         </button>
