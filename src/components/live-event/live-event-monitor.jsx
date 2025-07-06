@@ -56,8 +56,7 @@ const LiveEventMonitor = () => {
   const itemsPerPage = 6;
 
   // Static admin token as provided
-  const ADMIN_TOKEN =
-    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3NTE3ODU4MzYsImV4cCI6MTc1MTc4OTQzNiwibmJmIjoxNzUxNzg1ODM2LCJqdGkiOiJoOGVITmdJS014a1k1R0tlIiwic3ViIjoiMTYxIiwicHJ2IjoiMTNlOGQwMjhiMzkxZjNiN2I2M2YyMTkzM2RiYWQ0NThmZjIxMDcyZSJ9.6jL2A1wwpELv8AVELsj6Dfq7pyOL-N6EGdWcx0_r96A';
+  const ADMIN_TOKEN = localStorage.getItem('token');
 
   const fetchAllActiveEvents = async () => {
     try {
