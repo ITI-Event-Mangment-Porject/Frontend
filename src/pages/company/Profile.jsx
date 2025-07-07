@@ -24,33 +24,41 @@ const CompanyProfilePage = () => {
   const [error, setError] = useState(null);
   const token = localStorage.getItem('token');
 
-  useEffect(() => {
-    const fetchCompany = async () => {
-      setLoading(true);
-      try {
-        const response = await axios.get(`http://127.0.0.1:8000/api/companies/${companyId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const rawData = response.data.data || {};
-        
-        setCompanyData({
-          ...rawData,
-          logo_path: rawData.logo_path 
-            ? rawData.logo_path.startsWith('http')
-              ? rawData.logo_path
-              : `http://127.0.0.1:8000/storage/${rawData.logo_path}`
-            : ''
-        });
-      } catch (err) {
-        setError("Failed to fetch company data");
-      }
-      setLoading(false);
-    };
+useEffect(() => {
+  console.log("companyId", companyId);
 
-    fetchCompany();
-  }, [companyId, token]);
+  const fetchCompany = async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`http://127.0.0.1:8000/api/companies/${companyId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("response", response.data);
+
+      const result = response.data?.data?.result || {};
+
+setCompanyData({
+  ...result,
+  logo_path: result.logo_path 
+    ? result.logo_path.startsWith('http')
+      ? result.logo_path
+      : `http://127.0.0.1:8000/storage/${result.logo_path}`
+    : ''
+});
+
+
+    } catch (err) {
+      setError("Failed to fetch company data");
+    }
+    setLoading(false);
+  };
+
+  fetchCompany();
+}, [companyId, token]);
+
+  
 
   const handleInputChange = (field, value) => {
     setCompanyData(prev => ({ ...prev, [field]: value }));
@@ -146,14 +154,19 @@ const CompanyProfilePage = () => {
     setError(null);
   };
 
-  const getSizeLabel = (size) => {
-    const labels = {
-      small: "Small (1–50)",
-      medium: "Medium (51–200)",
-      large: "Large (200+)"
-    };
-    return labels[size] || size;
-  };
+const getSizeLabel = (value) => {
+  switch (value) {
+    case 'small':
+      return 'Small (1–50 employees)';
+    case 'medium':
+      return 'Medium (51–200 employees)';
+    case 'large':
+      return 'Large (200+ employees)';
+    default:
+      return 'Not specified';
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50/50 via-white to-slate-50/30 relative overflow-hidden">
@@ -175,8 +188,8 @@ const CompanyProfilePage = () => {
             <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           </div>
           
-          <div className="px-8 lg:px-16 pb-12 -mt-20 relative">
-            <div className="flex flex-col lg:flex-row gap-8 items-center lg:items-start">
+          <div className="px-8 lg:px-16 pb-12 -mt-24 relative">
+            <div className="flex flex-col lg:flex-row gap-8 items-start">
               
               {/* Logo Section */}
               <div className="relative group/logo">
@@ -214,135 +227,97 @@ const CompanyProfilePage = () => {
                 )}
               </div>
 
-              {/* Company Info */}
-              <div className="flex-1 text-center lg:text-left">
-                {isEditing ? (
-                  <input
-                    value={companyData.name || ''}
-                    onChange={(e) => handleInputChange("name", e.target.value)}
-                    className="text-3xl lg:text-5xl font-bold border-2 border-white/30 focus:border-[#901b20]/50 p-4 w-full rounded-2xl bg-white/20 backdrop-blur-sm focus:bg-white/30 transition-all duration-300 text-white placeholder-white/60"
-                    placeholder="Company Name"
-                  />
-                ) : (
-                  <h1 className="text-3xl lg:text-5xl font-bold text-white drop-shadow-2xl tracking-tight">
-                    {companyData.name || 'Company Name'}
-                  </h1>
-                )}
-                
-                <div className="mt-6">
+              {/* Company Info and Action Buttons */}
+              <div className="flex-1 flex flex-col lg:flex-row justify-between items-start gap-8">
+                {/* Company Info */}
+                <div className="flex-1">
                   {isEditing ? (
                     <input
-                      value={companyData.industry || ''}
-                      onChange={(e) => handleInputChange("industry", e.target.value)}
-                      className="border-2 border-white/30 focus:border-[#901b20]/50 p-3 rounded-2xl bg-white/20 backdrop-blur-sm focus:bg-white/30 transition-all duration-300 placeholder-white/60"
-                      placeholder="Industry"
+                      value={companyData.name || ''}
+                      onChange={(e) => handleInputChange("name", e.target.value)}
+                      className="text-3xl lg:text-5xl font-bold border-2 border-white/30 focus:border-[#901b20]/50 p-4 w-full rounded-2xl bg-white/20 backdrop-blur-sm focus:bg-white/30 transition-all duration-300 text-white placeholder-white/60 mb-4"
+                      placeholder="Company Name"
                     />
                   ) : (
-                    <span className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-white/20 to-white/10  text-sm font-semibold rounded-full border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
-                      <Briefcase className="w-4 h-4 mr-2" />
-                      {companyData.industry || 'Industry Not Specified'}
-                    </span>
+                    <h1 className="text-3xl lg:text-5xl font-bold text-white drop-shadow-2xl tracking-tight mb-4">
+                      {companyData.name || 'Company Name'}
+                    </h1>
+                  )}
+                  
+                  <div className="mb-6">
+                    {isEditing ? (
+                      <input
+                        value={companyData.industry || ''}
+                        onChange={(e) => handleInputChange("industry", e.target.value)}
+                        className="border-2 border-white/30 focus:border-[#901b20]/50 p-3 rounded-2xl bg-white/20 backdrop-blur-sm focus:bg-white/30 transition-all duration-300 placeholder-white/60 text-white"
+                        placeholder="Industry"
+                      />
+                    ) : (
+                      <span className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-white/20 to-white/10 text-white text-sm font-semibold rounded-full border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+                        <Briefcase className="w-4 h-4 mr-2" />
+                        {companyData.industry || 'Industry Not Specified'}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Company Size */}
+                  <div className="mb-6">
+                    {isEditing ? (
+                      <select
+                        value={companyData.size || ''}
+                        onChange={(e) => handleInputChange("size", e.target.value)}
+                        className="border-2 border-white/30 focus:border-[#901b20]/50 rounded-2xl p-3 bg-white/20 backdrop-blur-sm focus:bg-white/30 transition-all duration-300 text-white"
+                      >
+                        <option value="">Select company size</option>
+                        <option value="small">Small (1–50 employees)</option>
+                        <option value="medium">Medium (51–200 employees)</option>
+                        <option value="large">Large (200+ employees)</option>
+                      </select>
+                    ) : (
+                      <span className="inline-flex items-center px-4 py-2 bg-white/10 text-white rounded-xl font-medium shadow-sm border border-white/20">
+                        {getSizeLabel(companyData.size)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4 lg:self-start">
+                  {!isEditing ? (
+                    <button 
+                      onClick={() => setIsEditing(true)} 
+                      className="group/btn bg-gradient-to-r from-[#901b20]/90 to-[#ad565a]/90 hover:from-[#901b20] hover:to-[#ad565a] text-white px-8 py-4 rounded-2xl flex items-center justify-center gap-3 font-medium shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 backdrop-blur-sm"
+                    >
+                      <Edit3 className="w-5 h-5 transition-transform duration-300 group-hover/btn:rotate-12" /> 
+                      Edit Profile
+                    </button>
+                  ) : (
+                    <>
+                      <button 
+                        onClick={handleSave} 
+                        disabled={loading} 
+                        className="group/btn bg-gradient-to-r from-[#203947]/90 to-[#203947] hover:from-[#203947] hover:to-[#1a2d38] text-white px-8 py-4 rounded-2xl flex items-center justify-center gap-3 font-medium shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none backdrop-blur-sm"
+                      >
+                        {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5 transition-transform duration-300 group-hover/btn:scale-110" />}
+                        {loading ? 'Saving...' : 'Save Changes'}
+                      </button>
+                      <button 
+                        onClick={handleCancel} 
+                        className="group/btn bg-gradient-to-r from-slate-500/90 to-slate-600/90 hover:from-slate-600 hover:to-slate-700 text-white px-8 py-4 rounded-2xl flex items-center justify-center gap-3 font-medium shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 backdrop-blur-sm"
+                      >
+                        <X className="w-5 h-5 transition-transform duration-300 group-hover/btn:rotate-90" /> 
+                        Cancel
+                      </button>
+                    </>
                   )}
                 </div>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row gap-4 mt-6 lg:mt-0">
-                {!isEditing ? (
-                  <button 
-                    onClick={() => setIsEditing(true)} 
-                    className="group/btn bg-gradient-to-r from-[#901b20]/90 to-[#ad565a]/90 hover:from-[#901b20] hover:to-[#ad565a] text-white px-8 py-4 rounded-2xl flex items-center justify-center gap-3 font-medium shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 backdrop-blur-sm"
-                  >
-                    <Edit3 className="w-5 h-5 transition-transform duration-300 group-hover/btn:rotate-12" /> 
-                    Edit Profile
-                  </button>
-                ) : (
-                  <>
-                    <button 
-                      onClick={handleSave} 
-                      disabled={loading} 
-                      className="group/btn bg-gradient-to-r from-[#203947]/90 to-[#203947] hover:from-[#203947] hover:to-[#1a2d38] text-white px-8 py-4 rounded-2xl flex items-center justify-center gap-3 font-medium shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none backdrop-blur-sm"
-                    >
-                      {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5 transition-transform duration-300 group-hover/btn:scale-110" />}
-                      {loading ? 'Saving...' : 'Save Changes'}
-                    </button>
-                    <button 
-                      onClick={handleCancel} 
-                      className="group/btn bg-gradient-to-r from-slate-500/90 to-slate-600/90 hover:from-slate-600 hover:to-slate-700 text-white px-8 py-4 rounded-2xl flex items-center justify-center gap-3 font-medium shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1 backdrop-blur-sm"
-                    >
-                      <X className="w-5 h-5 transition-transform duration-300 group-hover/btn:rotate-90" /> 
-                      Cancel
-                    </button>
-                  </>
-                )}
               </div>
             </div>
           </div>
         </div>
 
-        {/* Contact Information Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {[
-            { label: "Email Address", field: "contact_email", icon: Mail, type: "email" },
-            { label: "Phone Number", field: "contact_phone", icon: Phone, type: "tel" },
-            { label: "Website", field: "website", icon: Globe, type: "url" },
-            { label: "Office Location", field: "location", icon: MapPin, type: "text" },
-            { label: "Company Size", field: "size", icon: Briefcase, isSelect: true }
-          ].map(({ label, field, icon: Icon, isSelect, type }) => (
-            <div key={field} className="group/card">
-              <div className="bg-white/10 backdrop-blur-3xl p-8 rounded-2xl shadow-xl border border-white/20 hover:shadow-2xl hover:border-[#901b20]/30 transition-all duration-500 h-full transform hover:scale-105 hover:-translate-y-1">
-                <div className="flex items-center mb-6">
-                  <div className="w-14 h-14 bg-gradient-to-br from-[#901b20]/20 to-[#ad565a]/20 rounded-2xl flex items-center justify-center mr-4 group-hover/card:from-[#901b20]/30 group-hover/card:to-[#ad565a]/30 transition-all duration-300 shadow-lg">
-                    <Icon className="w-7 h-7 text-[#901b20]" />
-                  </div>
-                  <h3 className="font-semibold text-xl text-slate-700">{label}</h3>
-                </div>
-                
-                {isEditing ? (
-                  isSelect ? (
-                    <select
-                      value={companyData[field] || ''}
-                      onChange={(e) => handleInputChange(field, e.target.value)}
-                      className="w-full border-2 border-white/30 focus:border-[#901b20]/50 rounded-2xl p-4 bg-white/20 backdrop-blur-sm focus:bg-white/30 transition-all duration-300 text-slate-700"
-                    >
-                      <option value="">Select company size</option>
-                      <option value="small">Small (1–50 employees)</option>
-                      <option value="medium">Medium (51–200 employees)</option>
-                      <option value="large">Large (200+ employees)</option>
-                    </select>
-                  ) : (
-                    <input
-                      type={type}
-                      value={companyData[field] || ''}
-                      onChange={(e) => handleInputChange(field, e.target.value)}
-                      className="w-full border-2 border-white/30 focus:border-[#901b20]/50 rounded-2xl p-4 bg-white/20 backdrop-blur-sm focus:bg-white/30 transition-all duration-300 text-slate-700 placeholder-slate-500"
-                      placeholder={`Enter ${label.toLowerCase()}`}
-                    />
-                  )
-                ) : (
-                  <div className="text-base text-slate-700 leading-relaxed">
-                    {isSelect ? (
-                      <span className="inline-flex items-center px-4 py-2 bg-[#203947]/10 text-[#203947] rounded-xl font-medium shadow-sm">
-                        {getSizeLabel(companyData[field])}
-                      </span>
-                    ) : (
-                      <p className="break-words">
-                        {companyData[field] || (
-                          <span className="text-slate-400 italic">
-                            No {label.toLowerCase()} provided
-                          </span>
-                        )}
-                      </p>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-
         {/* Company Description */}
-        <div className="bg-white/10 backdrop-blur-3xl rounded-2xl shadow-xl border border-white/20 p-10 hover:shadow-2xl transition-all duration-500 transform hover:scale-[1.01] group/desc">
+        <div className="bg-white/10 backdrop-blur-3xl rounded-2xl shadow-xl border border-white/20 p-10 hover:shadow-2xl transition-all duration-500 transform hover:scale-[1.01] group/desc mb-8">
           <div className="flex items-center mb-8">
             <div className="w-14 h-14 bg-gradient-to-br from-[#901b20]/20 to-[#ad565a]/20 rounded-2xl flex items-center justify-center mr-4 group-hover/desc:from-[#901b20]/30 group-hover/desc:to-[#ad565a]/30 transition-all duration-300 shadow-lg">
               <Edit3 className="w-7 h-7 text-[#901b20]" />
@@ -369,6 +344,47 @@ const CompanyProfilePage = () => {
               </p>
             </div>
           )}
+        </div>
+
+        {/* Contact Information Grid */}
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+          {[
+            { label: "Email Address", field: "contact_email", icon: Mail, type: "email" },
+            { label: "Phone Number", field: "contact_phone", icon: Phone, type: "tel" },
+            { label: "Website", field: "website", icon: Globe, type: "url" },
+            { label: "Office Location", field: "location", icon: MapPin, type: "text" }
+          ].map(({ label, field, icon: Icon, type }) => (
+            <div key={field} className="group/card">
+              <div className="bg-white/10 backdrop-blur-3xl p-8 rounded-2xl shadow-xl border border-white/20 hover:shadow-2xl hover:border-[#901b20]/30 transition-all duration-500 h-full transform hover:scale-105 hover:-translate-y-1">
+                <div className="flex items-center mb-6">
+                  <div className="w-14 h-14 bg-gradient-to-br from-[#901b20]/20 to-[#ad565a]/20 rounded-2xl flex items-center justify-center mr-4 group-hover/card:from-[#901b20]/30 group-hover/card:to-[#ad565a]/30 transition-all duration-300 shadow-lg">
+                    <Icon className="w-7 h-7 text-[#901b20]" />
+                  </div>
+                  <h3 className="font-semibold text-xl text-slate-700">{label}</h3>
+                </div>
+                
+                {isEditing ? (
+                  <input
+                    type={type}
+                    value={companyData[field] || ''}
+                    onChange={(e) => handleInputChange(field, e.target.value)}
+                    className="w-full border-2 border-white/30 focus:border-[#901b20]/50 rounded-2xl p-4 bg-white/20 backdrop-blur-sm focus:bg-white/30 transition-all duration-300 text-slate-700 placeholder-slate-500"
+                    placeholder={`Enter ${label.toLowerCase()}`}
+                  />
+                ) : (
+                  <div className="text-base text-slate-700 leading-relaxed">
+                    <p className="break-words">
+                      {companyData[field] || (
+                        <span className="text-slate-400 italic">
+                          No {label.toLowerCase()} provided
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
 
         {/* Error Message */}
