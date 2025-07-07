@@ -114,14 +114,26 @@ const EventDetails = () => {
   const handleFeedback = async () => {
     setFeedbackLoading(true);
     try {
+      // First, check if feedback form exists
       const res = await apiCall(`${API_BASE_URL}/api/feedback/events/${id}/forms`);
-      if (!res.ok) throw new Error();
+      
+      if (!res.ok) {
+        // If the API returns 404 or other error, show a message
+        if (res.status === 404) {
+          showMessage('Feedback form not available yet');
+        } else {
+          showMessage('Failed to load feedback form');
+        }
+        return;
+      }
       
       const data = await res.json();
-      if (data?.data?.id) {
-        navigate(`/feedback/${id}?formId=${data.data.id}`);
-      }
+      console.log('Feedback API Response:', data); // Debug log
+      
+      navigate(`/student/feedback/${id}`);
+      
     } catch (err) {
+      console.error('Feedback error:', err);
       showMessage('Failed to load feedback form');
     } finally {
       setFeedbackLoading(false);
