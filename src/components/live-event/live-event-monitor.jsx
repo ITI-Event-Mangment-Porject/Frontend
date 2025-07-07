@@ -155,7 +155,7 @@ const LiveEventMonitor = () => {
       {
         name: 'Ongoing',
         value: events.filter(e => e.status === 'ongoing').length,
-        color: '#10b981',
+        color: 'var(--secondary-400)',
       },
     ];
 
@@ -896,13 +896,13 @@ const LiveEventMonitor = () => {
                     <Legend />
                     <Bar
                       dataKey="published"
-                      fill="#3b82f6"
+                      fill="var(--secondary-400)"
                       name="Published"
                       radius={[4, 4, 0, 0]}
                     />
                     <Bar
                       dataKey="ongoing"
-                      fill="#10b981"
+                      fill="var(--primary-400)"
                       name="Ongoing"
                       radius={[4, 4, 0, 0]}
                     />

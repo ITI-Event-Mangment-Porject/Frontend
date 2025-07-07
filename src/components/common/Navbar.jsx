@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaBell, FaUserCircle, FaCog, FaSignOutAlt } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
@@ -6,6 +6,22 @@ const Navbar = () => {
   const navigate = useNavigate();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    console.log(storedUser);
+    setUser(storedUser || null);
+  }, []);
+
+  const handleSignOut = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    localStorage.removeItem('role');
+    localStorage.removeItem('refresh_token');
+    setUser(null);
+    navigate('/');
+  };
 
   const notifications = [
     {
@@ -101,21 +117,16 @@ const Navbar = () => {
                 <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
                   <div className="py-1" role="menu">
                     <div className="px-4 py-2 text-sm text-gray-900 border-b border-gray-100">
-                      <p className="font-medium">Admin User</p>
-                      <p className="text-sm text-gray-500">admin@example.com</p>
+                      <p className="font-medium">
+                        {user.first_name} {user.last_name}
+                      </p>
+                      <p className="text-sm text-gray-500">{user.email}</p>
                     </div>
                     <a
                       href="#"
                       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                       role="menuitem"
-                    >
-                      <FaCog className="mr-3 h-4 w-4 text-gray-400" />
-                      Settings
-                    </a>
-                    <a
-                      href="#"
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      role="menuitem"
+                      onClick={handleSignOut}
                     >
                       <FaSignOutAlt className="mr-3 h-4 w-4 text-gray-400" />
                       Sign out
