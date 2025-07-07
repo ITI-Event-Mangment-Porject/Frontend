@@ -34,9 +34,9 @@ const Navbar = () => {
           {/* Logo */}
           <div
             className="flex-shrink-0 flex hover:cursor-pointer justify-content-center align-content-center "
-            onClick={() => navigate('/admin/dashboard')}
+            onClick={() => navigate('/')}
           >
-            <img src="/logo.png" alt="" className="h-20 w-auto ms-4 " />
+            <img src="/logo.png" alt="" className="h-20 w-auto ms-4 mb-4" />
           </div>
 
           {/* Right side buttons */}

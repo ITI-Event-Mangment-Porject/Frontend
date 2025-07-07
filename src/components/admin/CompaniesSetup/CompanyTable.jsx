@@ -38,7 +38,6 @@ const CompanyTable = ({
               <CompanyRow
                 key={c.id}
                 company={c}
-                statusAppr={c.status}
                 onView={onView}
                 onApproveReject={onApproveReject}
                 actionLoading={actionLoading}

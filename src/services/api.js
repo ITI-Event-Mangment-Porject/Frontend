@@ -108,6 +108,9 @@ export const companyAPI = {
   create: companyData => api.post('/companies', companyData),
   update: (id, companyData) => api.put(`/companies/${id}`, companyData),
   delete: id => api.delete(`/companies/${id}`),
+  // Custom actions for companies
+  approve: id => api.post(`/companies/${id}/approve`),
+  reject: (id, reason) => api.post(`/companies/${id}/reject`, { reason }),
 };
 
 // Authentication API endpoints
