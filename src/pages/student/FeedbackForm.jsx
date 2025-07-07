@@ -13,45 +13,57 @@ const FeedbackForm = () => {
   const [loadingForm, setLoadingForm] = useState(true);
   const [responses, setResponses] = useState({});
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
   const [modalType, setModalType] = useState(null);
   const [modalMessage, setModalMessage] = useState('');
 
   useEffect(() => {
-    // Mock form data - replace with your actual form structure
-    const mockFormData = {
-      title: 'Event Feedback Form',
-      description: 'Please share your thoughts about this event',
-      form_config: [
-        {
-          question: 'How would you rate the overall event?',
-          type: 'rating'
-        },
-        {
-          question: 'How was the event organization?',
-          type: 'rating'
-        },
-        {
-          question: 'What did you like most about the event?',
-          type: 'text'
-        },
-        {
-          question: 'Any suggestions for improvement?',
-          type: 'text'
+    const fetchFeedbackForm = async () => {
+      try {
+        setLoadingForm(true);
+        setError(null);
+        
+        const token = localStorage.getItem('token');
+        const response = await fetch(
+          `${API_BASE_URL}/api/feedback/events/${id}/forms`,
+          {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token && { Authorization: `Bearer ${token}` }),
+            },
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || `Failed to fetch feedback form: ${response.status}`);
         }
-      ]
+
+        const formData = await response.json();
+        setForm(formData);
+
+        // Initialize responses object based on the form structure
+        const initialResponses = {};
+        if (formData.form_config && Array.isArray(formData.form_config)) {
+          formData.form_config.forEach((question, idx) => {
+            initialResponses[idx] = question.type === 'rating' ? 0 : '';
+          });
+        }
+        setResponses(initialResponses);
+
+      } catch (error) {
+        console.error('Error fetching feedback form:', error);
+        setError(error.message);
+      } finally {
+        setLoadingForm(false);
+      }
     };
 
-    // Simulate loading delay
-    setTimeout(() => {
-      setForm(mockFormData);
-      const initial = {};
-      mockFormData.form_config.forEach((q, idx) => {
-        initial[idx] = q.type === 'rating' ? 0 : '';
-      });
-      setResponses(initial);
-      setLoadingForm(false);
-    }, 1000);
+    if (id) {
+      fetchFeedbackForm();
+    }
   }, [id]);
 
   const handleChange = (idx, value) => {
@@ -74,9 +86,13 @@ const FeedbackForm = () => {
     setSubmitting(true);
     try {
       const token = localStorage.getItem('token');
-      // POST request to submit feedback responses
+      
+      // تحديد الـ form ID من البيانات المسترجعة
+      const formId = form.id || form.form_id || 1; // استخدم الـ ID الصحيح
+      
+      // POST request للـ endpoint الصحيح
       const res = await fetch(
-        `${API_BASE_URL}/api/feedback/events/${id}/forms`,
+        `${API_BASE_URL}/api/feedback/forms/${formId}/responses`,
         {
           method: 'POST',
           headers: {
@@ -117,6 +133,21 @@ const FeedbackForm = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen text-xl">
+        <span className="text-red-600 mb-4">Error loading feedback form</span>
+        <p className="text-gray-600 text-sm mb-4">{error}</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition-colors"
+        >
+          Try Again
+        </button>
+      </div>
+    );
+  }
+
   if (!form) {
     return (
       <div className="flex justify-center items-center h-screen text-xl">
@@ -149,7 +180,7 @@ const FeedbackForm = () => {
 
             <div className="p-6 sm:p-8">
               <form onSubmit={handleSubmit}>
-                {form.form_config.map((q, idx) => (
+                {form.form_config && form.form_config.map((q, idx) => (
                   <div className="mb-6" key={idx}>
                     <label className="block font-medium text-gray-700 mb-2">
                       {q.question}

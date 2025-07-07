@@ -1,5 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import Navbar from '../../components/student/Navbar';
 import Sidebar from '../../components/student/Sidebar';
 import Footer from '../../components/student/Footer';
@@ -14,10 +16,13 @@ const CompanyDirectory = () => {
   const [allJobProfiles, setAllJobProfiles] = useState([]);
   const [loadingProfiles, setLoadingProfiles] = useState(false);
   const [registeringJobs, setRegisteringJobs] = useState(new Set());
+  const [appliedProfiles, setAppliedProfiles] = useState(new Set());
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    axios.get(`${API_BASE_URL}/api/companies`, { headers: { Authorization: `Bearer ${token}` } })
+    axios.get(`${API_BASE_URL}/api/companies`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
       .then(res => setCompanies(res.data?.data?.companies?.data || []))
       .catch(err => console.error('Error fetching companies:', err));
   }, []);
@@ -43,17 +48,19 @@ const CompanyDirectory = () => {
 
   const industries = useMemo(() => ['Industry', ...Array.from(new Set(companies.map(c => c.industry).filter(Boolean)))], [companies]);
   const jobTitles = useMemo(() => ['Position', ...Array.from(new Set(allJobProfiles.map(p => p.title).filter(Boolean)))], [allJobProfiles]);
+
   const filtered = useMemo(() => {
     return companies.filter(c => {
       const matchesIndustry = filters.industry === 'All' || c.industry === filters.industry;
-      const hasMatchingJob = filters.jobTitle === 'All' || 
-        allJobProfiles.some(profile => 
-          profile.participation?.company_id === c.id && 
+      const hasMatchingJob = filters.jobTitle === 'All' ||
+        allJobProfiles.some(profile =>
+          profile.participation?.company_id === c.id &&
           profile.title === filters.jobTitle
         );
       return matchesIndustry && hasMatchingJob;
     });
   }, [companies, filters, allJobProfiles]);
+
   const company = filtered[selected] || {};
   const currentJobProfiles = useMemo(() => {
     if (!company.id || !allJobProfiles.length) return [];
@@ -69,13 +76,16 @@ const CompanyDirectory = () => {
     setRegisteringJobs(prev => new Set([...prev, profileId]));
     const token = localStorage.getItem('token');
     try {
-      await axios.post(`${API_BASE_URL}/api/job-profiles/${profileId}/register`, {}, {
+      await axios.post(`${API_BASE_URL}/api/job-fairs/${JOB_FAIR_ID}/interview-requests`, {
+        job_profile_id: profileId
+      }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      alert('تم التسجيل بنجاح!');
+      toast.success('Interview request submitted successfully!');
+      setAppliedProfiles(prev => new Set([...prev, profileId]));
     } catch (error) {
-      console.error('Error registering:', error);
-      alert('حدث خطأ في التسجيل. يرجى المحاولة مرة أخرى.');
+      console.error('Error sending interview request:', error);
+      toast.error('An error occurred while submitting your interview request. Please try again.');
     } finally {
       setRegisteringJobs(prev => {
         const newSet = new Set(prev);
@@ -102,7 +112,8 @@ const CompanyDirectory = () => {
                   {jobTitles.map(title => <option key={title} value={title}>{title}</option>)}
                 </select>
               </div>
-              <button className="w-full mt-3 text-sm border-2 border-dashed border-gray-300 rounded-lg py-2 hover:bg-gray-50" onClick={() => setFilters({ industry: 'All', size: 'All', is_approved: 'All', jobTitle: 'All' })}>
+              <button className="w-full mt-3 text-sm border-2 border-dashed border-gray-300 rounded-lg py-2 hover:bg-gray-50"
+                onClick={() => setFilters({ industry: 'All', size: 'All', is_approved: 'All', jobTitle: 'All' })}>
                 🗑️ Clear All Filters
               </button>
             </div>
@@ -112,7 +123,7 @@ const CompanyDirectory = () => {
               ) : (
                 filtered.map((c, i) => (
                   <div key={c.id} className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-orange-50 ${selected === i ? 'border-l-4 border-orange-500 bg-orange-50' : ''}`} onClick={() => setSelected(i)}>
-                    <img src={c.logo_path || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}`} alt={c.name} className="w-10 h-10 rounded-full object-cover bg-orange-100"/>
+                    <img src={c.logo_path || `https://ui-avatars.com/api/?name=${encodeURIComponent(c.name)}`} alt={c.name} className="w-10 h-10 rounded-full object-cover bg-orange-100" />
                     <div className="flex-1">
                       <div className="font-semibold text-sm">{c.name}</div>
                       <div className="text-xs text-gray-500">{c.industry} · {c.location}</div>
@@ -127,18 +138,20 @@ const CompanyDirectory = () => {
             {company?.name ? (
               <div>
                 <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center mb-4">
-                  <img src={company.logo_path || `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}`} alt={company.name} className="w-20 h-20 rounded-lg object-cover bg-orange-100"/>
+                  <img src={company.logo_path || `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}`} alt={company.name} className="w-20 h-20 rounded-lg object-cover bg-orange-100" />
                   <div>
                     <h1 className="font-bold text-2xl">{company.name}</h1>
                     <div className="text-sm text-gray-500">{company.industry} · {company.location}</div>
                     <div className="flex flex-wrap gap-2 text-xs text-gray-500 mt-1">
                       {company.website && (
-                        <a href={company.website.startsWith('http') ? company.website : `https://${company.website}`} target="_blank" rel="noopener noreferrer" className="inline-block px-4 py-2 rounded-full bg-orange-100 text-orange-700 font-semibold hover:bg-orange-200 transition">
+                        <a href={company.website.startsWith('http') ? company.website : `https://${company.website}`} target="_blank" rel="noopener noreferrer"
+                          className="inline-block px-4 py-2 rounded-full bg-orange-100 text-orange-700 font-semibold hover:bg-orange-200 transition">
                           🌐 Website
                         </a>
                       )}
                       {company.linkedin_url && (
-                        <a href={company.linkedin_url} target="_blank" rel="noopener noreferrer" className="inline-block px-4 py-2 rounded-full bg-blue-200 text-blue-800 font-semibold hover:bg-blue-300 transition">
+                        <a href={company.linkedin_url} target="_blank" rel="noopener noreferrer"
+                          className="inline-block px-4 py-2 rounded-full bg-blue-200 text-blue-800 font-semibold hover:bg-blue-300 transition">
                           💼 LinkedIn
                         </a>
                       )}
@@ -169,7 +182,11 @@ const CompanyDirectory = () => {
                           {profile.benefits && <p className="text-sm text-gray-600 mb-3"><strong>Benefits:</strong> {profile.benefits}</p>}
                           {(profile.salary_min || profile.salary_max) && (
                             <p className="text-sm text-gray-600 mb-3">
-                              <strong>Salary:</strong> {profile.salary_min && profile.salary_max ? `${profile.salary_min} - ${profile.salary_max}` : profile.salary_min ? `From ${profile.salary_min}` : `Up to ${profile.salary_max}`} {profile.salary_currency || 'EGP'}
+                              <strong>Salary:</strong> {profile.salary_min && profile.salary_max
+                                ? `${profile.salary_min} - ${profile.salary_max}`
+                                : profile.salary_min
+                                  ? `From ${profile.salary_min}`
+                                  : `Up to ${profile.salary_max}`} {profile.salary_currency || 'EGP'}
                             </p>
                           )}
                           <div className="flex gap-2 mb-3 text-xs">
@@ -184,9 +201,18 @@ const CompanyDirectory = () => {
                               ))}
                             </div>
                           )}
-                          <button onClick={() => handleRegister(profile.id)} disabled={registeringJobs.has(profile.id)} className={`px-4 py-2 rounded text-sm font-medium ${registeringJobs.has(profile.id) ? 'bg-gray-300 text-gray-500' : 'bg-red-900 text-white hover:bg-red-800'}`}>
-                            {registeringJobs.has(profile.id) ? 'Applying...' : 'Apply Now'}
-                          </button>
+                          {!appliedProfiles.has(profile.id) ? (
+                            <button
+                              onClick={() => handleRegister(profile.id)}
+                              disabled={registeringJobs.has(profile.id)}
+                              className={`px-4 py-2 rounded text-sm font-medium ${registeringJobs.has(profile.id)
+                                ? 'bg-gray-300 text-gray-500'
+                                : 'bg-red-900 text-white hover:bg-red-800'}`}>
+                              {registeringJobs.has(profile.id) ? 'Applying...' : 'Apply Now'}
+                            </button>
+                          ) : (
+                            <div className="text-green-700 text-sm font-semibold">✅ Applied</div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -201,7 +227,7 @@ const CompanyDirectory = () => {
             ) : (
               <div className="text-gray-400 text-center py-12">
                 <div className="text-6xl mb-4">🏢</div>
-                <p className="text-lg">Select a company to view details and position.</p>
+                <p className="text-lg">Select a company to view details and positions.</p>
               </div>
             )}
           </div>
