@@ -635,3 +635,9 @@ button {
   opacity: 1;
   visibility: visible;
 }
+
+@media (min-width: 1024px) {
+  .with-sidebar {
+    margin-left: 15rem; 
+  }
+}

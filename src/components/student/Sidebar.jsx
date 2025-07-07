@@ -9,16 +9,14 @@ import {
   MessageCircle,
   User,
 } from 'lucide-react';
-
 const Sidebar = () => {
   const location = useLocation();
 
   const navItems = [
-    { path: '/show-events', icon: List, label: 'Show Events' },
-    { path: '/company-directory', icon: Briefcase, label: 'Company Directory' },
-    { path: '/interview-queue', icon: Clock, label: 'Queue Status' },
-    { path: '/feedback', icon: MessageCircle, label: 'Feedback Form' },
-    { path: '/profile', icon: User, label: 'Profile' },
+    { path: '/student/show-events', icon: List, label: 'Show Events' },
+    { path: '/student/CompanyDirectory', icon: Briefcase, label: 'Job Fair Companies' },
+    { path: '/student/interview-queue', icon: Clock, label: 'Queue Status' },
+    { path: '/student/profile', icon: User, label: 'Profile' },
   ];
 
   return (

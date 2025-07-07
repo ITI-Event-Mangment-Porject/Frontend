@@ -6,7 +6,7 @@ import AttendanceReports from '../pages/admin/AttendanceReports';
 import Help from '../components/common/Help';
 import FeedbackForm from '../pages/student/FeedbackForm';
 import EventDetails from '../pages/student/EventDetails';
-import CompanyDirectory from '../pages/student/CompanyDirectory';
+import CompanyDirectory from '../pages/student/CompanyDirectory'; // adjust the path if needed
 import InterviewQueue from '../pages/student/InterviewQueue';
 import Profile from '../pages/student/Profile';
 import Login from '../pages/student/Login';
@@ -37,12 +37,12 @@ const AppRoutes = () => {
       <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
       <Route path="/support" element={<Help />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/feedback" element={<FeedbackForm />} />
-      <Route path="/event-details/:id" element={<EventDetails />} />
-      <Route path="/show-events" element={<ShowEvents />} />{' '}
-      <Route path="/company-directory" element={<CompanyDirectory />} />
-      <Route path="/interview-queue" element={<InterviewQueue />} />
-      <Route path="/profile" element={<Profile />} />
+      <Route path="/student/feedback/:id" element={<FeedbackForm />} />
+      <Route path="/student/event-details/:id" element={<EventDetails />} />
+      <Route path="/student/show-events" element={<ShowEvents />} />{' '}
+      <Route path="/student/CompanyDirectory" element={<CompanyDirectory />} />
+      <Route path="/student/interview-queue" element={<InterviewQueue />} />
+      <Route path="/student/profile" element={<Profile />} />
     </Routes>
   );
 };
