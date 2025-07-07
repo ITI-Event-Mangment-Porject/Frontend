@@ -17,7 +17,7 @@ import {
   FaCheckCircle,
   FaExclamationCircle,
 } from 'react-icons/fa';
-import Layout from '../../components/student/Layout'; // يتضمن النافبار والسايدبار
+import Layout from '../../components/student/Layout'; 
 import Footer from '../../components/student/Footer';
 
 const Profile = () => {
