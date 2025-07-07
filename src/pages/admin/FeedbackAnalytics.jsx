@@ -57,8 +57,7 @@ const FeedbackAnalytics = () => {
   const itemsPerPage = 6;
 
   // Static admin token as provided
-  const ADMIN_TOKEN =
-    'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3NTE4ODU2MzEsImV4cCI6MTc1MTg4OTIzMSwibmJmIjoxNzUxODg1NjMxLCJqdGkiOiJsMkZjUHphNnp6N21TTm5GIiwic3ViIjoiMTYwIiwicHJ2IjoiMTNlOGQwMjhiMzkxZjNiN2I2M2YyMTkzM2RiYWQ0NThmZjIxMDcyZSJ9.6BTC2eWj9HG_JXs5gxs2Z_HHmG-kINitGBY9erJPfq0';
+  const ADMIN_TOKEN = localStorage.getItem('token');
 
   const fetchAllInsights = async () => {
     try {
