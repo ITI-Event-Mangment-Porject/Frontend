@@ -5,6 +5,7 @@ import CompanyTable from './CompanyTable';
 import CompanyModal from './CompanyModal';
 import Pagination from './Pagination';
 import FullPageLoader from '../../FullPageLoader';
+import { companyAPI } from '../../../services/api';
 
 const CompaniesSetUp = () => {
   const [companies, setCompanies] = useState([]);
@@ -39,18 +40,31 @@ const CompaniesSetUp = () => {
     linkedin_url: '',
   });
 
-  const fetchCompanies = async (
-    url = 'http://localhost:8001/api/companies?sort=-created_at&per_page=10'
-  ) => {
+  const fetchCompanies = async (url = null) => {
     try {
       setLoading(true);
-      let finalUrl = url;
-      if (searchTerm) finalUrl += `&filter[name]=${searchTerm}`;
-      if (statusFilter === 'approved') finalUrl += `&filter[is_approved]=1`;
-      if (statusFilter === 'rejected') finalUrl += `&filter[is_approved]=0`;
-      const res = await fetch(finalUrl);
-      console.log(res);
-      const data = await res.json();
+
+      // Prepare query parameters
+      const params = {
+        sort: '-created_at',
+        per_page: 10,
+      };
+
+      // Add filters if they exist
+      if (searchTerm) params['filter[name]'] = searchTerm;
+      if (statusFilter === 'approved') params['filter[is_approved]'] = 1;
+      if (statusFilter === 'rejected') params['filter[is_approved]'] = 0;
+
+      // If a specific URL is provided (for pagination), extract page number
+      if (url) {
+        const pageMatch = url.match(/page=(\d+)/);
+        if (pageMatch && pageMatch[1]) {
+          params.page = pageMatch[1];
+        }
+      }
+
+      const response = await companyAPI.getAll(params);
+      const data = response.data;
 
       setCompanies(data.data.companies.data);
       setTotalCompanies(data.data.total_count);
@@ -81,16 +95,10 @@ const CompaniesSetUp = () => {
   const handleAddCompany = async e => {
     e.preventDefault();
     try {
-      const response = await fetch('http://localhost:8001/api/companies', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newCompany),
-      });
+      const response = await companyAPI.create(newCompany);
 
-      if (response.ok) {
-        const data = await response.json();
+      if (response.status === 200 || response.status === 201) {
+        const data = response.data;
         const newCompanyData = {
           ...data.data[0], // Extract the new company data
           status: data.data.status, // Include the "status" field
@@ -126,27 +134,14 @@ const CompaniesSetUp = () => {
     try {
       setActionLoading(`${companyId}-${action}`);
 
-      // Prepare the request body
-      const requestBody = {};
-
-      // Add reason to request body only for reject action when reason is provided
-      if (action === 'reject' && reason) {
-        requestBody.reason = reason;
+      let response;
+      if (action === 'approve') {
+        response = await companyAPI.approve(companyId);
+      } else if (action === 'reject') {
+        response = await companyAPI.reject(companyId, reason);
       }
 
-      const response = await fetch(
-        `http://localhost:8001/api/companies/${companyId}/${action}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          // Only send body if there's data to send
-          ...(Object.keys(requestBody).length > 0 && {
-            body: JSON.stringify(requestBody),
-          }),
-        }
-      );
-
-      if (response.ok) {
+      if (response.status === 200) {
         fetchCompanies();
         console.log(`Company ${action}d successfully`);
       } else {
@@ -169,7 +164,7 @@ const CompaniesSetUp = () => {
   );
 
   if (loading) {
-    <FullPageLoader loading={loading} />;
+    return <FullPageLoader loading={loading} />;
   }
 
   return (
