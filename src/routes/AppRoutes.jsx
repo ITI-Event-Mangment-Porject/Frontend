@@ -20,6 +20,7 @@ import AdminDashboard from '../pages/admin/Dashboard';
 import ManageEvents from '../pages/admin/ManageEvents';
 import Notifications from '../pages/admin/Notifications';
 import LiveEventMonitor from '../components/live-event/live-event-monitor';
+import FeedbackAnalytics from '../pages/admin/FeedbackAnalytics';
 
 // Not Found Page
 import NotFoundPage from '../pages/System/NotFoundPage';
@@ -36,6 +37,7 @@ const AppRoutes = () => {
       <Route path="/admin/events" element={<ManageEvents />} />
       <Route path="/admin/notifications" element={<Notifications />} />
       <Route path="/admin/liveevents" element={<LiveEventMonitor />} />
+      <Route path="/admin/FeedbackAnalytics" element={<FeedbackAnalytics />} />
       <Route
         path="/admin"
         element={<Navigate to="/admin/dashboard" replace />}
