@@ -179,7 +179,7 @@ const Navbar = () => {
                       <p className="text-sm text-gray-500">{user.email}</p>
                     </div>
                     <Link
-                      to="/profile"
+                      to="/student/profile"
                       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
                       role="menuitem"
                     >
