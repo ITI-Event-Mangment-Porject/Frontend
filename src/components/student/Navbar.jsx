@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaBell, FaUserCircle, FaSignOutAlt } from 'react-icons/fa';
-import axios from 'axios';
+import axios from 'axios'; // Adjust the import path as needed
+const APP_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -9,9 +10,13 @@ const Navbar = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
   const dropdownRef = useRef();
 
   useEffect(() => {
+    // Fetch user data from local storage or API
+    const storedUser = JSON.parse(localStorage.getItem('user'));
+    setUser(storedUser);
     fetchNotifications();
     // Close dropdown on outside click
     const handleClickOutside = event => {
@@ -27,7 +32,7 @@ const Navbar = () => {
   const fetchNotifications = () => {
     const token = localStorage.getItem('token');
     axios
-      .get('http://127.0.0.1:8000/api/notifications', {
+      .get(`${APP_URL}/api/notifications`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(res => {
@@ -45,7 +50,7 @@ const Navbar = () => {
     const token = localStorage.getItem('token');
     axios
       .post(
-        `http://127.0.0.1:8000/api/notifications/${id}/read`,
+        `${APP_URL}/api/notifications/${id}/read`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -58,7 +63,7 @@ const Navbar = () => {
     const token = localStorage.getItem('token');
     axios
       .post(
-        'http://127.0.0.1:8000/api/notifications/mark-all-read',
+        `${APP_URL}/api/notifications/mark-all-read`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -77,7 +82,11 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    navigate('/login');
+    localStorage.removeItem('user');
+    setUser(null);
+    localStorage.removeItem('refresh_token');
+    localStorage.removeItem('role');
+    navigate('/');
   };
 
   return (
@@ -87,7 +96,7 @@ const Navbar = () => {
           {/* Logo */}
           <div
             className="flex-shrink-0 flex hover:cursor-pointer justify-content-center align-content-center"
-            onClick={() => navigate('/show-events')}
+            onClick={() => navigate('/')}
           >
             <img src="/logo.webp" alt="Logo" className="h-20 w-auto ms-4" />
           </div>
@@ -164,10 +173,10 @@ const Navbar = () => {
                 <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
                   <div className="py-1" role="menu">
                     <div className="px-4 py-2 text-sm text-gray-900 border-b border-gray-100">
-                      <p className="font-medium">Student</p>
-                      <p className="text-sm text-gray-500">
-                        student@example.com
+                      <p className="font-medium">
+                        {user.first_name} {user.last_name}
                       </p>
+                      <p className="text-sm text-gray-500">{user.email}</p>
                     </div>
                     <Link
                       to="/profile"
