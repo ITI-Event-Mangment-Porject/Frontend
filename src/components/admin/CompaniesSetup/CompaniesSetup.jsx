@@ -4,7 +4,6 @@ import Filters from './Filters';
 import CompanyTable from './CompanyTable';
 import CompanyModal from './CompanyModal';
 import Pagination from './Pagination';
-import FullPageLoader from '../../FullPageLoader';
 
 const CompaniesSetUp = () => {
   const [companies, setCompanies] = useState([]);
@@ -169,7 +168,14 @@ const CompaniesSetUp = () => {
   );
 
   if (loading) {
-    <FullPageLoader loading={loading} />;
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading Companies data...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
