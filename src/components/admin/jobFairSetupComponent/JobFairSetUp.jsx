@@ -3,8 +3,10 @@ import React, { useEffect, useState } from 'react';
 import CompanyGrid from './CompanyGrid';
 import SearchAndFilterBar from './SearchAndFilterBar';
 import DetailModal from './DetailModal';
+import NewJobFairModal from './NewJobFairModal';
 
-const JWT_TOKEN ='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDEvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3NTE4ODMxNTYsImV4cCI6MTc4MTg4MzE1NiwibmJmIjoxNzUxODgzMTU2LCJqdGkiOiJ3UWcwZE94NjgzT1lmSFJEIiwic3ViIjoiMTYyIiwicHJ2IjoiMTNlOGQwMjhiMzkxZjNiN2I2M2YyMTkzM2RiYWQ0NThmZjIxMDcyZSJ9.dgpwv-fX-w_2bPhpc4N78A2UuutHNcfwcxOLGG5cxhM'; 
+const JWT_TOKEN =
+  'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDEvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3NTE5Mjg5MzEsImV4cCI6MTc4MTkyODkzMSwibmJmIjoxNzUxOTI4OTMxLCJqdGkiOiJUNE5LS3FvRkpuU1pKQXN0Iiwic3ViIjoiMTYyIiwicHJ2IjoiMTNlOGQwMjhiMzkxZjNiN2I2M2YyMTkzM2RiYWQ0NThmZjIxMDcyZSJ9.HQa7FjeiYPCBuyWVBzuOCeWJaoJeYriqF4_wMBDvyoI';
 const JobFairSetUp = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Statuses');
@@ -14,19 +16,24 @@ const JobFairSetUp = () => {
   const [selectedJobFairId, setSelectedJobFairId] = useState(1);
   const [selectedDetails, setSelectedDetails] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
- 
+  const [showCreateModal, setShowCreateModal] = useState(false);
+
+
   const [processingIds, setProcessingIds] = useState(new Set());
 
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`http://127.0.0.1:8001/api/job-fairs/${selectedJobFairId}/participations`, {
-          headers: {
-            Authorization: `Bearer ${JWT_TOKEN}`,
-            Accept: 'application/json',
-          },
-        });
+        const res = await fetch(
+          `http://127.0.0.1:8001/api/job-fairs/${selectedJobFairId}/participations`,
+          {
+            headers: {
+              Authorization: `Bearer ${JWT_TOKEN}`,
+              Accept: 'application/json',
+            },
+          }
+        );
         const data = await res.json();
         setCompanies(data.data.result);
       } catch (err) {
@@ -38,54 +45,71 @@ const JobFairSetUp = () => {
     fetchCompanies();
   }, [selectedJobFairId]);
 
-  const handleApprove = async (id) => {
-    setProcessingIds((prev) => new Set(prev).add(id));
-    await fetch(`http://127.0.0.1:8001/api/job-fairs/${selectedJobFairId}/participations/${id}`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${JWT_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ status: 'approved' }),
-    });
-    setCompanies((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, status: 'approved', reviewed_at: new Date().toISOString() } : p))
+  const handleApprove = async id => {
+    setProcessingIds(prev => new Set(prev).add(id));
+    await fetch(
+      `http://127.0.0.1:8001/api/job-fairs/${selectedJobFairId}/participations/${id}`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${JWT_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'approved' }),
+      }
     );
-    setProcessingIds((prev) => {
+    setCompanies(prev =>
+      prev.map(p =>
+        p.id === id
+          ? { ...p, status: 'approved', reviewed_at: new Date().toISOString() }
+          : p
+      )
+    );
+    setProcessingIds(prev => {
       const newSet = new Set(prev);
       newSet.delete(id);
       return newSet;
     });
   };
 
-  const handleRejected = async (id) => {
-    setProcessingIds((prev) => new Set(prev).add(id));
-    
-    await fetch(`http://127.0.0.1:8001/api/job-fairs/${selectedJobFairId}/participations/${id}`, {
-      method: 'PUT',
-      headers: {
-        Authorization: `Bearer ${JWT_TOKEN}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ status: 'rejected' }),
-    });
-    setCompanies((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, status: 'rejected', reviewed_at: new Date().toISOString() } : p))
+  const handleRejected = async id => {
+    setProcessingIds(prev => new Set(prev).add(id));
+
+    await fetch(
+      `http://127.0.0.1:8001/api/job-fairs/${selectedJobFairId}/participations/${id}`,
+      {
+        method: 'PUT',
+        headers: {
+          Authorization: `Bearer ${JWT_TOKEN}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ status: 'rejected' }),
+      }
     );
-    setProcessingIds((prev) => {
+    setCompanies(prev =>
+      prev.map(p =>
+        p.id === id
+          ? { ...p, status: 'rejected', reviewed_at: new Date().toISOString() }
+          : p
+      )
+    );
+    setProcessingIds(prev => {
       const newSet = new Set(prev);
       newSet.delete(id);
       return newSet;
     });
   };
-  
-  const handleViewDetails = async (id) => {
-    const res = await fetch(`http://127.0.0.1:8001/api/job-fairs/${selectedJobFairId}/participations/${id}`, {
-      headers: {
-        Authorization: `Bearer ${JWT_TOKEN}`,
-        Accept: 'application/json',
-      },
-    });
+
+  const handleViewDetails = async id => {
+    const res = await fetch(
+      `http://127.0.0.1:8001/api/job-fairs/${selectedJobFairId}/participations/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${JWT_TOKEN}`,
+          Accept: 'application/json',
+        },
+      }
+    );
     const data = await res.json();
     setSelectedDetails(data.data.result);
     setShowDetailsModal(true);
@@ -101,14 +125,22 @@ const JobFairSetUp = () => {
       </div>
     );
   }
-  if (error) return <div className="text-center py-10 text-red-500">{error}</div>;
+  if (error)
+    return <div className="text-center py-10 text-red-500">{error}</div>;
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Job Fair Participations</h1>
-       
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className="px-4 py-2 bg-(--primary-500) cursor-pointer text-white rounded hover:bg-(--primary-600) transition-colors flex items-center gap-2"
+        >
+          + New Job Fair
+        </button>
       </div>
+      {showCreateModal && <NewJobFairModal onClose={() => setShowCreateModal(false)} />}
+
 
       <SearchAndFilterBar
         searchTerm={searchTerm}
@@ -126,7 +158,6 @@ const JobFairSetUp = () => {
         onViewDetails={handleViewDetails}
         processingIds={processingIds}
       />
-
 
       {showDetailsModal && selectedDetails && (
         <DetailModal

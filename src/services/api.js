@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with base configuration
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8001/api',
   headers: {
     'Content-Type': 'application/json',
   },
@@ -107,8 +107,10 @@ export const companyAPI = {
   getById: id => api.get(`/companies/${id}`),
   create: companyData => api.post('/companies', companyData),
   update: (id, companyData) => api.put(`/companies/${id}`, companyData),
+  reject:(id)=>api.post(`/companies/${id}/reject`),
   delete: id => api.delete(`/companies/${id}`),
 };
+
 
 // Authentication API endpoints
 export const authAPI = {

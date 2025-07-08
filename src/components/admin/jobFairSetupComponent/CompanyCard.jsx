@@ -112,7 +112,7 @@ const CompanyCard = ({ participation, onApprove, onReject, onViewDetails, proces
               </button>
 
               <button
-                onClick={() => onReject(participation.id)}
+                onClick={() => onReject(participation.id, company.id)} 
                 disabled={processing}
                 className="flex items-center gap-1 px-3 py-1 text-sm text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 rounded transition-colors"
               >
