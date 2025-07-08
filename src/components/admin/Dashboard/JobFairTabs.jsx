@@ -686,7 +686,7 @@ const JobFairTabs = () => {
         </div>
 
         {/* Interview Duration Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-100">
+        <div className="bg-white rounded-lg shadow-md p-6 border border-primary hover:shadow-lg">
           <h3 className="text-lg font-semibold mb-4 text-gray-800">
             Average Interview Duration
           </h3>
@@ -884,7 +884,7 @@ const JobFairTabs = () => {
             {companiesByIndustry.map(([industry, companies]) => (
               <motion.div
                 key={industry}
-                className="bg-white rounded-lg shadow-sm p-6 border border-gray-100"
+                className="bg-white rounded-lg shadow-sm p-6 border border-primary hover:shadow-lg"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4 }}
