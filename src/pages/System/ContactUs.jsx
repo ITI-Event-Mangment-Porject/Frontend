@@ -1,12 +1,12 @@
-"use client"
+'use client';
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import HomeNavbar from "../../components/homePage/HomeNavbar"
-import HomeFooter from "../../components/homePage/HomeFooter"
+import { useState } from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import HomeNavbar from '../../components/homePage/HomeNavbar';
+import HomeFooter from '../../components/homePage/HomeFooter';
 import {
   MapPin,
   Phone,
@@ -22,118 +22,126 @@ import {
   Sparkles,
   Shield,
   Zap,
-} from "lucide-react"
+} from 'lucide-react';
 
 const ContactUs = () => {
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    subject: "",
-    category: "",
-    message: "",
-  })
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [submitStatus, setSubmitStatus] = useState(null)
+    name: '',
+    email: '',
+    subject: '',
+    category: '',
+    message: '',
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState(null);
 
   const contactInfo = [
     {
       icon: MapPin,
-      title: "Address",
-      details: ["Information Technology Institute (ITI)", "Mansoura, Egypt"],
-      color: "text-[#901b20]",
-      bgColor: "bg-[#901b20]/10",
-      hoverBg: "group-hover:bg-[#901b20]/20",
+      title: 'Address',
+      details: ['Information Technology Institute (ITI)', 'Mansoura, Egypt'],
+      color: 'text-[#901b20]',
+      bgColor: 'bg-[#901b20]/10',
+      hoverBg: 'group-hover:bg-[#901b20]/20',
     },
     {
       icon: Phone,
-      title: "Phone",
-      details: ["+20 1021094362", "+20 1014248145", "Available 9 AM - 4 PM"],
-      color: "text-[#203947]",
-      bgColor: "bg-[#203947]/10",
-      hoverBg: "group-hover:bg-[#203947]/20",
+      title: 'Phone',
+      details: ['+20 1021094362', '+20 1014248145', 'Available 9 AM - 4 PM'],
+      color: 'text-[#203947]',
+      bgColor: 'bg-[#203947]/10',
+      hoverBg: 'group-hover:bg-[#203947]/20',
     },
     {
       icon: Mail,
-      title: "Email",
-      details: ["support@communiti.iti.gov.eg", "admin@communiti.iti.gov.eg", "Response within 24 hours"],
-      color: "text-[#ad565a]",
-      bgColor: "bg-[#ad565a]/10",
-      hoverBg: "group-hover:bg-[#ad565a]/20",
+      title: 'Email',
+      details: [
+        'support@communiti.iti.gov.eg',
+        'admin@communiti.iti.gov.eg',
+        'Response within 24 hours',
+      ],
+      color: 'text-[#ad565a]',
+      bgColor: 'bg-[#ad565a]/10',
+      hoverBg: 'group-hover:bg-[#ad565a]/20',
     },
     {
       icon: Clock,
-      title: "Working Hours",
-      details: ["Sunday - Thursday", "9:00 AM - 6:00 PM", "Saturday - Friday: Closed"],
-      color: "text-[#cc9598]",
-      bgColor: "bg-[#cc9598]/10",
-      hoverBg: "group-hover:bg-[#cc9598]/20",
+      title: 'Working Hours',
+      details: [
+        'Sunday - Thursday',
+        '9:00 AM - 6:00 PM',
+        'Saturday - Friday: Closed',
+      ],
+      color: 'text-[#cc9598]',
+      bgColor: 'bg-[#cc9598]/10',
+      hoverBg: 'group-hover:bg-[#cc9598]/20',
     },
-  ]
+  ];
 
   const inquiryTypes = [
     {
       icon: Users,
-      title: "Student Support",
-      description: "Registration issues, event queries, profile management",
-      category: "student",
-      gradient: "from-blue-500/10 to-blue-600/10",
-      iconColor: "text-blue-600",
+      title: 'Student Support',
+      description: 'Registration issues, event queries, profile management',
+      category: 'student',
+      gradient: 'from-blue-500/10 to-blue-600/10',
+      iconColor: 'text-blue-600',
     },
     {
       icon: Building2,
-      title: "Company Relations",
-      description: "Partnership opportunities, job fair participation",
-      category: "company",
-      gradient: "from-green-500/10 to-green-600/10",
-      iconColor: "text-green-600",
+      title: 'Company Relations',
+      description: 'Partnership opportunities, job fair participation',
+      category: 'company',
+      gradient: 'from-green-500/10 to-green-600/10',
+      iconColor: 'text-green-600',
     },
     {
       icon: Calendar,
-      title: "Event Management",
-      description: "Event planning, technical support, scheduling",
-      category: "event",
-      gradient: "from-purple-500/10 to-purple-600/10",
-      iconColor: "text-purple-600",
+      title: 'Event Management',
+      description: 'Event planning, technical support, scheduling',
+      category: 'event',
+      gradient: 'from-purple-500/10 to-purple-600/10',
+      iconColor: 'text-purple-600',
     },
     {
       icon: MessageSquare,
-      title: "General Inquiry",
-      description: "Platform information, feedback, suggestions",
-      category: "general",
-      gradient: "from-orange-500/10 to-orange-600/10",
-      iconColor: "text-orange-600",
+      title: 'General Inquiry',
+      description: 'Platform information, feedback, suggestions',
+      category: 'general',
+      gradient: 'from-orange-500/10 to-orange-600/10',
+      iconColor: 'text-orange-600',
     },
-  ]
+  ];
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
+  const handleInputChange = e => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
       ...prev,
       [name]: value,
-    }))
-  }
+    }));
+  };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    setIsSubmitting(true)
-    setSubmitStatus(null)
+  const handleSubmit = async e => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    setSubmitStatus(null);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-      setSubmitStatus("success")
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      setSubmitStatus('success');
       setFormData({
-        name: "",
-        email: "",
-        subject: "",
-        category: "",
-        message: "",
-      })
+        name: '',
+        email: '',
+        subject: '',
+        category: '',
+        message: '',
+      });
     } catch (error) {
-      setSubmitStatus("error")
+      setSubmitStatus('error');
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -156,7 +164,8 @@ const ContactUs = () => {
             Contact Us
           </h1>
           <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto leading-relaxed animate-slide-in-up">
-            We're here to help you make the most of CommunITI. Reach out for support, partnerships, or any questions.
+            We're here to help you make the most of CommunITI. Reach out for
+            support, partnerships, or any questions.
           </p>
         </div>
       </section>
@@ -169,7 +178,9 @@ const ContactUs = () => {
               <Shield className="h-4 w-4 mr-2" />
               Multiple ways to reach us
             </div>
-            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">Get In Touch</h2>
+            <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
+              Get In Touch
+            </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Choose the most convenient way to connect with our team
             </p>
@@ -177,7 +188,7 @@ const ContactUs = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
             {contactInfo.map((info, index) => {
-              const IconComponent = info.icon
+              const IconComponent = info.icon;
               return (
                 <Card
                   key={index}
@@ -191,17 +202,22 @@ const ContactUs = () => {
                         <IconComponent className={`h-8 w-8 ${info.color}`} />
                       </div>
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-4">{info.title}</h3>
+                    <h3 className="text-xl font-bold text-gray-900 mb-4">
+                      {info.title}
+                    </h3>
                     <div className="space-y-2">
                       {info.details.map((detail, idx) => (
-                        <p key={idx} className="text-gray-600 text-sm leading-relaxed">
+                        <p
+                          key={idx}
+                          className="text-gray-600 text-sm leading-relaxed"
+                        >
                           {detail}
                         </p>
                       ))}
                     </div>
                   </CardContent>
                 </Card>
-              )
+              );
             })}
           </div>
         </div>
@@ -228,14 +244,18 @@ const ContactUs = () => {
                     Send us a Message
                   </CardTitle>
                   <p className="text-gray-600 text-lg">
-                    Fill out the form below and we'll get back to you within 24 hours.
+                    Fill out the form below and we'll get back to you within 24
+                    hours.
                   </p>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <form onSubmit={handleSubmit} className="space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <label htmlFor="name" className="block text-sm font-semibold text-gray-700 mb-3">
+                        <label
+                          htmlFor="name"
+                          className="block text-sm font-semibold text-gray-700 mb-3"
+                        >
                           Full Name *
                         </label>
                         <Input
@@ -250,7 +270,10 @@ const ContactUs = () => {
                         />
                       </div>
                       <div>
-                        <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-3">
+                        <label
+                          htmlFor="email"
+                          className="block text-sm font-semibold text-gray-700 mb-3"
+                        >
                           Email Address *
                         </label>
                         <Input
@@ -267,7 +290,10 @@ const ContactUs = () => {
                     </div>
 
                     <div>
-                      <label htmlFor="category" className="block text-sm font-semibold text-gray-700 mb-3">
+                      <label
+                        htmlFor="category"
+                        className="block text-sm font-semibold text-gray-700 mb-3"
+                      >
                         Inquiry Type *
                       </label>
                       <select
@@ -289,7 +315,10 @@ const ContactUs = () => {
                     </div>
 
                     <div>
-                      <label htmlFor="subject" className="block text-sm font-semibold text-gray-700 mb-3">
+                      <label
+                        htmlFor="subject"
+                        className="block text-sm font-semibold text-gray-700 mb-3"
+                      >
                         Subject *
                       </label>
                       <Input
@@ -305,7 +334,10 @@ const ContactUs = () => {
                     </div>
 
                     <div>
-                      <label htmlFor="message" className="block text-sm font-semibold text-gray-700 mb-3">
+                      <label
+                        htmlFor="message"
+                        className="block text-sm font-semibold text-gray-700 mb-3"
+                      >
                         Message *
                       </label>
                       <Textarea
@@ -320,7 +352,7 @@ const ContactUs = () => {
                       />
                     </div>
 
-                    {submitStatus === "success" && (
+                    {submitStatus === 'success' && (
                       <div className="flex items-center p-4 bg-green-50 border border-green-200 rounded-xl animate-fade-in">
                         <CheckCircle className="h-5 w-5 text-green-600 mr-3" />
                         <p className="text-green-800 font-medium">
@@ -329,10 +361,12 @@ const ContactUs = () => {
                       </div>
                     )}
 
-                    {submitStatus === "error" && (
+                    {submitStatus === 'error' && (
                       <div className="flex items-center p-4 bg-red-50 border border-red-200 rounded-xl animate-fade-in">
                         <AlertCircle className="h-5 w-5 text-red-600 mr-3" />
-                        <p className="text-red-800 font-medium">Failed to send message. Please try again.</p>
+                        <p className="text-red-800 font-medium">
+                          Failed to send message. Please try again.
+                        </p>
                       </div>
                     )}
 
@@ -366,53 +400,46 @@ const ContactUs = () => {
                     <Zap className="h-4 w-4 mr-2" />
                     Choose your inquiry type
                   </div>
-                  <h3 className="text-3xl font-bold text-gray-900 mb-4">How Can We Help?</h3>
-                  <p className="text-gray-600 text-lg">Select the category that best matches your needs</p>
+                  <h3 className="text-3xl font-bold text-gray-900 mb-4">
+                    How Can We Help?
+                  </h3>
+                  <p className="text-gray-600 text-lg">
+                    Select the category that best matches your needs
+                  </p>
                 </div>
 
                 <div className="space-y-4">
                   {inquiryTypes.map((type, index) => {
-                    const IconComponent = type.icon
+                    const IconComponent = type.icon;
                     return (
                       <div
                         key={index}
                         className={`group p-6 bg-gradient-to-r ${type.gradient} border border-gray-200 rounded-2xl hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1 hover:border-gray-300`}
-                        onClick={() => setFormData((prev) => ({ ...prev, category: type.category }))}
+                        onClick={() =>
+                          setFormData(prev => ({
+                            ...prev,
+                            category: type.category,
+                          }))
+                        }
                       >
                         <div className="flex items-start">
                           <div className="p-3 bg-white rounded-xl shadow-sm group-hover:shadow-md transition-shadow mr-4">
-                            <IconComponent className={`h-6 w-6 ${type.iconColor}`} />
+                            <IconComponent
+                              className={`h-6 w-6 ${type.iconColor}`}
+                            />
                           </div>
                           <div className="flex-1">
-                            <h4 className="font-bold text-gray-900 mb-2 text-lg">{type.title}</h4>
-                            <p className="text-gray-600 leading-relaxed">{type.description}</p>
+                            <h4 className="font-bold text-gray-900 mb-2 text-lg">
+                              {type.title}
+                            </h4>
+                            <p className="text-gray-600 leading-relaxed">
+                              {type.description}
+                            </p>
                           </div>
                         </div>
                       </div>
-                    )
+                    );
                   })}
-                </div>
-
-                {/* Additional Info */}
-                <div className="mt-8 p-6 bg-gradient-to-r from-[#901b20]/5 to-[#203947]/5 rounded-2xl border border-gray-200">
-                  <h4 className="font-bold text-gray-900 mb-3 flex items-center">
-                    <Clock className="h-5 w-5 text-[#901b20] mr-2" />
-                    Response Times
-                  </h4>
-                  <div className="space-y-2 text-sm text-gray-600">
-                    <div className="flex justify-between">
-                      <span>General Inquiries:</span>
-                      <span className="font-medium">Within 24 hours</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Technical Support:</span>
-                      <span className="font-medium">Within 4 hours</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Emergency Issues:</span>
-                      <span className="font-medium">Immediate</span>
-                    </div>
-                  </div>
                 </div>
               </div>
             </div>
@@ -422,7 +449,7 @@ const ContactUs = () => {
 
       <HomeFooter />
     </div>
-  )
-}
+  );
+};
 
-export default ContactUs
+export default ContactUs;

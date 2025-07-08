@@ -119,7 +119,7 @@ const HomeNavbar = () => {
             Home
           </CustomLink>
           <CustomLink
-            to="/about"
+            to="/about-us"
             className={`hover:text-[var(--gray-300)] font-medium transition-colors ${
               isScrolled
                 ? 'text-gray-700 hover:text-[var(--primary-500)]'
@@ -129,7 +129,7 @@ const HomeNavbar = () => {
             About Us
           </CustomLink>
           <CustomLink
-            to="/contact"
+            to="/contect-us"
             className={`hover:text-[var(--gray-300)] font-medium transition-colors ${
               isScrolled
                 ? 'text-gray-700 hover:text-[var(--primary-500)]'
