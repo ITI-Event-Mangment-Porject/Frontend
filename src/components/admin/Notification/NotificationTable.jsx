@@ -21,21 +21,44 @@ const NotificationTable = ({ onViewDetails }) => {
   // Fetch notifications from the API
   useEffect(() => {
     const fetchNotifications = async () => {
-      const result = await execute(() =>
-        messageAPI.getAllMessages({ page: currentPage })
-      );
+      try {
+        const result = await execute(() =>
+          messageAPI.getAll({ page: currentPage })
+        );
 
-      if (result && result.success !== false) {
-        // Extract notifications from the response
-        setNotifications(result.data || []);
+        if (result && result.success !== false) {
+          // Extract notifications from the response
+          const notificationsData = result.data || [];
+          setNotifications(notificationsData);
 
-        // Update pagination data
+          // Update pagination data
+          setPaginationData({
+            currentPage: result.current_page || 1,
+            from: result.from || 0,
+            to: result.to || 0,
+            total: result.total || 0,
+            lastPage: result.last_page || 1,
+          });
+        } else {
+          // Handle case where API returns success: false
+          setNotifications([]);
+          setPaginationData({
+            currentPage: 1,
+            from: 0,
+            to: 0,
+            total: 0,
+            lastPage: 1,
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching notifications:', err);
+        setNotifications([]);
         setPaginationData({
-          currentPage: result.current_page,
-          from: result.from,
-          to: result.to,
-          total: result.total,
-          lastPage: result.last_page,
+          currentPage: 1,
+          from: 0,
+          to: 0,
+          total: 0,
+          lastPage: 1,
         });
       }
     };
@@ -114,8 +137,31 @@ const NotificationTable = ({ onViewDetails }) => {
           className="mt-2 mb-4"
         />
       ) : error ? (
-        <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md">
-          Error loading notifications: {error}
+        <div className="px-6 py-16 text-center">
+          <div className="animate-fade-in">
+            <div className="mx-auto w-16 h-16 mb-6 relative">
+              <div className="absolute inset-0 bg-gray-100 rounded-full animate-pulse"></div>
+              <svg
+                className="relative w-16 h-16 text-gray-400 animate-bounce-slow"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.5}
+                  d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-2.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 009.586 13H7"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-medium text-gray-700 mb-2 animate-slide-up">
+              No notifications found here
+            </h3>
+            <p className="text-sm text-gray-500 animate-slide-up-delay">
+              Check back later for new notifications
+            </p>
+          </div>
         </div>
       ) : (
         <>
@@ -142,11 +188,29 @@ const NotificationTable = ({ onViewDetails }) => {
             <tbody className="bg-white divide-y divide-gray-200">
               {notifications.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan="5"
-                    className="px-6 py-4 text-center text-gray-500"
-                  >
-                    No notifications found
+                  <td colSpan="5" className="px-6 py-12 text-center">
+                    <div className="flex flex-col items-center justify-center">
+                      <svg
+                        className="w-12 h-12 text-gray-400 mb-4"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2 2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-2.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 009.586 13H7"
+                        />
+                      </svg>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        No Notifications Found
+                      </h3>
+                      <p className="text-gray-500 text-sm max-w-sm">
+                        There are no notifications to display at the moment. New
+                        notifications will appear here once they are created.
+                      </p>
+                    </div>
                   </td>
                 </tr>
               ) : (
