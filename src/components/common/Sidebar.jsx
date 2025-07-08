@@ -24,9 +24,9 @@ const Sidebar = () => {
       icon: FaClipboardList,
       label: 'Attendance Reports',
     },
-    { path: '/admin/feedback', icon: FaChartBar, label: 'Feedback Analytics' },
+    { path: '/admin/FeedbackAnalytics', icon: FaChartBar, label: 'Feedback Analytics' },
     { path: '/admin/companies', icon: FaBriefcase, label: 'Companies Setup' },
-    { path: '/admin/monitor', icon: FaDesktop, label: 'Live Monitor' },
+    { path: '/admin/liveevents', icon: FaDesktop, label: 'Live Events' },
     { path: '/admin/notifications', icon: FaBell, label: 'Notifications' },
     { path: '/admin/queue', icon: FaListAlt, label: 'Queue Management' },
   ];

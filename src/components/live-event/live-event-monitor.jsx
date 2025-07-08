@@ -1,5 +1,6 @@
 'use client';
 
+import { getFriendlyErrorMessage } from "../../utils/errorMessages";
 import { useState, useEffect, useMemo } from 'react';
 import {
   Search,
@@ -46,7 +47,6 @@ const LiveEventMonitor = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  // const [totalPages, setTotalPages] = useState(1)
   const [_, setTotalEvents] = useState(0);
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -55,8 +55,12 @@ const LiveEventMonitor = () => {
   const [actionError, setActionError] = useState('');
   const itemsPerPage = 6;
 
-  // Static admin token as provided
   const ADMIN_TOKEN = localStorage.getItem('token');
+
+  if (!ADMIN_TOKEN) {
+    window.location.href = '/login';
+    return;
+  }
 
   const fetchAllActiveEvents = async () => {
     try {
@@ -387,6 +391,7 @@ const LiveEventMonitor = () => {
   }
 
   if (error) {
+    const message = getFriendlyErrorMessage(error);
     return (
       <div className="min-h-screen bg-[#ebebeb] p-6 flex items-center justify-center">
         <div className="max-w-md w-full bg-white rounded-2xl p-8 text-center shadow-2xl animate-shake">
@@ -396,10 +401,10 @@ const LiveEventMonitor = () => {
           <h3 className="text-2xl font-bold text-gray-900 mb-3">
             Error Loading Events
           </h3>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <p className="text-gray-600 mb-6">{message}</p>
           <button
             onClick={() => window.location.reload()}
-            className="button bg-primary hover:bg-primary-600 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+            className="button bg-primary hover:bg-primary-600 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg mx-auto"
           >
             Try Again
           </button>
