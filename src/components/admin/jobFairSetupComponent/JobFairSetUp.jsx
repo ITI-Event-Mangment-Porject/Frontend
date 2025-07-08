@@ -5,9 +5,8 @@ import SearchAndFilterBar from './SearchAndFilterBar';
 import DetailModal from './DetailModal';
 import NewJobFairModal from './NewJobFairModal';
 
-const JWT_TOKEN =
-  'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDEvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3NTE5Mjg5MzEsImV4cCI6MTc4MTkyODkzMSwibmJmIjoxNzUxOTI4OTMxLCJqdGkiOiJUNE5LS3FvRkpuU1pKQXN0Iiwic3ViIjoiMTYyIiwicHJ2IjoiMTNlOGQwMjhiMzkxZjNiN2I2M2YyMTkzM2RiYWQ0NThmZjIxMDcyZSJ9.HQa7FjeiYPCBuyWVBzuOCeWJaoJeYriqF4_wMBDvyoI';
-const JobFairSetUp = () => {
+const JWT_TOKEN ='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDEvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3NTE5OTg3OTMsImV4cCI6MTc4MTk5ODc5MywibmJmIjoxNzUxOTk4NzkzLCJqdGkiOiJzckhHaWpQZmN0WU96bWU2Iiwic3ViIjoiMTYyIiwicHJ2IjoiMTNlOGQwMjhiMzkxZjNiN2I2M2YyMTkzM2RiYWQ0NThmZjIxMDcyZSJ9.fXlhOX24U9dyZyqi9dABx9cucgbV_vYnxQ1aKG3R4qg';
+ const JobFairSetUp = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Statuses');
   const [companies, setCompanies] = useState([]);
@@ -45,60 +44,75 @@ const JobFairSetUp = () => {
     fetchCompanies();
   }, [selectedJobFairId]);
 
-  const handleApprove = async id => {
-    setProcessingIds(prev => new Set(prev).add(id));
-    await fetch(
-      `http://127.0.0.1:8001/api/job-fairs/${selectedJobFairId}/participations/${id}`,
-      {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${JWT_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: 'approved' }),
-      }
-    );
-    setCompanies(prev =>
-      prev.map(p =>
-        p.id === id
-          ? { ...p, status: 'approved', reviewed_at: new Date().toISOString() }
-          : p
-      )
-    );
-    setProcessingIds(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(id);
-      return newSet;
-    });
-  };
+  const handleAction = async ({ participationId, companyId, action, reason = null }) => {
+    setProcessingIds(prev => new Set(prev).add(participationId));
+  
+    try {
+      // Step 1: Update participation status
+      await fetch(
+        `http://127.0.0.1:8001/api/job-fairs/${selectedJobFairId}/participations/${participationId}`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${JWT_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: action }),
+        }
+      );
+  
+      const requestBody = {};
 
-  const handleRejected = async id => {
-    setProcessingIds(prev => new Set(prev).add(id));
-
-    await fetch(
-      `http://127.0.0.1:8001/api/job-fairs/${selectedJobFairId}/participations/${id}`,
-      {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${JWT_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status: 'rejected' }),
+      // Add reason to request body only for reject action when reason is provided
+      if (action === 'reject' && reason) {
+        requestBody.reason = reason;
       }
-    );
-    setCompanies(prev =>
-      prev.map(p =>
-        p.id === id
-          ? { ...p, status: 'rejected', reviewed_at: new Date().toISOString() }
-          : p
-      )
-    );
-    setProcessingIds(prev => {
-      const newSet = new Set(prev);
-      newSet.delete(id);
-      return newSet;
-    });
+
+      const response = await fetch(
+        `http://localhost:8001/api/companies/${companyId}/${action}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          // Only send body if there's data to send
+          ...(Object.keys(requestBody).length > 0 && {
+            body: JSON.stringify(requestBody),
+          }),
+        }
+      );
+      if (response.ok) {
+       
+        console.log(`Company ${action}d successfully`);
+      } else {
+        console.error(`Failed to ${action} company`);
+      }
+      // Step 3: Update local state
+      setCompanies(prev =>
+        prev.map(p =>
+          p.id === participationId
+            ? {
+                ...p,
+                status: action,
+                reviewed_at: new Date().toISOString(),
+                company: {
+                  ...p.company,
+                  status: action,
+                  reason: reason ?? null,
+                },
+              }
+            : p
+        )
+      );
+    } catch (err) {
+      console.error('Action failed:', err);
+    } finally {
+      setProcessingIds(prev => {
+        const updated = new Set(prev);
+        updated.delete(participationId);
+        return updated;
+      });
+    }
   };
+  
 
   const handleViewDetails = async id => {
     const res = await fetch(
@@ -153,8 +167,7 @@ const JobFairSetUp = () => {
         companies={companies}
         searchTerm={searchTerm}
         statusFilter={statusFilter}
-        onApprove={handleApprove}
-        onReject={handleRejected}
+        handleAction={handleAction}
         onViewDetails={handleViewDetails}
         processingIds={processingIds}
       />
@@ -163,8 +176,7 @@ const JobFairSetUp = () => {
         <DetailModal
           details={selectedDetails}
           onClose={() => setShowDetailsModal(false)}
-          onApprove={handleApprove}
-          onReject={handleRejected}
+          handleAction={handleAction}
           processingIds={processingIds}
         />
       )}

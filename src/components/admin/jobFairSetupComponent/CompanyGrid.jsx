@@ -6,8 +6,7 @@ const CompanyGrid = ({
   companies,
   searchTerm,
   statusFilter,
-  onApprove,
-  onReject,
+  handleAction,
   onViewDetails,
   processingIds,
 }) => {
@@ -37,8 +36,7 @@ const CompanyGrid = ({
         <CompanyCard
           key={participation.id}
           participation={participation}
-          onApprove={onApprove}
-          onReject={onReject}
+          handleAction={handleAction}
           onViewDetails={onViewDetails}
           processing={processingIds.has(participation.id)}
         />
