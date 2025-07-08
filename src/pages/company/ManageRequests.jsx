@@ -6,6 +6,7 @@ import { useParams } from 'react-router-dom';
 import { Briefcase as BriefcaseIcon, Star, CheckCircle, XCircle } from 'lucide-react';
 import { Building, ArrowUpRight } from 'lucide-react';
 import { Sparkles } from 'lucide-react';
+import api from '../../api/axios'; 
 
 const InterviewRequestsManager = () => {
   const [jobProfiles, setJobProfiles] = useState([]);
@@ -20,8 +21,6 @@ const InterviewRequestsManager = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [selectedUserRequest, setSelectedUserRequest] = useState(null);
-
-
 
   const BASE_URL = 'http://127.0.0.1:8000/api';
   const { jobFairId, companyId } = useParams();
@@ -40,25 +39,18 @@ const InterviewRequestsManager = () => {
     try {
       setLoading(true);
 
-      const res = await fetch(`${BASE_URL}/job-fairs/${jobFairId}/participations`);
-      if (!res.ok) throw new Error('Failed to fetch participations');
-
-      const participationsData = await res.json();
-const participation = participationsData.data?.result?.find(
-  p => p.company_id == companyId
-);
-
-      console.log('companyId from useParams:', companyId);
-console.log('participations fetched:', participationsData.data?.result);
+      const res = await api.get(`/job-fairs/${jobFairId}/participations`);
+      const participationsData = res.data;
+      const participation = participationsData.data?.result?.find(
+        p => p.company_id == companyId
+      );
 
       if (!participation) throw new Error('Participation not found for this company');
 
       setParticipationId(participation.id);
 
-      const jobProfilesRes = await fetch(`${BASE_URL}/job-fairs/${jobFairId}/participations/${participation.id}/job-profiles`);
-      if (!jobProfilesRes.ok) throw new Error('Failed to fetch job profiles');
-
-      const jobProfilesData = await jobProfilesRes.json();
+      const jobProfilesRes = await api.get(`/job-fairs/${jobFairId}/participations/${participation.id}/job-profiles`);
+      const jobProfilesData = jobProfilesRes.data;
       const profiles = jobProfilesData.data?.job_profiles || [];
       
       setJobProfiles(profiles);
@@ -66,7 +58,6 @@ console.log('participations fetched:', participationsData.data?.result);
         setSelectedProfile(profiles[0]);
       }
     } catch (err) {
-      console.error(err);
       setError(err.message);
     } finally {
       setLoading(false);
@@ -76,43 +67,29 @@ console.log('participations fetched:', participationsData.data?.result);
   const fetchInterviewRequests = async (participationId, jobProfileId) => {
     try {
       setLoadingRequests(true);
-      const url = `${BASE_URL}/job-fairs/${jobFairId}/job-profiles/${jobProfileId}/interview-requests`;
-      const response = await fetch(url);
-
-          if (response.status === 404) {
-      console.warn('No interview requests found for this job profile.');
-      setInterviewRequests([]);  
-      return;
-    }
-
-      if (!response.ok) throw new Error('Failed to fetch interview requests');
-
-      const data = await response.json();
-      setInterviewRequests(data.data?.result || []);
-      console.log('Fetched interview requests:', interviewRequests);
-
+      const url = `/job-fairs/${jobFairId}/job-profiles/${jobProfileId}/interview-requests`;
+      let response;
+      try {
+        response = await api.get(url);
+      } catch (err) {
+        if (err.response && err.response.status === 404) {
+          setInterviewRequests([]);
+          return;
+        }
+        throw err;
+      }
+      setInterviewRequests(response.data.data?.result || []);
     } catch (err) {
-      console.error('Error fetching interview requests:', err);
       setError(err.message);
     } finally {
       setLoadingRequests(false);
-      
     }
   };
 
   const reviewInterviewRequest = async (requestId, status) => {
     try {
       setProcessingRequest(requestId);
-      const response = await fetch(`${BASE_URL}/job-fairs/interview-requests/${requestId}/review`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ status }),
-      });
-
-      if (!response.ok) throw new Error('Failed to update request status');
-
+      await api.put(`/job-fairs/interview-requests/${requestId}/review`, { status });
       if (selectedProfile && participationId) {
         fetchInterviewRequests(participationId, selectedProfile.id);
       }
@@ -122,7 +99,8 @@ console.log('participations fetched:', participationsData.data?.result);
       setProcessingRequest(null);
     }
   };
-    const filteredRequests = interviewRequests.filter(request => {
+
+  const filteredRequests = interviewRequests.filter(request => {
     const matchesSearch = `${request.user?.first_name} ${request.user?.last_name}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          request.user?.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'all' || request.status === statusFilter;
@@ -139,7 +117,7 @@ console.log('participations fetched:', participationsData.data?.result);
     return stats;
   };
 
-    const getStatusColor = (status) => {
+  const getStatusColor = (status) => {
     switch (status) {
       case 'approved': return 'bg-green-50 text-green-700 border-green-200';
       case 'rejected': return 'bg-red-50 text-red-700 border-red-200';
@@ -147,19 +125,17 @@ console.log('participations fetched:', participationsData.data?.result);
       default: return 'bg-gray-50 text-gray-700 border-gray-200';
     }
   };
-    const getTrackColor = (trackColor) => {
+  const getTrackColor = (trackColor) => {
     return trackColor || '#203947';
   };
   const openProfileModal = (request) => {
-  setSelectedUserRequest(request);
-  setShowProfileModal(true);
-};
-const closeProfileModal = () => {
-  setSelectedUserRequest(null);
-  setShowProfileModal(false);
-};
-
-
+    setSelectedUserRequest(request);
+    setShowProfileModal(true);
+  };
+  const closeProfileModal = () => {
+    setSelectedUserRequest(null);
+    setShowProfileModal(false);
+  };
 
   if (loading) {
     return (
@@ -534,50 +510,44 @@ const closeProfileModal = () => {
           backdrop-filter: blur(4px);
         }
       `}</style>
-      {showProfileModal && selectedUserRequest && (
-<div className="fixed inset-0 z-50 bg-black bg-opacity-60 flex items-center justify-center backdrop-blur-sm animate-in fade-in duration-300">
-  <div className="bg-white w-full max-w-4xl rounded-3xl p-0 relative shadow-2xl overflow-hidden max-h-[90vh] animate-in zoom-in-95 slide-in-from-bottom-4 duration-500">
-    <div className="px-6 py-6 bg-gradient-to-br from-slate-900 via-[#203947] to-[#901b20] text-white relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/20"></div>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.1),transparent_50%)]"></div>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(144,27,32,0.3),transparent_50%)]"></div>
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_40%,rgba(255,255,255,0.05),transparent)] animate-pulse"></div>
-      <div className="absolute top-2 right-4 w-8 h-8 bg-white/5 rounded-full blur-sm animate-pulse"></div>
-      <div className="absolute bottom-2 left-4 w-12 h-12 bg-[#901b20]/10 rounded-full blur-lg animate-pulse delay-1000"></div>
+{showProfileModal && selectedUserRequest && (
+  <div className="fixed inset-0 z-50 bg-black bg-opacity-60 flex items-center justify-center backdrop-blur-sm animate-in fade-in duration-300">
+    <div className="bg-white w-full max-w-4xl rounded-3xl p-0 relative shadow-2xl overflow-hidden max-h-[90vh] animate-in zoom-in-95 slide-in-from-bottom-4 duration-500">
       
-      {/* Content inside header */}
-      <div className="relative z-10">
-        <button 
-          onClick={closeProfileModal} 
-          className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/20 p-2 rounded-full transition-all duration-300 hover:scale-110 backdrop-blur-sm"
-        >
-          <X className="h-5 w-5" />
-        </button>
-        <h2 className="text-3xl font-bold text-white mb-2">
-          {selectedUserRequest.user.first_name} {selectedUserRequest.user.last_name}
-        </h2>
-        <div className="flex items-center space-x-2 text-white/90">
-          <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse"></div>
-          <span className="text-sm font-medium">Student Profile</span>
+      {/* Header Section */}
+      <div className="px-6 py-6 bg-gradient-to-br from-slate-900 via-[#203947] to-[#901b20] text-white relative overflow-hidden">
+        {/* Background Effects */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/20"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.1),transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(144,27,32,0.3),transparent_50%)]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_40%,rgba(255,255,255,0.05),transparent)] animate-pulse"></div>
+        <div className="absolute top-2 right-4 w-8 h-8 bg-white/5 rounded-full blur-sm animate-pulse"></div>
+        <div className="absolute bottom-2 left-4 w-12 h-12 bg-[#901b20]/10 rounded-full blur-lg animate-pulse delay-1000"></div>
+        
+        {/* Header Content */}
+        <div className="relative z-10">
+          <button 
+            onClick={closeProfileModal} 
+            className="absolute top-4 right-4 text-white/80 hover:text-white hover:bg-white/20 p-2 rounded-full transition-all duration-300 hover:scale-110 backdrop-blur-sm"
+          >
+            <X className="h-5 w-5" />
+          </button>
+          <h2 className="text-3xl font-bold text-white mb-2">
+            {selectedUserRequest.user.first_name} {selectedUserRequest.user.last_name}
+          </h2>
+          <div className="flex items-center space-x-2 text-white/90">
+            <div className="w-2 h-2 bg-white/60 rounded-full animate-pulse"></div>
+            <span className="text-sm font-medium">Student Profile</span>
+          </div>
         </div>
       </div>
-    </div>
 
-      {/* Content area with enhanced spacing */}
+      {/* Content Area */}
       <div className="p-8 overflow-auto max-h-[calc(90vh-200px)]">
-        {/* Profile information grid */}
+        
+        {/* Basic Information Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
           <div className="space-y-4">
-            <div className="group hover:bg-[#ebebeb]/50 p-4 rounded-2xl transition-all duration-300 hover:shadow-md">
-              <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full"></div>
-                <div>
-                  <span className="text-[#203947] font-semibold text-sm">Portal ID</span>
-                  <p className="text-[#203947] font-medium">{selectedUserRequest.user.portal_user_id}</p>
-                </div>
-              </div>
-            </div>
-            
             <div className="group hover:bg-[#ebebeb]/50 p-4 rounded-2xl transition-all duration-300 hover:shadow-md">
               <div className="flex items-center space-x-3">
                 <div className="w-3 h-3 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full"></div>
@@ -594,16 +564,6 @@ const closeProfileModal = () => {
                 <div>
                   <span className="text-[#203947] font-semibold text-sm">Phone</span>
                   <p className="text-[#203947] font-medium">{selectedUserRequest.user.phone || 'N/A'}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="group hover:bg-[#ebebeb]/50 p-4 rounded-2xl transition-all duration-300 hover:shadow-md">
-              <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full"></div>
-                <div>
-                  <span className="text-[#203947] font-semibold text-sm">Track ID</span>
-                  <p className="text-[#203947] font-medium">{selectedUserRequest.user.track_id}</p>
                 </div>
               </div>
             </div>
@@ -629,39 +589,39 @@ const closeProfileModal = () => {
                 </div>
               </div>
             </div>
-            
-            <div className="group hover:bg-[#ebebeb]/50 p-4 rounded-2xl transition-all duration-300 hover:shadow-md">
-              <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full"></div>
-                <div>
-                  <span className="text-[#203947] font-semibold text-sm">LinkedIn</span>
-                  <p className="text-[#203947] font-medium">
-                    {selectedUserRequest.user.linkedin_url ? (
-                      <a href={selectedUserRequest.user.linkedin_url} target="_blank" className="text-[#901b20] hover:text-[#ad565a] underline transition-colors duration-300">Profile</a>
-                    ) : 'N/A'}
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="group hover:bg-[#ebebeb]/50 p-4 rounded-2xl transition-all duration-300 hover:shadow-md">
-              <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full"></div>
-                <div>
-                  <span className="text-[#203947] font-semibold text-sm">GitHub</span>
-                  <p className="text-[#203947] font-medium">
-                    {selectedUserRequest.user.github_url ? (
-                      <a href={selectedUserRequest.user.github_url} target="_blank" className="text-[#901b20] hover:text-[#ad565a] underline transition-colors duration-300">Repo</a>
-                    ) : 'N/A'}
-                  </p>
-                </div>
-              </div>
-            </div>
           </div>
         </div>
 
-        {/* Additional links */}
+        {/* Social Links & Portfolio */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+          <div className="group hover:bg-[#ebebeb]/50 p-4 rounded-2xl transition-all duration-300 hover:shadow-md">
+            <div className="flex items-center space-x-3">
+              <div className="w-3 h-3 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full"></div>
+              <div>
+                <span className="text-[#203947] font-semibold text-sm">LinkedIn</span>
+                <p className="text-[#203947] font-medium">
+                  {selectedUserRequest.user.linkedin_url ? (
+                    <a href={selectedUserRequest.user.linkedin_url} target="_blank" className="text-[#901b20] hover:text-[#ad565a] underline transition-colors duration-300">Profile</a>
+                  ) : 'N/A'}
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          <div className="group hover:bg-[#ebebeb]/50 p-4 rounded-2xl transition-all duration-300 hover:shadow-md">
+            <div className="flex items-center space-x-3">
+              <div className="w-3 h-3 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full"></div>
+              <div>
+                <span className="text-[#203947] font-semibold text-sm">GitHub</span>
+                <p className="text-[#203947] font-medium">
+                  {selectedUserRequest.user.github_url ? (
+                    <a href={selectedUserRequest.user.github_url} target="_blank" className="text-[#901b20] hover:text-[#ad565a] underline transition-colors duration-300">Repo</a>
+                  ) : 'N/A'}
+                </p>
+              </div>
+            </div>
+          </div>
+          
           <div className="group hover:bg-[#ebebeb]/50 p-4 rounded-2xl transition-all duration-300 hover:shadow-md">
             <div className="flex items-center space-x-3">
               <div className="w-3 h-3 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full"></div>
@@ -691,7 +651,7 @@ const closeProfileModal = () => {
           </div>
         </div>
 
-        {/* Application message */}
+        {/* Application Message */}
         <div className="mb-8">
           <h3 className="text-[#203947] font-bold text-lg mb-4 flex items-center">
             <div className="w-4 h-4 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full mr-3"></div>
@@ -706,7 +666,7 @@ const closeProfileModal = () => {
         </div>
       </div>
 
-      {/* Action buttons with enhanced styling */}
+      {/* Action Buttons */}
       <div className="bg-gradient-to-r from-[#ebebeb]/50 to-[#cc9598]/20 p-6 border-t border-[#ebebeb]">
         <div className="flex space-x-4">
           <button

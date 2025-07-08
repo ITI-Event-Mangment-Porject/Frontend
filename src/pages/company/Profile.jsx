@@ -169,7 +169,7 @@ const getSizeLabel = (value) => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50/50 via-white to-slate-50/30 relative overflow-hidden">
+    <div> ">
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-1/4 w-64 h-64 bg-gradient-to-br from-[#901b20]/5 to-[#ad565a]/5 rounded-full blur-3xl animate-pulse" />
@@ -181,12 +181,19 @@ const getSizeLabel = (value) => {
         
         {/* Main Profile Card */}
         <div className="bg-white/10 backdrop-blur-3xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden mb-8 hover:shadow-3xl transition-all duration-500 transform hover:scale-[1.01] group">
-          {/* Header Background */}
-          <div className="h-48 bg-gradient-to-br from-[#203947]/80 via-[#901b20]/70 to-[#ad565a]/80 relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-r from-black/20 via-transparent to-black/20" />
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(255,255,255,0.1),transparent)] animate-pulse" />
-            <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-          </div>
+{/* Modern Card Header Style */}
+<div className="relative h-48 bg-gradient-to-br from-slate-900 via-[#203947] to-[#901b20] overflow-hidden rounded-t-3xl">
+  {/* Overlays & Effects */}
+  <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/20"></div>
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.1),transparent_50%)]"></div>
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(144,27,32,0.3),transparent_50%)]"></div>
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_40%,rgba(255,255,255,0.05),transparent)] animate-pulse"></div>
+  
+  {/* Floating Pulses */}
+  <div className="absolute top-10 right-10 w-16 h-16 bg-white/5 rounded-full blur-sm animate-pulse"></div>
+  <div className="absolute bottom-6 left-10 w-24 h-24 bg-[#901b20]/10 rounded-full blur-lg animate-pulse delay-1000"></div>
+</div>
+
           
           <div className="px-8 lg:px-16 pb-12 -mt-24 relative">
             <div className="flex flex-col lg:flex-row gap-8 items-start">
@@ -249,11 +256,11 @@ const getSizeLabel = (value) => {
                       <input
                         value={companyData.industry || ''}
                         onChange={(e) => handleInputChange("industry", e.target.value)}
-                        className="border-2 border-white/30 focus:border-[#901b20]/50 p-3 rounded-2xl bg-white/20 backdrop-blur-sm focus:bg-white/30 transition-all duration-300 placeholder-white/60 text-white"
+                        className="border-2 border-white/30 focus:border-[#901b20]/50 p-3 rounded-2xl bg-white/20 backdrop-blur-sm focus:bg-white/30 transition-all duration-300 placeholder-white/60 "
                         placeholder="Industry"
                       />
                     ) : (
-                      <span className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-white/20 to-white/10 text-white text-sm font-semibold rounded-full border border-white/30 shadow-lg hover:shadow-xl transition-all duration-300 backdrop-blur-sm">
+                      <span className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-white/20 to-white/10  text-sm font-semibold rounded-full border border-white/30 shadow-lg hover:shadow-xl text-white transition-all duration-300 backdrop-blur-sm">
                         <Briefcase className="w-4 h-4 mr-2" />
                         {companyData.industry || 'Industry Not Specified'}
                       </span>
@@ -266,7 +273,7 @@ const getSizeLabel = (value) => {
                       <select
                         value={companyData.size || ''}
                         onChange={(e) => handleInputChange("size", e.target.value)}
-                        className="border-2 border-white/30 focus:border-[#901b20]/50 rounded-2xl p-3 bg-white/20 backdrop-blur-sm focus:bg-white/30 transition-all duration-300 text-white"
+                        className="border-2 border-white/30 focus:border-[#901b20]/50 rounded-2xl p-3 bg-white/20 backdrop-blur-sm focus:bg-white/30 transition-all duration-300"
                       >
                         <option value="">Select company size</option>
                         <option value="small">Small (1–50 employees)</option>
@@ -274,7 +281,7 @@ const getSizeLabel = (value) => {
                         <option value="large">Large (200+ employees)</option>
                       </select>
                     ) : (
-                      <span className="inline-flex items-center px-4 py-2 bg-white/10 text-white rounded-xl font-medium shadow-sm border border-white/20">
+                      <span className="inline-flex items-center px-4 py-2 bg-white/10 rounded-xl font-medium shadow-sm border border-white/20">
                         {getSizeLabel(companyData.size)}
                       </span>
                     )}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { CheckCircle, Mail, Phone, Shield, ArrowRight, ArrowLeft, Building } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import api from '../../api/axios';
+import axios from 'axios';
 
 
 const MultiStepVerificationWithSetup = () => {
@@ -90,7 +91,7 @@ const fetchParticipationStatus = async () => {
     const response = await api.get(`/job-fairs/${storedJobFairId}/companies`);
 
     if (response.status === 200) {
-      const companies = response.data?.data?.result;
+      const companies = response.data.data?.result || {};
 
       if (!Array.isArray(companies)) {
         return false;
@@ -175,6 +176,7 @@ const addInterviewSlot = async () => {
   const success = await submitInterviewSlot();
   if (success) {
     setInterviewSlots(prevSlots => [...prevSlots, interviewSlot]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 
     setInterviewSlot({
       slot_date: '',
@@ -237,8 +239,23 @@ useEffect(() => {
       setCurrentStep(savedStepNumber);
       setInitialStepLoaded(true);
       
-      const companyResponse = await api.get(`/companies/${companyId}`);
-      setCompanyData(companyResponse.data.data);
+      const response = await axios.get(`http://127.0.0.1:8000/api/companies/${companyId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("response", response.data);
+
+      const result = response.data?.data?.result || {};
+
+setCompanyData({
+  ...result,
+  logo_path: result.logo_path 
+    ? result.logo_path.startsWith('http')
+      ? result.logo_path
+      : `http://127.0.0.1:8000/storage/${result.logo_path}`
+    : ''
+});
 
       try {
         const tracksResponse = await api.get('/test/tracks?sort_order=desc');
@@ -436,7 +453,12 @@ const handleSubmit = async (e) => {
 
     const response = await api.post(
       `/job-fairs/${jobFairId}/participations/${participationId}/interview-slots`,
-      payload
+      payload,
+        {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    }
+  }
     );
 
     if (response.status === 200 || response.status === 201) {
@@ -458,6 +480,7 @@ const handleSubmit = async (e) => {
 
 
 const handleJobProfileSubmit = async () => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
   setIsSubmitting(true);
   setErrorMsg('');
   setSuccessMsg('');
@@ -466,6 +489,7 @@ const handleJobProfileSubmit = async () => {
     setErrorMsg("Participation ID not found. Please complete participation first.");
     setIsSubmitting(false);
     return false;
+    
   }
 
   if (
@@ -501,6 +525,7 @@ const handleJobProfileSubmit = async () => {
     if (response.status === 200 || response.status === 201) {
       setSuccessMsg("Job profile submitted successfully!");
       setCompletedSteps((prev) => new Set([...prev, 2]));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
 
       setFormData({
         title: '',
@@ -517,6 +542,7 @@ const handleJobProfileSubmit = async () => {
       return true;
     } else {
       setErrorMsg("Failed to submit job profile. Please try again.");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return false;
     }
   } catch (error) {
@@ -774,11 +800,18 @@ const isCurrentStepValid = () => {
           <form onSubmit={handleSubmit}>
             <div className="space-y-8">
               {/* Header Section */}
-<div className="rounded-3xl p-8 shadow-2xl -mx-8 -mt-8 mb-8 relative overflow-hidden h-48 bg-gradient-to-br from-[#203947]/80 via-[#901b20]/70 to-[#ad565a]/80">
-                <div className="absolute inset-0 bg-gradient-to-r from-black/20 to-transparent"></div>
-                <div className="absolute top-0 right-0 w-96 h-96 bg-red-500/10 rounded-full blur-3xl transform translate-x-1/2 -translate-y-1/2"></div>
+<div className="rounded-3xl p-8 shadow-2xl -mx-8 -mt-8 mb-8 relative overflow-hidden h-48 bg-gradient-to-br from-slate-900 via-[#203947] to-[#901b20]">
+  {/* Gradient overlays & pulses */}
+  <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/20"></div>
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.1),transparent_50%)]"></div>
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(144,27,32,0.3),transparent_50%)]"></div>
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_40%,rgba(255,255,255,0.05),transparent)] animate-pulse"></div>
+  
+  {/* Floating elements */}
+  <div className="absolute top-6 right-6 w-20 h-20 bg-white/5 rounded-full blur-md animate-pulse"></div>
+  <div className="absolute bottom-6 left-8 w-28 h-28 bg-[#901b20]/10 rounded-full blur-2xl animate-pulse delay-1000"></div>
                 <div className="relative z-10">
-                  <div className="flex items-center justify-between">
+                  <div className="relative z-10 h-full flex items-center justify-between">
                     <div className="flex items-center space-x-8">
                       {companyData.logo_path && (
                         <div className="relative w-36 h-36 rounded-3xl border-4 border-white/20 shadow-2xl bg-white/95 backdrop-blur-sm overflow-hidden transform hover:scale-105 transition-all duration-300 hover:shadow-3xl">
@@ -1009,22 +1042,36 @@ const isCurrentStepValid = () => {
   
   return (
     <div className="space-y-8">
-      <div className="text-center mb-8">
-        <div className="bg-gradient-to-br from-blue-100 to-blue-50 rounded-3xl p-6 w-fit mx-auto mb-6 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
-          <Shield className="w-20 h-20 text-blue-600 mx-auto hover:scale-110 transition-transform duration-300" />
-        </div>
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">Interview Slot Setup</h2>
-        <p className="text-gray-600 text-lg">Configure your interview time slots for the job fair</p>
-        {jobFairData && (
-          <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-blue-100 rounded-2xl shadow-lg border border-blue-200 hover:shadow-xl transition-all duration-300">
-            <p className="text-blue-800 text-base">
-              <strong>Job Fair Schedule:</strong> {formatDateForInput(jobFairData.start_date)} to {formatDateForInput(jobFairData.end_date)}
-              <br />
-              <strong>Time:</strong> {formatTimeForInput(jobFairData.start_time)} - {formatTimeForInput(jobFairData.end_time)}
-            </p>
-          </div>
-        )}
+<div className="relative h-80 mb-12 rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 via-[#203947] to-[#901b20] shadow-2xl">
+  {/* Decorative gradients */}
+  <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/20"></div>
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.1),transparent_50%)]"></div>
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(144,27,32,0.3),transparent_50%)]"></div>
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_40%,rgba(255,255,255,0.05),transparent)] animate-pulse"></div>
+  
+  {/* Floating shapes */}
+  <div className="absolute top-6 right-6 w-16 h-16 bg-white/10 rounded-full blur-md animate-pulse"></div>
+  <div className="absolute bottom-6 left-6 w-24 h-24 bg-[#901b20]/20 rounded-full blur-2xl animate-pulse delay-1000"></div>
+
+  {/* Content */}
+  <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
+    <div className="bg-white/10 p-4 rounded-2xl mb-4 backdrop-blur-sm border border-white/20">
+      <Shield className="w-14 h-14 text-white" />
+    </div>
+    <h2 className="text-white text-3xl font-bold mb-2">Interview Setup</h2>
+    <p className="text-white/80 text-lg">Configure your interview time slots for the job fair</p>
+
+    {jobFairData && (
+      <div className="mt-4 px-6 py-4 bg-white/10 rounded-xl backdrop-blur-sm border border-white/20 text-white/90 shadow-md">
+        <p className="text-sm">
+          <strong>Job Fair Schedule:</strong> {formatDateForInput(jobFairData.start_date)} to {formatDateForInput(jobFairData.end_date)}<br />
+          <strong>Time:</strong> {formatTimeForInput(jobFairData.start_time)} - {formatTimeForInput(jobFairData.end_time)}
+        </p>
       </div>
+    )}
+  </div>
+</div>
+
 
       {/* Show existing interview slots */}
       {interviewSlots.length > 0 && (
@@ -1108,7 +1155,7 @@ const isCurrentStepValid = () => {
 
             <div>
               <label className="block text-base font-semibold text-gray-900 mb-3">
-                Duration (minutes) *
+                Interview Duration (minutes) *
               </label>
               <input
                 type="number"
@@ -1185,7 +1232,7 @@ const isCurrentStepValid = () => {
             </div>
 
             <div className="flex flex-col space-y-4">
-              <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+              {/* <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
                 <label className="flex items-center space-x-3 cursor-pointer group">
                   <input
                     type="checkbox"
@@ -1195,9 +1242,9 @@ const isCurrentStepValid = () => {
                   />
                   <span className="text-base font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200">Is Break Slot</span>
                 </label>
-              </div>
+              </div> */}
               
-              <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+              {/* <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
                 <label className="flex items-center space-x-3 cursor-pointer group">
                   <input
                     type="checkbox"
@@ -1207,11 +1254,11 @@ const isCurrentStepValid = () => {
                   />
                   <span className="text-base font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200">Is Available</span>
                 </label>
-              </div>
+              </div> */}
             </div>
           </div>
 
-          {interviewSlot.is_break && (
+          {/* {interviewSlot.is_break && (
             <div className="mt-6 p-6 bg-orange-50 rounded-2xl border border-orange-200">
               <label className="block text-base font-semibold text-gray-900 mb-3">
                 Break Reason *
@@ -1225,7 +1272,7 @@ const isCurrentStepValid = () => {
                 required={interviewSlot.is_break}
               />
             </div>
-          )}
+          )} */}
 
           <div className="flex gap-4 mt-8">
             <button 
@@ -1293,11 +1340,25 @@ const isCurrentStepValid = () => {
 
 case 3:
         return (
-          <div className="space-y-8 max-w-2xl mx-auto p-6">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-[#203947] mb-2 animate-fade-in">Add Candidate Job Profile</h2>
-              <div className="w-24 h-1 bg-gradient-to-r from-[#901b20] to-[#ad565a] mx-auto rounded-full"></div>
-            </div>
+          <div className="space-y-8 max-w-3xl mx-auto p-6">
+<div className="relative h-48 mb-12 rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 via-[#203947] to-[#901b20] shadow-2xl">
+  {/* Decorative gradients */}
+  <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/20"></div>
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_80%,rgba(255,255,255,0.1),transparent_50%)]"></div>
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(144,27,32,0.3),transparent_50%)]"></div>
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_40%,rgba(255,255,255,0.05),transparent)] animate-pulse"></div>
+  
+  {/* Floating shapes */}
+  <div className="absolute top-6 right-6 w-16 h-16 bg-white/10 rounded-full blur-md animate-pulse"></div>
+  <div className="absolute bottom-6 left-6 w-24 h-24 bg-[#901b20]/20 rounded-full blur-2xl animate-pulse delay-1000"></div>
+
+  {/* Header content */}
+  <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
+    <h2 className="text-white text-3xl font-bold mb-2 animate-fade-in">Add Candidate Job Profile</h2>
+    <div className="w-24 h-1 bg-gradient-to-r from-white/70 to-white/30 rounded-full"></div>
+  </div>
+</div>
+
 
             <div className="space-y-6">
               {/* Title */}
@@ -1320,7 +1381,7 @@ case 3:
               {/* Description */}
               <div className="group">
                 <label className="block text-sm font-semibold text-[#203947] mb-2 transition-colors group-focus-within:text-[#901b20]">
-                  Description
+                  Job Summary
                 </label>
                 <div className="relative">
                   <textarea
@@ -1335,7 +1396,7 @@ case 3:
               </div>
 
               {/* Requirements */}
-              <div className="group">
+              {/* <div className="group">
                 <label className="block text-sm font-semibold text-[#203947] mb-2 transition-colors group-focus-within:text-[#901b20]">
                   Requirements
                 </label>
@@ -1349,7 +1410,7 @@ case 3:
                   />
                   <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-[#901b20]/5 to-[#ad565a]/5 opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
                 </div>
-              </div>
+              </div> */}
 
               {/* Employment Type & Location Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
