@@ -23,6 +23,7 @@ import {
   CartesianGrid,
   LabelList,
 } from 'recharts';
+import { eventAPI, jobFairAPI } from '@/services/api';
 
 // Predefined industry categories with colors
 const INDUSTRY_CATEGORIES = {
@@ -52,38 +53,103 @@ const JobFairTabs = () => {
     const fetchEvents = async () => {
       try {
         setLoading(true);
-        // Mock data for events - replace with actual API call
+        const params = {
+          'filter[type]': 'Job Fair',
+        };
+        const response = await eventAPI.getAll(params);
+        console.log('Job Fair events response:', response);
+
+        // Debug log to see exact structure
+        console.log('Response structure check:', {
+          hasData: !!response.data,
+          dataType: typeof response.data,
+          hasNestedData: response.data && !!response.data.data,
+          hasNestedResult:
+            response.data && response.data.data && !!response.data.data.result,
+          hasNestedResultData:
+            response.data &&
+            response.data.data &&
+            response.data.data.result &&
+            !!response.data.data.result.data,
+        });
+
+        // Check if we have data in the expected format
+        // The API returns nested data structure that can vary
+        let eventsData = [];
+
+        if (response && response.data) {
+          // Try to extract events from various possible response structures
+          if (
+            response.data.data &&
+            response.data.data.result &&
+            response.data.data.result.data
+          ) {
+            // Structure: response.data.data.result.data (from the jobfair response)
+            eventsData = response.data.data.result.data;
+          } else if (response.data.data) {
+            // Structure: response.data.data (original expected format)
+            eventsData = response.data.data;
+          } else if (response.data.result && response.data.result.data) {
+            // Structure: response.data.result.data (from the event response)
+            eventsData = response.data.result.data;
+          } else if (Array.isArray(response.data)) {
+            // Structure: response.data (direct array)
+            eventsData = response.data;
+          }
+
+          console.log('Extracted events data:', eventsData);
+
+          if (eventsData && eventsData.length > 0) {
+            // Format the events for display
+            const formattedEvents = eventsData.map(event => ({
+              id: event.id,
+              title: event.title,
+              date: new Date(event.start_date).toLocaleDateString(),
+              location: event.location || 'Not specified',
+              company_count: event.companies_count || 0,
+              start_date: event.start_date,
+              end_date: event.end_date,
+              status: event.status,
+              description: event.description,
+            }));
+
+            setEvents(formattedEvents);
+            // Set the first event as active by default
+            setActiveEvent(formattedEvents[0]);
+            console.log('Formatted events:', formattedEvents);
+            console.log('Active event:', formattedEvents[0]);
+          } else {
+            setEvents([]);
+          }
+        } else {
+          console.error('Unexpected API response format:', response);
+          setError('Failed to fetch events: Unexpected response format');
+        }
+
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching events:', err);
+        console.error('Error details:', err.response?.data || err.message);
+        setError(`Failed to fetch events: ${err.message}`);
+        setLoading(false);
+
+        // Use mock data if API fails completely
         const mockEvents = [
           {
             id: 1,
-            title: 'Summer Job Fair 2025',
-            date: '2025-07-15',
-            location: 'Main Campus',
-            company_count: 24,
-          },
-          {
-            id: 2,
-            title: 'Winter Recruitment Drive',
-            date: '2025-01-10',
-            location: 'Online',
-            company_count: 18,
-          },
-          {
-            id: 3,
-            title: 'Tech Career Expo',
-            date: '2025-04-22',
-            location: 'Innovation Center',
-            company_count: 32,
+            title: 'Mock Job Fair 2025',
+            date: new Date().toLocaleDateString(),
+            location: 'Mock Location',
+            company_count: 15,
+            start_date: new Date().toISOString(),
+            end_date: new Date(Date.now() + 86400000).toISOString(),
+            status: 'published',
+            description:
+              'This is a mock event created because the API fetch failed.',
           },
         ];
-
         setEvents(mockEvents);
         setActiveEvent(mockEvents[0]);
-        setLoading(false);
-      } catch (err) {
-        console.log(err);
-        setError('Failed to fetch events');
-        setLoading(false);
       }
     };
 
@@ -97,55 +163,143 @@ const JobFairTabs = () => {
 
       try {
         setCompanyLoading(true);
+        console.log('Fetching companies for event ID:', activeEvent.id);
 
-        // Generate mock companies data with industry distribution
-        const industries = Object.keys(INDUSTRY_CATEGORIES);
-        const mockCompanies = Array.from({ length: 20 }, (_, i) => {
-          // Determine company industry based on patterns in the id
-          const industryIndex = i % industries.length;
-          const industry = industries[industryIndex];
+        // Fetch real company data from API
+        const response = await jobFairAPI.getParticipations(activeEvent.id);
+        console.log('Company participations full response:', response);
 
-          return {
-            id: i + 1,
-            name: `${industry} Corp ${i + 1}`,
-            logo: `https://ui-avatars.com/api/?name=${industry.split(' ').join('+')}&background=random`,
-            industry: industry,
-            website: `https://www.example${i}.com`,
-            contact_email: `contact@company${i}.com`,
-            contact_phone: `+1 (555) 000-${1000 + i}`,
-            description: `A leading ${industry.toLowerCase()} company specializing in innovative solutions.`,
-            status: i % 5 === 0 ? 'pending' : 'confirmed',
-          };
-        });
+        // Check if we have data in the expected format - try multiple potential structures
+        let participations = [];
 
-        setEventCompanies(mockCompanies);
+        if (response && response.data) {
+          if (response.data.result) {
+            // Direct result structure
+            participations = response.data.result || [];
+          } else if (response.data.data && response.data.data.result) {
+            // Nested data.result structure
+            participations = response.data.data.result || [];
+          } else if (Array.isArray(response.data)) {
+            // Direct array structure
+            participations = response.data;
+          } else if (response.data.data && Array.isArray(response.data.data)) {
+            // Nested data array structure
+            participations = response.data.data;
+          }
 
-        // Generate interview duration data
-        const interviewData = mockCompanies.map(company => {
-          const actualDuration = 10 + Math.floor(Math.random() * 20); // 10-30 minutes
-          const targetDuration = 15; // 15 minutes target
-          const totalInterviews = 10 + Math.floor(Math.random() * 40); // 10-50 interviews
+          console.log('Extracted participations:', participations);
+          console.log('Participations found:', participations.length);
 
-          return {
-            companyId: company.id,
-            companyName: company.name,
-            industry: company.industry,
-            actualDuration,
-            targetDuration,
-            totalInterviews,
-            isEfficient: actualDuration <= targetDuration,
-          };
-        });
+          // Map the participations to companies
+          const companies = participations
+            .filter(p => p.company) // Only include participations with company data
+            .map(p => {
+              const company = p.company;
+              return {
+                id: company.id,
+                name: company.name,
+                logo:
+                  company.logo ||
+                  `https://ui-avatars.com/api/?name=${encodeURIComponent(company.name)}&background=random`,
+                industry: company.industry || 'Other',
+                website: company.website || '#',
+                contact_email: company.contact_email || 'N/A',
+                contact_phone: company.contact_phone || 'N/A',
+                description: company.description || 'No description available',
+                status: p.status || 'pending',
+              };
+            });
 
-        setInterviewData(interviewData);
-        // Initially select all companies
-        setSelectedCompanies(interviewData.map(c => c.companyId));
+          console.log('Processed companies:', companies);
+
+          // Set the companies to state
+          setEventCompanies(companies);
+
+          // Generate interview data based on real companies
+          const interviewData = companies.map(company => {
+            // For now, using mock interview data since we don't have real data
+            const actualDuration = 10 + Math.floor(Math.random() * 20); // 10-30 minutes
+            const targetDuration = 15; // 15 minutes target
+            const totalInterviews = 10 + Math.floor(Math.random() * 40); // 10-50 interviews
+
+            return {
+              companyId: company.id,
+              companyName: company.name,
+              industry: company.industry,
+              actualDuration,
+              targetDuration,
+              totalInterviews,
+              isEfficient: actualDuration <= targetDuration,
+            };
+          });
+
+          setInterviewData(interviewData);
+          setSelectedCompanies(interviewData.map(c => c.companyId));
+        } else {
+          // Fallback to mock data if API doesn't return expected format
+          console.warn(
+            "API didn't return expected data format, using fallback mock data"
+          );
+          generateMockCompanyData();
+        }
+
         setCompanyLoading(false);
       } catch (err) {
-        console.log(err);
-        setCompanyError('Failed to fetch companies for this event');
+        console.error('Error fetching companies:', err);
+        console.error('Error details:', err.response?.data || err.message);
+        setCompanyError(
+          `Failed to fetch companies for this event: ${err.message}`
+        );
         setCompanyLoading(false);
+        // Fallback to mock data on error
+        generateMockCompanyData();
       }
+    };
+
+    // Fallback function to generate mock data if API fails
+    const generateMockCompanyData = () => {
+      // Generate mock companies data with industry distribution
+      const industries = Object.keys(INDUSTRY_CATEGORIES);
+      const mockCompanies = Array.from({ length: 20 }, (_, i) => {
+        // Determine company industry based on patterns in the id
+        const industryIndex = i % industries.length;
+        const industry = industries[industryIndex];
+
+        return {
+          id: i + 1,
+          name: `${industry} Corp ${i + 1}`,
+          logo: `https://ui-avatars.com/api/?name=${industry.split(' ').join('+')}&background=random`,
+          industry: industry,
+          website: `https://www.example${i}.com`,
+          contact_email: `contact@company${i}.com`,
+          contact_phone: `+1 (555) 000-${1000 + i}`,
+          description: `A leading ${industry.toLowerCase()} company specializing in innovative solutions.`,
+          status: i % 5 === 0 ? 'pending' : 'confirmed',
+        };
+      });
+
+      setEventCompanies(mockCompanies);
+
+      // Generate interview duration data
+      const interviewData = mockCompanies.map(company => {
+        const actualDuration = 10 + Math.floor(Math.random() * 20); // 10-30 minutes
+        const targetDuration = 15; // 15 minutes target
+        const totalInterviews = 10 + Math.floor(Math.random() * 40); // 10-50 interviews
+
+        return {
+          companyId: company.id,
+          companyName: company.name,
+          industry: company.industry,
+          actualDuration,
+          targetDuration,
+          totalInterviews,
+          isEfficient: actualDuration <= targetDuration,
+        };
+      });
+
+      setInterviewData(interviewData);
+      // Initially select all companies
+      setSelectedCompanies(interviewData.map(c => c.companyId));
     };
 
     fetchEventCompanies();
@@ -202,6 +356,24 @@ const JobFairTabs = () => {
         return [...prev, companyId];
       }
     });
+  };
+
+  // Function to handle event tab changes
+  const handleEventChange = event => {
+    console.log('Switching to event:', event);
+
+    // Reset states when changing events
+    setCompanyError(null); // Clear any previous errors
+    setCompanyLoading(true); // Show loading state
+    setEventCompanies([]); // Clear previous companies
+    setInterviewData([]); // Clear previous interview data
+    setSelectedCompanies([]); // Clear selected companies
+
+    // Set the new active event
+    setActiveEvent(event);
+
+    // Companies will be fetched in the useEffect that depends on activeEvent
+    console.log('Event changed, new active event:', event);
   };
 
   // Select all companies
@@ -300,14 +472,34 @@ const JobFairTabs = () => {
           {events.map(event => (
             <button
               key={event.id}
-              onClick={() => setActiveEvent(event)}
-              className={`px-4 py-3 rounded-lg whitespace-nowrap transition-all ${
+              onClick={() => handleEventChange(event)}
+              className={`px-7 py-4 rounded-lg whitespace-nowrap transition-all ${
                 activeEvent?.id === event.id
-                  ? 'bg-[var(--primary-500)] text-white shadow-md'
-                  : 'bg-white text-gray-700 border border-gray-200 hover:bg-gray-50'
+                  ? 'bg-gradient-to-r from-[var(--primary-400)] to-[var(--primary-600)] text-white shadow-md '
+                  : 'bg-white text-gray-700 border border-primary hover:bg-[var(--gray-50)] hover:shadow-md'
               }`}
             >
-              {event.title}
+              <div className="flex flex-col items-start">
+                <span className="font-medium">{event.title}</span>
+                <div className="flex items-center mt-1">
+                  <span
+                    className={`px-1.5 py-0.5 text-xs rounded-full ${
+                      event.status === 'published'
+                        ? 'bg-green-100 text-green-700'
+                        : event.status === 'ongoing'
+                          ? 'bg-blue-100 text-blue-700'
+                          : event.status === 'completed'
+                            ? 'bg-gray-100 text-gray-700'
+                            : 'bg-yellow-100 text-yellow-700'
+                    }`}
+                  >
+                    {event.status === 'published' ? 'Upcoming' : event.status}
+                  </span>
+                  <span className="text-xs text-gray-50 ml-2">
+                    {event.date}
+                  </span>
+                </div>
+              </div>
             </button>
           ))}
         </div>
@@ -316,14 +508,36 @@ const JobFairTabs = () => {
       {/* Active Event Details */}
       {activeEvent && (
         <motion.div
-          className="mb-8 bg-white rounded-lg shadow-md p-6 border border-gray-100"
+          className="mb-8 bg-white rounded-lg shadow-md p-6 border hover:shadow-lg border-primary"
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
           <h2 className="text-xl font-bold text-gray-800 mb-4">
             {activeEvent.title}
+            <span
+              className={`ml-3 px-2 py-1 text-xs rounded-full inline-flex items-center ${
+                activeEvent.status === 'published'
+                  ? 'bg-green-100 text-green-700'
+                  : activeEvent.status === 'ongoing'
+                    ? 'bg-blue-100 text-blue-700'
+                    : activeEvent.status === 'completed'
+                      ? 'bg-gray-100 text-gray-700'
+                      : 'bg-yellow-100 text-yellow-700'
+              }`}
+            >
+              {activeEvent.status === 'published'
+                ? 'Upcoming'
+                : activeEvent.status}
+            </span>
           </h2>
+
+          {activeEvent.description && (
+            <div className="mb-4 text-gray-600 text-sm border-l-4 border-gray-200 pl-3 italic">
+              {activeEvent.description}
+            </div>
+          )}
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="flex items-center text-gray-600">
               <div className="p-3 rounded-full bg-blue-50 mr-4 text-blue-500">
@@ -342,9 +556,13 @@ const JobFairTabs = () => {
                   ></path>
                 </svg>
               </div>
-              <div>
+              <div className="p-4">
                 <p className="text-sm text-gray-500">Date</p>
                 <p className="font-medium">{activeEvent.date}</p>
+                <p className="text-xs text-gray-500">
+                  {new Date(activeEvent.start_date).toLocaleDateString()} -{' '}
+                  {new Date(activeEvent.end_date).toLocaleDateString()}
+                </p>
               </div>
             </div>
             <div className="flex items-center text-gray-600">
@@ -381,7 +599,9 @@ const JobFairTabs = () => {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Companies</p>
-                <p className="font-medium">{activeEvent.company_count}</p>
+                <p className="font-medium">
+                  {activeEvent.company_count || eventCompanies.length}
+                </p>
               </div>
             </div>
           </div>
@@ -396,7 +616,7 @@ const JobFairTabs = () => {
         transition={{ duration: 0.5, delay: 0.2 }}
       >
         {/* Companies by Industry Pie Chart */}
-        <div className="bg-white rounded-lg shadow-md p-6 border border-gray-100">
+        <div className="bg-white rounded-lg shadow-md p-6 border border-primary hover:shadow-lg ">
           <h3 className="text-lg font-semibold mb-4 text-gray-800">
             Companies by Industry
           </h3>
@@ -431,16 +651,18 @@ const JobFairTabs = () => {
               <p>{companyError}</p>
             </div>
           ) : (
-            <div className="h-64">
+            <div className="h-90">
+              {' '}
+              {/* Increased height to accommodate chart and legend */}
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
                     data={prepareIndustryChartData}
                     cx="50%"
-                    cy="50%"
+                    cy="40%" /* Moved the pie chart up to make room for legend below */
                     labelLine={false}
                     label={renderCustomizedLabel}
-                    outerRadius={80}
+                    outerRadius={100} /* Slightly reduced the radius */
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -451,7 +673,12 @@ const JobFairTabs = () => {
                   <Tooltip
                     formatter={value => [`${value} Companies`, 'Count']}
                   />
-                  <Legend />
+                  <Legend
+                    layout="horizontal"
+                    verticalAlign="bottom"
+                    align="center"
+                    wrapperStyle={{ paddingTop: '30px' }}
+                  />
                 </PieChart>
               </ResponsiveContainer>
             </div>
