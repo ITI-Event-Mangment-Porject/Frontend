@@ -1,7 +1,7 @@
 import { Bell, Settings } from 'lucide-react';
 import { NavLink, useParams } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
-import api from '../../api/axios';
+import api from '../../../api/axios';
 import { useLocation } from 'react-router-dom';
 
 const Topbar = () => {

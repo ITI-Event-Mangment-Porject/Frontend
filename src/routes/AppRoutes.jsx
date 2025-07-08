@@ -1,5 +1,5 @@
 import { Routes, Route } from "react-router-dom";
-import Layout from "../components/common/Layout";
+import Layout from "../pages/company/common/Layout";
 
 // Company Pages
 import Dashboard from "../pages/company/Dashboard";

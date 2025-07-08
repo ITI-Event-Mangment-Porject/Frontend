@@ -1,7 +1,7 @@
 import { NavLink, useParams, useLocation } from 'react-router-dom';
 import { FaClipboardList, FaUsers, FaUserCheck, FaUser } from 'react-icons/fa';
 import React, { useState, useEffect } from 'react';
-import api from '../../api/axios';
+import api from '../../../api/axios';
 
 const Sidebar = () => {
   const { companyId } = useParams();
