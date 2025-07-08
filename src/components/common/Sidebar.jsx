@@ -24,7 +24,12 @@ const Sidebar = () => {
       icon: FaClipboardList,
       label: 'Attendance Reports',
     },
+
+    {path:'/admin/jobfair', icon: FaClipboardList, label: 'Job Fair Management'},
+    { path: '/admin/feedback', icon: FaChartBar, label: 'Feedback Analytics' },
+
     { path: '/admin/FeedbackAnalytics', icon: FaChartBar, label: 'Feedback Analytics' },
+
     { path: '/admin/companies', icon: FaBriefcase, label: 'Companies Setup' },
     { path: '/admin/liveevents', icon: FaDesktop, label: 'Live Events' },
     { path: '/admin/notifications', icon: FaBell, label: 'Notifications' },

@@ -27,11 +27,15 @@ import HomePage from '../pages/homePage/HomePage';
 import AdminDashboard from '../pages/admin/Dashboard';
 import ManageEvents from '../pages/admin/ManageEvents';
 import Notifications from '../pages/admin/Notifications';
+
+import JobFairSetup from '../pages/admin/JobFairSetup';
+
 import LiveMonitor from '../pages/admin/LiveMonitor';
 import AlFeedbackAnalyics from '../pages/admin/FeedbackAnalytics';
 
 // Not Found Page
 import NotFoundPage from '../pages/System/NotFoundPage';
+
 
 const AppRoutes = () => {
   return (
@@ -43,6 +47,7 @@ const AppRoutes = () => {
       <Route path="/admin/users" element={<UserManagement />} />
       <Route path="/admin/companies" element={<CompaniesSetup />} />
       <Route path="/admin/attendance" element={<AttendanceReports />} />
+      <Route path="/admin/jobfair" element={<JobFairSetup />} />
       {/* Default redirect to admin dashboard */}
       <Route path="/admin/events" element={<ManageEvents />} />
       <Route path="/admin/notifications" element={<Notifications />} />
