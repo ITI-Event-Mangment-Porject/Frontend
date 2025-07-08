@@ -19,6 +19,7 @@ import SetupForm from "../pages/company/SetupForm";
 import ManageRequests from "../pages/company/ManageRequests";
 import InterviewTracking from "../pages/company/InterviewTracking";
 import CompanyProfile from "../pages/company/Profile";
+import Layout from '../pages/company/common/Layout';
 
 // Home Page
 import HomePage from '../pages/homePage/HomePage';
@@ -65,12 +66,14 @@ const AppRoutes = () => {
       <Route path="*" element={<NotFoundPage />} />
 
       {/* Company routes - using relative paths */}
-      <Route index element={<Dashboard />} />
-      <Route path="dashboard" element={<Dashboard />} />
-      <Route path="job-fairs/:jobFairId/setup" element={<SetupForm />} />
-      <Route path="job-fairs/:jobFairId/requests" element={<ManageRequests />} />
-      <Route path="tracking" element={<InterviewTracking />} />
-      <Route path="profile" element={<CompanyProfile />} />
+      <Route path="/company/:companyId" element={<Layout />}>
+        <Route index element={<Dashboard />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="job-fairs/:jobFairId/setup" element={<SetupForm />} />
+        <Route path="job-fairs/:jobFairId/requests" element={<ManageRequests />} />
+        <Route path="tracking" element={<InterviewTracking />} />
+        <Route path="profile" element={<CompanyProfile />} />
+      </Route>
     </Routes>
   );
 };
