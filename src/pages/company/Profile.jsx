@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import api from '../../api/axios'; 
 
-const CompanyProfilePage = () => {
+const CompanyProfile = () => {
   const { companyId } = useParams();
   const [companyData, setCompanyData] = useState({
     name: "",
@@ -169,7 +169,7 @@ const getSizeLabel = (value) => {
 
 
   return (
-    <div> ">
+    <div> 
       {/* Background decorative elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-1/4 w-64 h-64 bg-gradient-to-br from-[#901b20]/5 to-[#ad565a]/5 rounded-full blur-3xl animate-pulse" />
@@ -413,4 +413,4 @@ const getSizeLabel = (value) => {
   );
 };
 
-export default CompanyProfilePage;
+export default CompanyProfile;
