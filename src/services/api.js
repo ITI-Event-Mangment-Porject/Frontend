@@ -131,6 +131,12 @@ export const companyAPI = {
   reject: (id, reason) => api.post(`/companies/${id}/reject`, { reason }),
 };
 
+export const messageAPI = {
+  getAll: params => api.get('/bulk-messages', { params }),
+  getById: id => api.get(`/bulk-messages/${id}`),
+  sendBulkMessages: messageData => api.post('/bulk-messages', messageData),
+};
+
 // Job Fair Participation API endpoints
 export const jobFairAPI = {
   getParticipations: jobFairId => {

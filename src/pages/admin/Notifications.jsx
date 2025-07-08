@@ -34,42 +34,6 @@ const Notifications = () => {
     n => n.status.toLowerCase() === 'failed'
   ).length;
 
-  // Handle filter application
-  const handleApplyFilters = filters => {
-    let filtered = [...notifications];
-
-    // Filter by search text
-    if (filters.searchText) {
-      const searchLower = filters.searchText.toLowerCase();
-      filtered = filtered.filter(
-        n =>
-          n.title.toLowerCase().includes(searchLower) ||
-          (n.message && n.message.toLowerCase().includes(searchLower))
-      );
-    }
-
-    // Filter by status
-    if (filters.status && filters.status !== 'All Notifications') {
-      const statusLower = filters.status.toLowerCase();
-      filtered = filtered.filter(n =>
-        statusLower === 'successful'
-          ? n.status.toLowerCase() === 'success'
-          : n.status.toLowerCase() === statusLower
-      );
-    }
-
-    // Filter by date range
-    if (filters.dateRange.startDate) {
-      const startDate = new Date(filters.dateRange.startDate);
-      filtered = filtered.filter(n => {
-        const notifDate = new Date(n.sentDate);
-        return notifDate >= startDate;
-      });
-    }
-
-    setFilteredNotifications(filtered);
-  };
-
   // View notification details
   const handleViewDetails = notification => {
     setSelectedNotification(notification);
@@ -138,9 +102,6 @@ const Notifications = () => {
           successCount={successCount}
           failedCount={failedCount}
         />
-
-        {/* Filters */}
-        <NotificationFilter onApplyFilters={handleApplyFilters} />
 
         {/* Notification Table */}
         <NotificationTable
