@@ -1,34 +1,34 @@
-// /** @type {import('tailwindcss').Config} */
-// const defaultConfig = require("shadcn/ui/tailwind.config")
+import forms from '@tailwindcss/forms';
+import typography from '@tailwindcss/typography';
 
-// module.exports = {
-//   ...defaultConfig,
-//   content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}", "*.{js,ts,jsx,tsx,mdx}"],
-//   theme: {
-//     ...defaultConfig.theme,
-//     extend: {
-//       ...defaultConfig.theme.extend,
-//       colors: {
-//         ...defaultConfig.theme.extend.colors,
-//         primary: {
-//           DEFAULT: "#901b20",
-//           foreground: "#ffffff",
-//         },
-//         secondary: {
-//           DEFAULT: "#203947",
-//           foreground: "#ffffff",
-//         },
-//         accent: {
-//           DEFAULT: "#ad565a",
-//           light: "#cc9598",
-//           foreground: "#ffffff",
-//         },
-//         destructive: {
-//           DEFAULT: "#ef4444",
-//           foreground: "#ffffff",
-//         },
-//       },
-//     },
-//   },
-//   plugins: [...defaultConfig.plugins, require("tailwindcss-animate")],
-// }
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        primary: '#901b20',
+        secondary: '#203947',
+        'accent-1': '#ad565a',
+        'accent-2': '#cc9598',
+        light: '#ebebeb',
+      },
+    },
+  },
+  plugins: [
+    forms,
+    typography,
+  ],
+  animation: {
+    'fade-in': 'fadeIn 0.3s ease-out',
+  },
+  keyframes: {
+    fadeIn: {
+      '0%': { opacity: 0 },
+      '100%': { opacity: 1 },
+    },
+}
+}

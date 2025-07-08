@@ -16,8 +16,10 @@ import {
   FaCalendarAlt,
   FaCheckCircle,
   FaExclamationCircle,
+  FaMapMarkerAlt,
+  FaBook,
 } from 'react-icons/fa';
-import Layout from '../../components/student/Layout'; // يتضمن النافبار والسايدبار
+import Layout from '../../components/student/Layout'; 
 import Footer from '../../components/student/Footer';
 
 const Profile = () => {
@@ -59,7 +61,7 @@ const Profile = () => {
       }
 
       setCurrentUserId(userId);
-      const response = await fetch(`${API_BASE_URL}/api/test/users/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -71,9 +73,12 @@ const Profile = () => {
         const user = data.data.user;
         const profileData = {
           name: `${user.first_name} ${user.last_name}`,
+          first_name: user.first_name,
+          last_name: user.last_name,
           email: user.email,
           phone: user.phone,
-          course: user.track?.name || '',
+          program: user.program,
+          branch: user.branch,
           bio: user.bio || '',
           avatar: user.profile_image || 'https://via.placeholder.com/200x200.png',
           linkedin_url: user.linkedin_url || '',
@@ -81,6 +86,11 @@ const Profile = () => {
           portfolio_url: user.portfolio_url || '',
           intake_year: user.intake_year,
           graduation_year: user.graduation_year,
+          cv_path: user.cv_path,
+          intake: user.intake,
+          round: user.round,
+          is_active: user.is_active,
+          last_login_at: user.last_login_at,
         };
         setProfile(profileData);
       }
@@ -102,11 +112,11 @@ const Profile = () => {
       setSuccess(null);
       
       const token = localStorage.getItem('token');
-      const nameParts = editForm.name?.trim().split(' ') || ['', ''];
       
+      // تحضير البيانات للإرسال حسب الـ API المطلوب
       const updateData = {
-        first_name: nameParts[0] || '',
-        last_name: nameParts.slice(1).join(' ') || '',
+        first_name: editForm.first_name || '',
+        last_name: editForm.last_name || '',
         phone: editForm.phone || '',
         bio: editForm.bio || '',
         linkedin_url: editForm.linkedin_url || '',
@@ -114,10 +124,18 @@ const Profile = () => {
         portfolio_url: editForm.portfolio_url || '',
         intake_year: editForm.intake_year ? parseInt(editForm.intake_year) : null,
         graduation_year: editForm.graduation_year ? parseInt(editForm.graduation_year) : null,
+        profile_img: editForm.profile_img || '', // إضافة profile_img
       };
 
+      // إزالة الحقول الفارغة أو null
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] === null || updateData[key] === '') {
+          delete updateData[key];
+        }
+      });
+
       const response = await fetch(
-        `${API_BASE_URL}/api/test/users/${currentUserId}`,
+        `${API_BASE_URL}/api/users/${currentUserId}`,
         {
           method: 'PUT',
           headers: {
@@ -128,17 +146,45 @@ const Profile = () => {
         }
       );
 
-      if (!response.ok)
-        throw new Error(`HTTP error! status: ${response.status}`);
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+      
       const data = await response.json();
 
       if (data.success) {
-        setProfile({ ...editForm });
+        // تحديث الـ profile بناءً على البيانات المرجعة من الـ API
+        const updatedUser = data.data.user;
+        const updatedProfile = {
+          name: `${updatedUser.first_name} ${updatedUser.last_name}`,
+          first_name: updatedUser.first_name,
+          last_name: updatedUser.last_name,
+          email: updatedUser.email,
+          phone: updatedUser.phone,
+          program: updatedUser.program,
+          branch: updatedUser.branch,
+          bio: updatedUser.bio || '',
+          avatar: updatedUser.profile_image || 'https://via.placeholder.com/200x200.png',
+          linkedin_url: updatedUser.linkedin_url || '',
+          github_url: updatedUser.github_url || '',
+          portfolio_url: updatedUser.portfolio_url || '',
+          intake_year: updatedUser.intake_year,
+          graduation_year: updatedUser.graduation_year,
+          cv_path: updatedUser.cv_path,
+          portal_user_id: updatedUser.portal_user_id,
+          intake: updatedUser.intake,
+          round: updatedUser.round,
+          is_active: updatedUser.is_active,
+          last_login_at: updatedUser.last_login_at,
+        };
+        
+        setProfile(updatedProfile);
         setEditMode(false);
-        setSuccess('Profile updated successfully!');
+        setSuccess(data.message || 'Profile updated successfully!');
         setTimeout(() => setSuccess(null), 3000);
       } else {
-        throw new Error(data.message || 'Failed to update');
+        throw new Error(data.message || 'Failed to update profile');
       }
     } catch (err) {
       setError('Failed to update profile: ' + err.message);
@@ -152,32 +198,81 @@ const Profile = () => {
     if (!file) return;
 
     setUploading(true);
+    setError(null);
+    
     try {
-      // Simulate file upload - replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const token = localStorage.getItem('token');
+      const formData = new FormData();
+      formData.append('cv', file);
+
+      // رفع الـ CV للـ API
+      const response = await fetch(`${API_BASE_URL}/api/users/${currentUserId}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to upload CV');
+      }
+
+      const data = await response.json();
       
-      const newDocument = {
-        id: Date.now(),
-        name: file.name,
-        date: new Date().toISOString().slice(0, 10),
-        size: `${Math.round(file.size / 1024)} KB`,
-        type: file.type,
-      };
-      
-      setDocuments(docs => [...docs, newDocument]);
-      setSuccess('Document uploaded successfully!');
-      setTimeout(() => setSuccess(null), 3000);
+      if (data.success) {
+        // تحديث المسار في الـ profile
+        setProfile(prev => ({ ...prev, cv_path: data.data.cv_path }));
+        
+        const newDocument = {
+          id: Date.now(),
+          name: file.name,
+          date: new Date().toISOString().slice(0, 10),
+          size: `${Math.round(file.size / 1024)} KB`,
+          type: file.type,
+          path: data.data.cv_path,
+        };
+        
+        setDocuments(docs => [...docs, newDocument]);
+        setSuccess('CV uploaded successfully!');
+        setTimeout(() => setSuccess(null), 3000);
+      }
     } catch (err) {
-      setError('Failed to upload document: ' + err.message);
+      setError('Failed to upload CV: ' + err.message);
     } finally {
       setUploading(false);
     }
   };
 
-  const handleDeleteDocument = (docId) => {
-    setDocuments(docs => docs.filter(doc => doc.id !== docId));
-    setSuccess('Document deleted successfully!');
-    setTimeout(() => setSuccess(null), 3000);
+  const handleDeleteDocument = async (docId) => {
+    try {
+      const token = localStorage.getItem('token');
+      
+      // حذف الـ CV من الـ API
+      const response = await fetch(`${API_BASE_URL}/users/${currentUserId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete CV');
+      }
+
+      const data = await response.json();
+      
+      if (data.success) {
+        setDocuments(docs => docs.filter(doc => doc.id !== docId));
+        setProfile(prev => ({ ...prev, cv_path: null }));
+        setSuccess('CV deleted successfully!');
+        setTimeout(() => setSuccess(null), 3000);
+      }
+    } catch (err) {
+      setError('Failed to delete CV: ' + err.message);
+    }
   };
 
   if (loading) {
@@ -234,9 +329,9 @@ const Profile = () => {
               
               <div className="flex-1 text-center lg:text-left">
                 <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                  {editMode ? editForm.name || profile.name : profile.name}
+                  {editMode ? `${editForm.first_name || ''} ${editForm.last_name || ''}`.trim() : profile.name}
                 </h1>
-                <p className="text-orange-600 font-semibold mb-4">Student</p>
+                <p className="text-orange-600 font-semibold mb-1">Student</p>
                 <div className="flex flex-wrap justify-center lg:justify-start gap-4">
                   {profile.email && (
                     <div className="flex items-center space-x-2 text-gray-600">
@@ -250,10 +345,16 @@ const Profile = () => {
                       <span>{profile.phone}</span>
                     </div>
                   )}
-                  {profile.course && (
+                  {profile.program && (
                     <div className="flex items-center space-x-2 text-gray-600">
-                      <FaGraduationCap className="text-orange-500" />
-                      <span>{profile.course}</span>
+                      <FaBook className="text-orange-500" />
+                      <span>{profile.program}</span>
+                    </div>
+                  )}
+                  {profile.branch && (
+                    <div className="flex items-center space-x-2 text-gray-600">
+                      <FaMapMarkerAlt className="text-orange-500" />
+                      <span>{profile.branch}</span>
                     </div>
                   )}
                 </div>
@@ -263,7 +364,19 @@ const Profile = () => {
                 {!editMode ? (
                   <button
                     onClick={() => {
-                      setEditForm({ ...profile });
+                      setEditForm({ 
+                        first_name: profile.first_name || '',
+                        last_name: profile.last_name || '',
+                        phone: profile.phone || '',
+                        bio: profile.bio || '',
+                        linkedin_url: profile.linkedin_url || '',
+                        github_url: profile.github_url || '',
+                        portfolio_url: profile.portfolio_url || '',
+                        intake_year: profile.intake_year || '',
+                        graduation_year: profile.graduation_year || '',
+                        avatar: profile.avatar || '',
+                        profile_img: profile.avatar || '',
+                      });
                       setEditMode(true);
                       setError(null);
                     }}
@@ -308,10 +421,12 @@ const Profile = () => {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {[
-                    { field: 'name', label: 'Full Name', icon: FaUser, type: 'text' },
+                    { field: 'first_name', label: 'First Name', icon: FaUser, type: 'text' },
+                    { field: 'last_name', label: 'Last Name', icon: FaUser, type: 'text' },
                     { field: 'email', label: 'Email', icon: FaEnvelope, type: 'email', readonly: true },
                     { field: 'phone', label: 'Phone', icon: FaPhone, type: 'tel' },
-                    { field: 'course', label: 'Course', icon: FaGraduationCap, type: 'text', readonly: true },
+                    { field: 'program', label: 'Program', icon: FaBook, type: 'text', readonly: true },
+                    { field: 'branch', label: 'Branch', icon: FaMapMarkerAlt, type: 'text', readonly: true },
                     { field: 'intake_year', label: 'Intake Year', icon: FaCalendarAlt, type: 'number' },
                     { field: 'graduation_year', label: 'Graduation Year', icon: FaCalendarAlt, type: 'number' },
                   ].map(({ field, label, icon: Icon, type, readonly = false }) => (
@@ -356,7 +471,7 @@ const Profile = () => {
               </div>
             </div>
 
-            {/* Social Links & Documents */}
+            {/* Social Links & CV */}
             <div className="space-y-8">
               {/* Social Links */}
               <div className="bg-white rounded-2xl shadow-lg p-8">
@@ -403,54 +518,72 @@ const Profile = () => {
                 </div>
               </div>
 
-              {/* Documents */}
+              {/* CV Upload */}
               <div className="bg-white rounded-2xl shadow-lg p-8">
                 <div className="flex justify-between items-center mb-6">
-                  <h3 className="text-xl font-bold text-gray-800">Documents</h3>
+                  <h3 className="text-xl font-bold text-gray-800">CV/Resume</h3>
                   <label className="flex items-center space-x-2 text-orange-500 cursor-pointer hover:text-orange-600 transition-colors">
                     {uploading ? (
                       <FaSpinner className="animate-spin" />
                     ) : (
                       <FaFileUpload />
                     )}
-                    <span>{uploading ? 'Uploading...' : 'Upload'}</span>
+                    <span>{uploading ? 'Uploading...' : 'Upload CV'}</span>
                     <input
                       type="file"
                       className="hidden"
                       onChange={handleFileUpload}
                       disabled={uploading}
-                      accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png"
+                      accept=".pdf,.doc,.docx"
                     />
                   </label>
                 </div>
                 
                 <div className="space-y-3">
-                  {documents.length === 0 ? (
+                  {!profile.cv_path && documents.length === 0 ? (
                     <div className="text-center py-12 text-gray-500">
                       <FaFileUpload className="mx-auto text-6xl mb-4 text-gray-300" />
-                      <p className="text-lg">No documents uploaded yet</p>
-                      <p className="text-sm">Upload your CV, certificates, or other documents</p>
+                      <p className="text-lg">No CV uploaded yet</p>
+                      <p className="text-sm">Upload your CV/Resume document</p>
                     </div>
                   ) : (
-                    documents.map((doc) => (
-                      <div
-                        key={doc.id}
-                        className="flex justify-between items-center p-4 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors"
-                      >
-                        <div className="flex-1">
-                          <p className="font-medium text-gray-800">{doc.name}</p>
-                          <p className="text-sm text-gray-500">
-                            {doc.date} • {doc.size}
-                          </p>
+                    <>
+                      {profile.cv_path && (
+                        <div className="flex justify-between items-center p-4 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors">
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-800">Current CV</p>
+                            <p className="text-sm text-gray-500">
+                              {profile.cv_path.split('\\').pop() || 'CV Document'}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteDocument('current')}
+                            className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                          >
+                            <FaTrash />
+                          </button>
                         </div>
-                        <button
-                          onClick={() => handleDeleteDocument(doc.id)}
-                          className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                      )}
+                      {documents.map((doc) => (
+                        <div
+                          key={doc.id}
+                          className="flex justify-between items-center p-4 bg-gray-50 rounded-lg border hover:bg-gray-100 transition-colors"
                         >
-                          <FaTrash />
-                        </button>
-                      </div>
-                    ))
+                          <div className="flex-1">
+                            <p className="font-medium text-gray-800">{doc.name}</p>
+                            <p className="text-sm text-gray-500">
+                              {doc.date} • {doc.size}
+                            </p>
+                          </div>
+                          <button
+                            onClick={() => handleDeleteDocument(doc.id)}
+                            className="text-red-500 hover:text-red-700 p-2 rounded-lg hover:bg-red-50 transition-colors"
+                          >
+                            <FaTrash />
+                          </button>
+                        </div>
+                      ))}
+                    </>
                   )}
                 </div>
               </div>
