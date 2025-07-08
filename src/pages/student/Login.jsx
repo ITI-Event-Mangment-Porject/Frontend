@@ -50,7 +50,7 @@ const LoginPage = () => {
             navigate('/admin/dashboard');
             break;
           case 'student':
-            navigate('/');
+            navigate('/student/show-events');
             break;
           case 'company':
             navigate('/'); // Will be changed to company dashboard later

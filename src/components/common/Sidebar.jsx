@@ -17,7 +17,7 @@ const Sidebar = () => {
 
   const navItems = [
     { path: '/admin/dashboard', icon: FaHome, label: 'Dashboard' },
-    { path: '/admin/users', icon: FaUsers, label: 'User Management' },
+    { path: '/admin/users', icon: FaUsers, label: 'Student Management' },
     { path: '/admin/events', icon: FaCalendarAlt, label: 'Manage Events' },
     {
       path: '/admin/attendance',

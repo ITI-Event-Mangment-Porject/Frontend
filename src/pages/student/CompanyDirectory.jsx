@@ -75,17 +75,57 @@ const CompanyDirectory = () => {
   const handleRegister = async (profileId) => {
     setRegisteringJobs(prev => new Set([...prev, profileId]));
     const token = localStorage.getItem('token');
+    
+    if (!token) {
+      toast.error('Please log in again');
+      return;
+    }
+
     try {
-      await axios.post(`${API_BASE_URL}/api/job-fairs/${JOB_FAIR_ID}/interview-requests`, {
+      const response = await axios.post(`${API_BASE_URL}/api/job-fairs/${JOB_FAIR_ID}/interview-requests`, {
         job_profile_id: profileId
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
+
       toast.success('Interview request submitted successfully!');
       setAppliedProfiles(prev => new Set([...prev, profileId]));
+      
     } catch (error) {
-      console.error('Error sending interview request:', error);
-      toast.error('An error occurred while submitting your interview request. Please try again.');
+      console.error('Error:', error);
+      
+      if (error.response) {
+        const status = error.response.status;
+        const errorData = error.response.data;
+        
+        switch (status) {
+          case 403:
+            if (errorData.message?.includes('token') || errorData.message?.includes('expired')) {
+              toast.error('Your session has expired. Please log in again.');
+              localStorage.removeItem('token');
+              window.location.href = '/login';
+            } else if (errorData.message?.includes('already applied')) {
+              toast.warning('You have already applied for this position!');
+              setAppliedProfiles(prev => new Set([...prev, profileId]));
+            } else {
+              toast.error(`Access denied: ${errorData.message || 'Permission denied'}`);
+            }
+            break;
+          case 401:
+            toast.error('Please log in again to continue.');
+            localStorage.removeItem('token');
+            window.location.href = '/login';
+            break;
+          case 409:
+            toast.warning('You have already applied for this position!');
+            setAppliedProfiles(prev => new Set([...prev, profileId]));
+            break;
+          default:
+            toast.error(errorData.message || 'An error occurred while submitting your application.');
+        }
+      } else {
+        toast.error('Network error. Please check your connection.');
+      }
     } finally {
       setRegisteringJobs(prev => {
         const newSet = new Set(prev);
@@ -234,6 +274,7 @@ const CompanyDirectory = () => {
         </div>
       </div>
       <Footer />
+      <ToastContainer />
     </div>
   );
 };

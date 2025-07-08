@@ -41,13 +41,28 @@ const FeedbackForm = () => {
           throw new Error(errorData.message || `Failed to fetch feedback form: ${response.status}`);
         }
 
-        const formData = await response.json();
-        setForm(formData);
+        const data = await response.json();
+        const formData = Array.isArray(data) ? data[0] : data;
+
+
+        let processedFormData = { ...formData };
+        if (typeof formData.form_config === 'string') {
+          try {
+            const parsedConfig = JSON.parse(formData.form_config);
+            processedFormData.form_config = parsedConfig.fields || parsedConfig;
+          } catch (e) {
+            console.error('Error parsing form_config:', e);
+            processedFormData.form_config = [];
+          }
+        }
+
+        console.log('Processed form data:', processedFormData); // للتشخيص
+        setForm(processedFormData);
 
         // Initialize responses object based on the form structure
         const initialResponses = {};
-        if (formData.form_config && Array.isArray(formData.form_config)) {
-          formData.form_config.forEach((question, idx) => {
+        if (processedFormData.form_config && Array.isArray(processedFormData.form_config)) {
+          processedFormData.form_config.forEach((question, idx) => {
             initialResponses[idx] = question.type === 'rating' ? 0 : '';
           });
         }
@@ -76,7 +91,8 @@ const FeedbackForm = () => {
 
     // Validation
     for (let i = 0; i < form.form_config.length; i++) {
-      if (form.form_config[i].type === 'rating' && (!responses[i] || responses[i] < 1)) {
+      const question = form.form_config[i];
+      if (question.type === 'rating' && question.required && (!responses[i] || responses[i] < 1)) {
         setModalType('error');
         setModalMessage('⚠️ Please answer all required questions.');
         return;
@@ -88,7 +104,7 @@ const FeedbackForm = () => {
       const token = localStorage.getItem('token');
       
       // تحديد الـ form ID من البيانات المسترجعة
-      const formId = form.id || form.form_id || 1; // استخدم الـ ID الصحيح
+      const formId = form.id || form.form_id || 1;
       
       // POST request للـ endpoint الصحيح
       const res = await fetch(
@@ -183,8 +199,8 @@ const FeedbackForm = () => {
                 {form.form_config && form.form_config.map((q, idx) => (
                   <div className="mb-6" key={idx}>
                     <label className="block font-medium text-gray-700 mb-2">
-                      {q.question}
-                      {q.type === 'rating' && <span className="text-red-500">*</span>}
+                      {q.label || q.question}
+                      {q.required && <span className="text-red-500">*</span>}
                     </label>
                     {q.type === 'rating' ? (
                       <div className="flex gap-1">
