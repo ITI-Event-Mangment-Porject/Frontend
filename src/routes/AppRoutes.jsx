@@ -12,13 +12,12 @@ import Profile from '../pages/student/Profile';
 import Login from '../pages/student/Login';
 import ShowEvents from '../pages/student/ShowEvents';
 
-
 // Company Pages
-import Dashboard from "../pages/company/Dashboard";
-import SetupForm from "../pages/company/SetupForm";
-import ManageRequests from "../pages/company/ManageRequests";
-import InterviewTracking from "../pages/company/InterviewTracking";
-import CompanyProfile from "../pages/company/Profile";
+import Dashboard from '../pages/company/Dashboard';
+import SetupForm from '../pages/company/SetupForm';
+import ManageRequests from '../pages/company/ManageRequests';
+import InterviewTracking from '../pages/company/InterviewTracking';
+import CompanyProfile from '../pages/company/Profile';
 import Layout from '../pages/company/common/Layout';
 
 // Home Page
@@ -37,6 +36,8 @@ import NotFoundPage from '../pages/System/NotFoundPage';
 const AppRoutes = () => {
   return (
     <Routes>
+      {/* Home route */}
+      <Route path="/" element={<HomePage />} />
       {/* Admin routes - using absolute paths */}
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/users" element={<UserManagement />} />
@@ -51,8 +52,6 @@ const AppRoutes = () => {
         path="/admin"
         element={<Navigate to="/admin/dashboard" replace />}
       />
-      {/* Home route */}
-      <Route path="/" element={<HomePage />} />
       {/* Catch all route - 404 Not Found Page */}
       <Route path="/support" element={<Help />} />
       <Route path="/login" element={<Login />} />
@@ -62,15 +61,17 @@ const AppRoutes = () => {
       <Route path="/student/CompanyDirectory" element={<CompanyDirectory />} />
       <Route path="/student/interview-queue" element={<InterviewQueue />} />
       <Route path="/student/profile" element={<Profile />} />
-      <Route path="/home" element={<HomePage />} />
+      {/* <Route path="/" element={<HomePage />} /> */}
       <Route path="*" element={<NotFoundPage />} />
-
       {/* Company routes - using relative paths */}
       <Route path="/company/:companyId" element={<Layout />}>
         <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="job-fairs/:jobFairId/setup" element={<SetupForm />} />
-        <Route path="job-fairs/:jobFairId/requests" element={<ManageRequests />} />
+        <Route
+          path="job-fairs/:jobFairId/requests"
+          element={<ManageRequests />}
+        />
         <Route path="tracking" element={<InterviewTracking />} />
         <Route path="profile" element={<CompanyProfile />} />
       </Route>

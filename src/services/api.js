@@ -57,40 +57,40 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor to handle authentication errors
-api.interceptors.response.use(
-  response => response,
-  error => {
-    // Handle authentication errors
-    if (error.response?.status === 401) {
-      console.warn('401 Unauthorized response received', error.config?.url);
+// // Response interceptor to handle authentication errors
+// api.interceptors.response.use(
+//   response => response,
+//   error => {
+//     // Handle authentication errors
+//     if (error.response?.status === 401) {
+//       console.warn('401 Unauthorized response received', error.config?.url);
 
-      // Check if we're already on a public route
-      const publicRoutes = [
-        '/login',
-        '/register',
-        '/forgot-password',
-        '/reset-password',
-        '/home',
-      ];
-      const isOnPublicRoute = publicRoutes.some(route =>
-        window.location.pathname.includes(route)
-      );
+//       // Check if we're already on a public route
+//       const publicRoutes = [
+//         '/login',
+//         '/register',
+//         '/forgot-password',
+//         '/reset-password',
+//         '/home',
+//       ];
+//       const isOnPublicRoute = publicRoutes.some(route =>
+//         window.location.pathname.includes(route)
+//       );
 
-      // Clear invalid token
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+//       // Clear invalid token
+//       localStorage.removeItem('token');
+//       localStorage.removeItem('user');
 
-      // Redirect to login page if not already on a public route
-      if (!isOnPublicRoute) {
-        console.log('Redirecting to login due to authentication error');
-        window.location.href = '/login';
-      }
-    }
+//       // Redirect to login page if not already on a public route
+//       if (!isOnPublicRoute) {
+//         console.log('Redirecting to login due to authentication error');
+//         window.location.href = '/';
+//       }
+//     }
 
-    return Promise.reject(error);
-  }
-);
+//     return Promise.reject(error);
+//   }
+// );
 
 // User API endpoints
 export const userAPI = {

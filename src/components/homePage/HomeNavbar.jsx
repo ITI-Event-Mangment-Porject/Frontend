@@ -68,7 +68,7 @@ const HomeNavbar = () => {
       case 'student':
         navigate('/student/show-events');
         break;
-      case 'company':
+      case 'company_representative':
         navigate('/company/dashboard');
         break;
       default:

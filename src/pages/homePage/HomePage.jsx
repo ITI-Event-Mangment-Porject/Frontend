@@ -4,7 +4,7 @@ import HomeFeaturesSection from '../../components/homePage/HomeFeaturesSection';
 import HomeHowItWorks from '../../components/homePage/HomeHowItWorks';
 import HomeUpcomingEvents from '../../components/homePage/HomeUpcomingEvents';
 import HomeTestimonials from '../../components/homePage/HomeTestimonials';
-import HomePartners from '../../components/homePage/HomePartners';
+// import HomePartners from '../../components/homePage/HomePartners';
 import HomeCTA from '../../components/homePage/HomeCTA';
 import HomeNavbar from '../../components/homePage/HomeNavbar';
 import HomeFooter from '../../components/homePage/HomeFooter';

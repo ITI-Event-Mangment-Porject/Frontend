@@ -52,8 +52,8 @@ const LoginPage = () => {
           case 'student':
             navigate('/student/show-events');
             break;
-          case 'company':
-            navigate('/'); // Will be changed to company dashboard later
+          case 'company_representative':
+            navigate('/company/dashboard');
             break;
           default:
             navigate('/');
