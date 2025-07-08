@@ -4,7 +4,7 @@ const CompanyRow = ({ company, onView, onApproveReject, actionLoading }) => {
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
 
-  const getStatusStyle = (status) => {
+  const getStatusStyle = status => {
     if (status === 'approved') return 'bg-green-100 text-green-700';
     if (status === 'rejected') return 'bg-red-100 text-red-700';
     return 'bg-yellow-100 text-yellow-700';
@@ -21,8 +21,8 @@ const CompanyRow = ({ company, onView, onApproveReject, actionLoading }) => {
     company.status === 'approved'
       ? 'approved'
       : company.status === 'pending'
-      ? 'pending'
-      : 'rejected';
+        ? 'pending'
+        : 'rejected';
 
   const handleRejectClick = () => {
     setShowRejectModal(true);
@@ -68,7 +68,7 @@ const CompanyRow = ({ company, onView, onApproveReject, actionLoading }) => {
           <div className="text-sm text-gray-500">{company.contact_phone}</div>
         </td>
         <td className="px-6 py-4 text-sm text-gray-500">{company.industry}</td>
-        
+
         <td className="px-6 py-4">
           <span
             className={`px-2 py-1 inline-flex text-xs font-semibold rounded-full ${getStatusStyle(status)}`}
@@ -79,9 +79,9 @@ const CompanyRow = ({ company, onView, onApproveReject, actionLoading }) => {
         <td className="px-6 py-4">
           <div className="flex items-center space-x-2">
             {status === 'approved' || status === 'rejected' ? (
-              <button 
-                onClick={() => onView(company)} 
-                className="cursor-pointer text-center text-(--primary-600) " 
+              <button
+                onClick={() => onView(company)}
+                className="cursor-pointer text-center text-(--primary-600) "
                 title="View Details"
               >
                 View
@@ -137,7 +137,7 @@ const CompanyRow = ({ company, onView, onApproveReject, actionLoading }) => {
                 </svg>
               </button>
             </div>
-            
+
             <div className="px-6 py-4">
               <div className="flex items-center mb-4">
                 {company.logo_path ? (
@@ -164,10 +164,10 @@ const CompanyRow = ({ company, onView, onApproveReject, actionLoading }) => {
               <p className="text-sm text-gray-600 mb-4">
                 Please provide a reason for rejecting this company:
               </p>
-              
+
               <textarea
                 value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
+                onChange={e => setRejectReason(e.target.value)}
                 placeholder="Enter rejection reason..."
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2  resize-none"
                 rows="4"

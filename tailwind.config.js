@@ -1,27 +1,34 @@
-// /** @type {import('tailwindcss').Config} */
-// export default {
-//   content: [
-//     "./index.html",
-//     "./src/**/*.{js,ts,jsx,tsx}",
-//   ],
-//   theme: {
-//     extend: {
-//       colors: {
-//         primary: {
-//           50: '#eff6ff',
-//           500: '#3b82f6',
-//           600: '#2563eb',
-//           700: '#1d4ed8',
-//         },
-//         secondary: {
-//           50: '#f0f9ff',
-//           500: '#0ea5e9',
-//         }
-//       }
-//     },
-//   },
-//   plugins: [
-//     require('@tailwindcss/forms'),
-//     require('@tailwindcss/typography'),
-//   ],
-// }
+import forms from '@tailwindcss/forms';
+import typography from '@tailwindcss/typography';
+
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  theme: {
+    extend: {
+      colors: {
+        primary: '#901b20',
+        secondary: '#203947',
+        'accent-1': '#ad565a',
+        'accent-2': '#cc9598',
+        light: '#ebebeb',
+      },
+    },
+  },
+  plugins: [
+    forms,
+    typography,
+  ],
+  animation: {
+    'fade-in': 'fadeIn 0.3s ease-out',
+  },
+  keyframes: {
+    fadeIn: {
+      '0%': { opacity: 0 },
+      '100%': { opacity: 1 },
+    },
+}
+}
