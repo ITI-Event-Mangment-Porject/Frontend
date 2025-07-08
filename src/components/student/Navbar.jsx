@@ -12,22 +12,31 @@ const Navbar = () => {
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const [user, setUser] = useState(null);
   const dropdownRef = useRef();
+  const userId = user ?.id ;
 
-  useEffect(() => {
-    // Fetch user data from local storage or API
-    const storedUser = JSON.parse(localStorage.getItem('user'));
-    setUser(storedUser);
-    fetchNotifications();
-    // Close dropdown on outside click
-    const handleClickOutside = event => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsNotificationsOpen(false);
-        setIsProfileMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    useEffect(() => {
+      console.log("Fetching notifications for user:", userId);
+      if (!userId) return; 
+      const unsubscribe = onSnapshot(collection
+        (db, "notifications", String(userId), "user_notifications"),
+        (snapshot) => {
+          const newNotifications = [];
+  
+          snapshot.docChanges().forEach((change)=> {
+            if(change.type === "added") {
+              newNotifications.push({id: change.doc.id, ...change.doc.data()});
+            }
+          })
+  
+          if (newNotifications.length > 0) {
+            setNotifications((prev) => [...prev, ...newNotifications]);
+          }
+        }
+      )
+      return () => unsubscribe();
+      }, []);
+
+
 
   const fetchNotifications = () => {
     const token = localStorage.getItem('token');

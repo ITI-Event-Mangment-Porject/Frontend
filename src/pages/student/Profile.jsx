@@ -61,7 +61,7 @@ const Profile = () => {
       }
 
       setCurrentUserId(userId);
-      const response = await fetch(`${API_BASE_URL}/api/test/users/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${userId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -87,7 +87,6 @@ const Profile = () => {
           intake_year: user.intake_year,
           graduation_year: user.graduation_year,
           cv_path: user.cv_path,
-          portal_user_id: user.portal_user_id,
           intake: user.intake,
           round: user.round,
           is_active: user.is_active,
@@ -136,7 +135,7 @@ const Profile = () => {
       });
 
       const response = await fetch(
-        `${API_BASE_URL}/users/${currentUserId}`,
+        `${API_BASE_URL}/api/users/${currentUserId}`,
         {
           method: 'PUT',
           headers: {
@@ -207,7 +206,7 @@ const Profile = () => {
       formData.append('cv', file);
 
       // رفع الـ CV للـ API
-      const response = await fetch(`${API_BASE_URL}/users/${currentUserId}/cv`, {
+      const response = await fetch(`${API_BASE_URL}/api/users/${currentUserId}`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -251,7 +250,7 @@ const Profile = () => {
       const token = localStorage.getItem('token');
       
       // حذف الـ CV من الـ API
-      const response = await fetch(`${API_BASE_URL}/users/${currentUserId}/cv`, {
+      const response = await fetch(`${API_BASE_URL}/users/${currentUserId}`, {
         method: 'DELETE',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -333,7 +332,6 @@ const Profile = () => {
                   {editMode ? `${editForm.first_name || ''} ${editForm.last_name || ''}`.trim() : profile.name}
                 </h1>
                 <p className="text-orange-600 font-semibold mb-1">Student</p>
-                <p className="text-gray-600 text-sm mb-4">ID: {profile.portal_user_id}</p>
                 <div className="flex flex-wrap justify-center lg:justify-start gap-4">
                   {profile.email && (
                     <div className="flex items-center space-x-2 text-gray-600">
