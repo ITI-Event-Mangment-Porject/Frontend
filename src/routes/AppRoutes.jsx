@@ -29,6 +29,7 @@ import ManageEvents from '../pages/admin/ManageEvents';
 import Notifications from '../pages/admin/Notifications';
 
 import JobFairSetup from '../pages/admin/JobFairSetup';
+import BrandingDaySetup from '../pages/admin/BrandingDaySetup';
 
 import LiveMonitor from '../pages/admin/LiveMonitor';
 import AlFeedbackAnalyics from '../pages/admin/FeedbackAnalytics';
@@ -50,6 +51,7 @@ const AppRoutes = () => {
       <Route path="/admin/companies" element={<CompaniesSetup />} />
       <Route path="/admin/attendance" element={<AttendanceReports />} />
       <Route path="/admin/jobfair" element={<JobFairSetup />} />
+      <Route path="/admin/brandingDay" element={<BrandingDaySetup />} />
       {/* Default redirect to admin dashboard */}
       <Route path="/admin/events" element={<ManageEvents />} />
       <Route path="/admin/notifications" element={<Notifications />} />

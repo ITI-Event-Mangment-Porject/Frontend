@@ -39,7 +39,12 @@ const Sidebar = () => {
     },
 
     { path: '/admin/companies', icon: FaBriefcase, label: 'Companies Setup' },
+
+    { path: '/admin/brandingDay', icon: FaDesktop, label: 'Branding Day' },
+    { path: '/admin/monitor', icon: FaDesktop, label: 'Live Monitor' },
+
     { path: '/admin/liveevents', icon: FaDesktop, label: 'Live Events' },
+
     { path: '/admin/notifications', icon: FaBell, label: 'Notifications' },
     { path: '/admin/queue', icon: FaListAlt, label: 'Queue Management' },
   ];
