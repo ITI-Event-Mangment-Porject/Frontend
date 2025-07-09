@@ -27,10 +27,10 @@ import HomePage from '../pages/homePage/HomePage';
 import AdminDashboard from '../pages/admin/Dashboard';
 import ManageEvents from '../pages/admin/ManageEvents';
 import Notifications from '../pages/admin/Notifications';
-
+import LiveQueue from '../pages/admin/LiveInterviewQueue';
 import JobFairSetup from '../pages/admin/JobFairSetup';
+import FeedbackFormsCreaton from '../pages/admin/FeedbackFormsCreaton';
 import BrandingDaySetup from '../pages/admin/BrandingDaySetup';
-
 import LiveMonitor from '../pages/admin/LiveMonitor';
 import AlFeedbackAnalyics from '../pages/admin/FeedbackAnalytics';
 
@@ -57,6 +57,8 @@ const AppRoutes = () => {
       <Route path="/admin/notifications" element={<Notifications />} />
       <Route path="/admin/liveevents" element={<LiveMonitor />} />
       <Route path="/admin/FeedbackAnalytics" element={<AlFeedbackAnalyics />} />
+      <Route path="/admin/LiveQueue" element={<LiveQueue />} />
+      <Route path="/admin/createFeedbackForm" element={<FeedbackFormsCreaton />} />
       <Route
         path="/admin"
         element={<Navigate to="/admin/dashboard" replace />}
@@ -79,10 +81,7 @@ const AppRoutes = () => {
         <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="job-fairs/:jobFairId/setup" element={<SetupForm />} />
-        <Route
-          path="job-fairs/:jobFairId/requests"
-          element={<ManageRequests />}
-        />
+        <Route path="job-fairs/:jobFairId/requests" element={<ManageRequests />} />
         <Route path="tracking" element={<InterviewTracking />} />
         <Route path="profile" element={<CompanyProfile />} />
       </Route>

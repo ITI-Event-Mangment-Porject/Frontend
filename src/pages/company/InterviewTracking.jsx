@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import api from '../../api/axios';
-import { 
-  Calendar, 
-  Clock, 
-  User, 
-  Mail, 
-  MapPin, 
-  Eye, 
-  Users, 
-  CheckCircle, 
-  XCircle, 
-  PlayCircle, 
+import {
+  Calendar,
+  Clock,
+  User,
+  Mail,
+  MapPin,
+  Eye,
+  Users,
+  CheckCircle,
+  XCircle,
+  PlayCircle,
   PauseCircle,
   Star,
   TrendingUp,
@@ -33,17 +33,16 @@ const InterviewTracking = () => {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const [processingInterview, setProcessingInterview] = useState(false);
+  let requestData = null;
 
   useEffect(() => {
     const fetchQueue = async () => {
       try {
-        
         const res = await api.get(`/job-fairs/${jobFairId}/queues/company/${companyId}`);
         const approvedOnly = res.data.data.queue.filter(
           (entry) => entry.interview_request_id && entry.status !== 'cancelled'
         );
         setQueueData(approvedOnly);
-        
       } catch (err) {
         console.error('Error fetching interview queue:', err);
       } finally {
@@ -53,45 +52,128 @@ const InterviewTracking = () => {
 
     fetchQueue();
   }, [jobFairId, companyId]);
-  
-
 
   useEffect(() => {
-  const fetchExtraUserInfo = async () => {
-    if (!selectedStudent?.student?.id) return;
+    const fetchExtraUserInfo = async () => {
+      const studentId = selectedStudent?.student?.id;
+      if (!studentId) return;
 
-    try {
-      const res = await api.get(`/test/users/${selectedStudent.student.id}`);
-      const user = res.data.data.user;
+      try {
+        const res = await api.get(`/users/${studentId}`); 
+        const user = res.data.data.user;
 
-      setSelectedStudent(prev => ({
-        ...prev,
-        student: {
-          ...prev.student,
-          linkedin_url: user.linkedin_url,
-          github_url: user.github_url
-        }
-      }));
-    } catch (err) {
-      console.error('Error fetching user profile links:', err);
-    }
-  };
+        setSelectedStudent(prev => ({
+          ...prev,
+          student: {
+            ...prev.student,
+            linkedin_url: user.linkedin_url,
+            github_url: user.github_url
+          }
+        }));
+      } catch (err) {
+        console.error('Error fetching user profile links:', err);
+      }
+    };
 
-  fetchExtraUserInfo();
-}, [selectedStudent?.student?.id]);
-
-
+    fetchExtraUserInfo();
+  }, [selectedStudent?.student?.id]);
 
   const getStatusStats = () => {
-    const stats = {
+    return {
       total: queueData.length,
-      waiting: queueData.filter(entry => entry.status === 'waiting').length,
-      in_interview: queueData.filter(entry => entry.status === 'in_interview').length,
-      completed: queueData.filter(entry => entry.status === 'completed').length,
-      skipped: queueData.filter(entry => entry.status === 'skipped').length
+      waiting: queueData.filter(e => e.status === 'waiting').length,
+      in_interview: queueData.filter(e => e.status === 'in_interview').length,
+      completed: queueData.filter(e => e.status === 'completed').length,
+      skipped: queueData.filter(e => e.status === 'skipped' || e.status === 'pending').length
     };
-    return stats;
   };
+
+ const handleInterviewAction = async (action) => {
+  if (!selectedStudent) return;
+
+  const queueId = selectedStudent.queue_id;
+  const slotId = selectedStudent.slot?.id;
+  if (action === 'start' && !slotId) {
+    alert("Cannot start interview: Missing slot information.");
+    return;
+  }
+
+  setProcessingInterview(true);
+  try {
+    let endpoint = '';
+    let method = 'PUT';
+    let newStatus = selectedStudent.status;
+    let payload = {};
+
+    switch (action) {
+      case 'start':
+        endpoint = `/job-fairs/${jobFairId}/queues/slot/${slotId}/next`;
+        method = 'POST';
+        newStatus = 'in_interview';
+        break;
+      case 'end':
+        endpoint = `/job-fairs/${jobFairId}/queues/${queueId}/end-interview`;
+        method = 'POST';
+        newStatus = 'completed';
+        payload = { notes: selectedStudent.notes };
+        break;
+      case 'skip':
+      case 'pending':
+        endpoint = `/job-fairs/${jobFairId}/queues/${queueId}/pending`;
+        newStatus = 'pending';
+        break;
+      case 'resume':
+        endpoint = `/job-fairs/${jobFairId}/queues/${queueId}/resume`;
+        newStatus = 'waiting';
+        break;
+      default:
+        console.warn('Unknown action:', action);
+        return;
+    }
+
+    let response;
+    if (method === 'DELETE') {
+      response = await api.delete(endpoint);
+    } else if (method === 'POST') {
+      response = await api.post(endpoint, payload);
+    } else {
+      response = await api.put(endpoint);
+    }
+
+    if (action === 'start' && response?.data?.data?.now_interviewing) {
+      const updatedStudent = response.data.data.now_interviewing;
+      setQueueData(prev =>
+        prev.map(entry =>
+          entry.queue_id === updatedStudent.id
+            ? { ...entry, status: updatedStudent.status }
+            : entry
+        )
+      );
+      setSelectedStudent(prev =>
+        prev && prev.queue_id === updatedStudent.id
+          ? { ...prev, status: updatedStudent.status }
+          : prev
+      );
+    } else {
+      
+      setQueueData(prev =>
+        prev.map(entry =>
+          entry.queue_id === queueId
+            ? { ...entry, status: newStatus }
+            : entry
+        )
+      );
+      setSelectedStudent(prev => ({ ...prev, status: newStatus }));
+    }
+
+  } catch (error) {
+    console.error(`Error performing ${action}:`, error);
+    alert(`Failed to ${action} interview.`);
+  } finally {
+    setProcessingInterview(false);
+  }
+};
+
 
   const openStudentModal = (entry) => {
     setSelectedStudent(entry);
@@ -103,98 +185,28 @@ const InterviewTracking = () => {
     setSelectedStudent(null);
   };
 
-const handleInterviewAction = async (action) => {
-  if (!selectedStudent) return;
-
-  setProcessingInterview(true);
-  try {
-    let endpointAction = '';
-    switch (action) {
-      case 'start':
-        endpointAction = 'resume'; 
-        break;
-      case 'end':
-        endpointAction = 'next'; 
-        break;
-      case 'skip':
-        endpointAction = 'requeue-last'; 
-        break;
-      case 'pending':
-        endpointAction = 'pending'; 
-        break;
-      default:
-        return;
-    }
-
-    await api.put(`/job-fairs/${jobFairId}/queues/${selectedStudent.queue_id}/${endpointAction}`);
-
-    let newStatus = selectedStudent.status;
-    switch (action) {
-      case 'start':
-        newStatus = 'in_interview';
-        break;
-      case 'end':
-        newStatus = 'completed';
-        break;
-      case 'skip':
-        newStatus = 'skipped';
-        break;
-      case 'pending':
-        newStatus = 'waiting';
-        break;
-    }
-
-    setQueueData(prev =>
-      prev.map(entry =>
-        entry.queue_id === selectedStudent.queue_id
-          ? { ...entry, status: newStatus }
-          : entry
-      )
-    );
-
-    setSelectedStudent(prev => ({ ...prev, status: newStatus }));
-
-    // closeModal();
-  } catch (error) {
-    console.error('Error updating interview status:', error);
-  } finally {
-    setProcessingInterview(false);
-  }
-};
-
-
   const getStatusColor = (status) => {
     switch (status) {
-      case 'waiting':
-        return 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white border-yellow-200';
-      case 'in_interview':
-        return 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white border-blue-200';
-      case 'completed':
-        return 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-200';
-      case 'skipped':
-        return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white border-gray-200';
-      default:
-        return 'bg-gradient-to-r from-red-500 to-rose-500 text-white border-red-200';
+      case 'waiting': return 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white';
+      case 'in_interview': return 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white';
+      case 'completed': return 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white';
+      case 'skipped': return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white';
+      default: return 'bg-gradient-to-r from-red-500 to-rose-500 text-white';
     }
   };
 
   const getStatusIcon = (status) => {
     switch (status) {
-      case 'waiting':
-        return <Clock className="h-4 w-4" />;
-      case 'in_interview':
-        return <PlayCircle className="h-4 w-4" />;
-      case 'completed':
-        return <CheckCircle className="h-4 w-4" />;
-      case 'skipped':
-        return <PauseCircle className="h-4 w-4" />;
-      default:
-        return <XCircle className="h-4 w-4" />;
+      case 'waiting': return <Clock className="h-4 w-4" />;
+      case 'in_interview': return <PlayCircle className="h-4 w-4" />;
+      case 'completed': return <CheckCircle className="h-4 w-4" />;
+      case 'skipped': return <PauseCircle className="h-4 w-4" />;
+      default: return <XCircle className="h-4 w-4" />;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
+<div className="min-h-screen bg-gradient-to-br from-white/20 via-white/40 to-white/20">
       {/* Ultra Modern Header */}
       <div className="relative h-48 bg-gradient-to-br from-slate-900 via-[#203947] to-[#901b20] overflow-hidden">
         {/* Animated Background Elements */}
@@ -264,7 +276,7 @@ const handleInterviewAction = async (action) => {
         </div>
 
         {/* Enhanced Main Content Card */}
-        <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+        <div className="from-white/20 via-white/40 to-white/20 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
           <div className="px-8 py-6 bg-gradient-to-r from-[#203947] via-[#ad565a] to-[#203947] text-white relative overflow-hidden">
             <div className="absolute inset-0 bg-gradient-to-r from-black/10 to-transparent"></div>
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl"></div>
@@ -402,7 +414,7 @@ const handleInterviewAction = async (action) => {
             </div>
 
             <div className="p-8">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 ">
                 {/* Student Information */}
                 <div className="space-y-6">
                   <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50">
@@ -589,6 +601,17 @@ const handleInterviewAction = async (action) => {
                             </button>
                           </div>
                         )}
+                        {['skipped', 'pending'].includes(selectedStudent.status) && (
+  <button
+    onClick={() => handleInterviewAction('resume')}
+    disabled={processingInterview}
+    className="w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl hover:from-indigo-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
+  >
+    <PlayCircle className="h-5 w-5 mr-2" />
+    {processingInterview ? 'Processing...' : 'Resume Interview'}
+  </button>
+)}
+
                       </div>
                     </div>
                   </div>
