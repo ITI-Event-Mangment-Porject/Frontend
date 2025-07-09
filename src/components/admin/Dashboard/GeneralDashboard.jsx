@@ -6,17 +6,11 @@ import {
   FaUsers,
   FaCalendarAlt,
   FaBuilding,
-  FaClock,
   FaChartLine,
-  FaCheckCircle,
-  FaFilter,
-  FaInfoCircle,
 } from 'react-icons/fa';
 import {
   BarChart,
   Bar,
-  LineChart,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -26,9 +20,6 @@ import {
   PieChart,
   Pie,
   Cell,
-  AreaChart,
-  Area,
-  ComposedChart,
 } from 'recharts';
 import StatCounterSkeleton from '../../common/StatCounterSkeleton';
 import useApi from '../../../hooks/useApi';
@@ -41,30 +32,12 @@ const GeneralDashboard = () => {
   const [metrics, setMetrics] = useState(null);
   const [recentEvents, setRecentEvents] = useState([]);
   const [eventDistributionData, setEventDistributionData] = useState([]);
+  const [companyStatsData, setCompanyStatsData] = useState([]);
 
   // API hooks
   const usersApi = useApi();
   const eventsApi = useApi();
   const companiesApi = useApi();
-
-  // Function to get month name
-  const getMonthName = monthIndex => {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return months[monthIndex];
-  };
 
   // Helper function to determine event status
   const determineEventStatus = event => {
@@ -85,36 +58,72 @@ const GeneralDashboard = () => {
     }
   };
 
+  // Helper function to fetch all pages of companies
+  const fetchAllCompanies = async () => {
+    let allCompanies = [];
+    let currentPage = 1;
+    let hasMorePages = true;
+
+    while (hasMorePages) {
+      try {
+        console.log(`Fetching companies page ${currentPage}...`);
+        const result = await companiesApi.execute(() =>
+          companyAPI.getAll({ page: currentPage, per_page: 100 })
+        );
+
+        if (result?.data?.companies?.data) {
+          allCompanies = [...allCompanies, ...result.data.companies.data];
+
+          // Check if there are more pages
+          const pagination = result.data.companies;
+          if (pagination.current_page < pagination.last_page) {
+            currentPage++;
+          } else {
+            hasMorePages = false;
+          }
+        } else {
+          hasMorePages = false;
+        }
+      } catch (error) {
+        console.error(`Error fetching companies page ${currentPage}:`, error);
+        hasMorePages = false;
+      }
+    }
+
+    console.log(
+      `Fetched total of ${allCompanies.length} companies across all pages`
+    );
+    return allCompanies;
+  };
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setLoading(true);
         console.log('Fetching dashboard data...');
 
-        // Fetch all data in parallel using Promise.all
-        const [usersResult, eventsResult, companiesResult] = await Promise.all([
+        // Fetch all data in parallel, but companies needs special handling for pagination
+        const [usersResult, eventsResult, allCompanies] = await Promise.all([
           usersApi.execute(() => userAPI.getAll()),
           eventsApi.execute(() => eventAPI.getAll()),
-          companiesApi.execute(() => companyAPI.getAll()),
+          fetchAllCompanies(),
         ]);
 
         console.log('Users:', usersResult);
         console.log('Events:', eventsResult);
-        console.log('Companies:', companiesResult);
+        console.log('All Companies:', allCompanies);
 
         // Process metrics data
         const metricsData = {
           totalUsers: usersResult?.data?.pagination?.total || 0,
           totalEvents: eventsResult?.data?.result?.total || 0,
-          totalCompanies: companiesResult?.data?.companies?.total || 0,
+          totalCompanies: allCompanies?.length || 0,
           activeEvents:
             eventsResult?.data?.result?.data?.filter(
               e => e.status === 'published'
             )?.length || 0,
           pendingCompanies:
-            companiesResult?.data?.companies?.data?.filter(
-              c => c.status === 'pending'
-            )?.length || 0,
+            allCompanies?.filter(c => c.status === 'pending')?.length || 0,
           avgWaitTime: '24 min',
         };
 
@@ -139,60 +148,60 @@ const GeneralDashboard = () => {
           setRecentEvents(events);
         }
 
-        // Process user growth data
-        if (usersResult?.data?.pagination?.data) {
-          const users = usersResult.data.pagination.data || [];
-          const currentDate = new Date();
-          const chartData = [];
+        // Process company statistics data
+        console.log('Processing company statistics data...');
+        if (allCompanies && allCompanies.length > 0) {
+          console.log('Found companies:', allCompanies.length);
 
-          // Generate data for the past 6 months
-          for (let i = 5; i >= 0; i--) {
-            const date = new Date(currentDate);
-            date.setMonth(currentDate.getMonth() - i);
-            const monthIdx = date.getMonth();
-            const year = date.getFullYear();
-            const monthName = getMonthName(monthIdx);
+          // Count companies by approval status
+          const statusCounts = {
+            approved: 0,
+            rejected: 0,
+            pending: 0,
+          };
 
-            // Count users by role created in this month
-            const usersInMonth = users.filter(user => {
-              if (!user.created_at) return false;
-              const userDate = new Date(user.created_at);
-              return (
-                userDate.getMonth() === monthIdx &&
-                userDate.getFullYear() === year
-              );
-            });
+          allCompanies.forEach(company => {
+            const status =
+              company.status || company.approval_status || 'pending';
+            // eslint-disable-next-line no-prototype-builtins
+            if (statusCounts.hasOwnProperty(status)) {
+              statusCounts[status]++;
+            } else {
+              // Handle variations in status naming
+              if (status === 'accepted' || status === 'active') {
+                statusCounts.approved++;
+              } else if (status === 'declined' || status === 'inactive') {
+                statusCounts.rejected++;
+              } else {
+                statusCounts.pending++;
+              }
+            }
+          });
 
-            const studentsCount = usersInMonth.filter(
-              u => u.role === 'student'
-            ).length;
-            const companiesCount = usersInMonth.filter(
-              u => u.role === 'company'
-            ).length;
+          const chartData = [
+            {
+              status: 'Approved',
+              count: statusCounts.approved,
+              color: '#10b981', // Green
+            },
+            {
+              status: 'Pending',
+              count: statusCounts.pending,
+              color: '#f59e0b', // Yellow/Orange
+            },
+            {
+              status: 'Rejected',
+              count: statusCounts.rejected,
+              color: '#ef4444', // Red
+            },
+          ];
 
-            chartData.push({
-              month: monthName,
-              students: studentsCount,
-              companies: companiesCount,
-            });
-          }
+          console.log('Company statistics chart data:', chartData);
+          setCompanyStatsData(chartData);
         } else {
-          // Generate placeholder data for user growth
-          const currentDate = new Date();
-          const chartData = [];
-
-          for (let i = 5; i >= 0; i--) {
-            const date = new Date(currentDate);
-            date.setMonth(currentDate.getMonth() - i);
-            const monthName = getMonthName(date.getMonth());
-
-            chartData.push({
-              month: monthName,
-              students: Math.floor(Math.random() * 100) + 100,
-              companies: Math.floor(Math.random() * 20) + 10,
-              staff: Math.floor(Math.random() * 10) + 5,
-            });
-          }
+          console.log('No company data found from API');
+          // Set empty array if no data from API
+          setCompanyStatsData([]);
         }
 
         // Map events by ID for easy lookup
@@ -232,14 +241,8 @@ const GeneralDashboard = () => {
 
           setEventDistributionData(chartData);
         } else {
-          // Fallback data
-          setEventDistributionData([
-            { name: 'Job Fair', value: 45, color: '#8884d8' },
-            { name: 'Workshop', value: 25, color: '#82ca9d' },
-            { name: 'Webinar', value: 15, color: '#ffc658' },
-            { name: 'Networking', value: 10, color: '#ff8042' },
-            { name: 'Other', value: 5, color: '#0088fe' },
-          ]);
+          // Set empty array if no data from API
+          setEventDistributionData([]);
         }
 
         setLoading(false);
@@ -384,7 +387,7 @@ const GeneralDashboard = () => {
 
       {/* Charts & Graphs Section */}
       <div className="mb-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Event Distribution (keep existing) */}
+        {/* Event Distribution */}
         <motion.div
           className="bg-white rounded-lg shadow-md p-6 border border-gray-100"
           initial={{ opacity: 0, y: 20 }}
@@ -431,6 +434,61 @@ const GeneralDashboard = () => {
                     )}
                   />
                 </PieChart>
+              </ResponsiveContainer>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Company Statistics Chart */}
+        <motion.div
+          className="bg-white rounded-lg shadow-md p-6 border border-gray-100"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.7 }}
+        >
+          <h3 className="text-lg font-semibold mb-4 text-gray-800">
+            Company Approval Status
+          </h3>
+          <div className="h-64">
+            {companyStatsData.length === 0 ? (
+              <div className="flex flex-col items-center justify-center h-full">
+                <FaBuilding className="text-gray-300 text-4xl mb-2" />
+                <p className="text-gray-400">No company data available</p>
+                <p className="text-gray-400 text-sm">
+                  Data will appear when companies register
+                </p>
+              </div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart
+                  data={companyStatsData}
+                  margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="status" tick={{ fontSize: 12 }} />
+                  <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+                  <Tooltip
+                    formatter={(value, name, props) => [
+                      `${value} companies`,
+                      props.payload.status,
+                    ]}
+                    labelFormatter={label => `Status: ${label}`}
+                    contentStyle={{
+                      backgroundColor: '#f8fafc',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                    }}
+                  />
+                  <Bar
+                    dataKey="count"
+                    fill={entry => entry.color}
+                    radius={[4, 4, 0, 0]}
+                  >
+                    {companyStatsData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Bar>
+                </BarChart>
               </ResponsiveContainer>
             )}
           </div>
@@ -484,9 +542,6 @@ const GeneralDashboard = () => {
                       Location
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Companies
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Status
                     </th>
                   </tr>
@@ -513,11 +568,6 @@ const GeneralDashboard = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-500">
                           {event.location}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">
-                          {event.companies}
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

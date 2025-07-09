@@ -30,11 +30,14 @@ import Notifications from '../pages/admin/Notifications';
 import LiveQueue from '../pages/admin/LiveInterviewQueue';
 import JobFairSetup from '../pages/admin/JobFairSetup';
 import FeedbackFormsCreaton from '../pages/admin/FeedbackFormsCreaton';
+import BrandingDaySetup from '../pages/admin/BrandingDaySetup';
 import LiveMonitor from '../pages/admin/LiveMonitor';
 import AlFeedbackAnalyics from '../pages/admin/FeedbackAnalytics';
 
 // Not Found Page
 import NotFoundPage from '../pages/System/NotFoundPage';
+import AboutUs from '../pages/System/AboutUs';
+import ContactUs from '../pages/System/ContactUs';
 
 
 const AppRoutes = () => {
@@ -48,6 +51,7 @@ const AppRoutes = () => {
       <Route path="/admin/companies" element={<CompaniesSetup />} />
       <Route path="/admin/attendance" element={<AttendanceReports />} />
       <Route path="/admin/jobfair" element={<JobFairSetup />} />
+      <Route path="/admin/brandingDay" element={<BrandingDaySetup />} />
       {/* Default redirect to admin dashboard */}
       <Route path="/admin/events" element={<ManageEvents />} />
       <Route path="/admin/notifications" element={<Notifications />} />
@@ -61,6 +65,8 @@ const AppRoutes = () => {
       />
       {/* Catch all route - 404 Not Found Page */}
       <Route path="/support" element={<Help />} />
+      <Route path="/about-us" element={<AboutUs />} />
+      <Route path="/contect-us" element={<ContactUs />} />
       <Route path="/login" element={<Login />} />
       <Route path="/student/feedback/:id" element={<FeedbackForm />} />
       <Route path="/student/event-details/:id" element={<EventDetails />} />
@@ -75,10 +81,7 @@ const AppRoutes = () => {
         <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="job-fairs/:jobFairId/setup" element={<SetupForm />} />
-        <Route
-          path="job-fairs/:jobFairId/requests"
-          element={<ManageRequests />}
-        />
+        <Route path="job-fairs/:jobFairId/requests" element={<ManageRequests />} />
         <Route path="tracking" element={<InterviewTracking />} />
         <Route path="profile" element={<CompanyProfile />} />
       </Route>

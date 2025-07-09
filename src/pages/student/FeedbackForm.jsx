@@ -133,7 +133,7 @@ const FeedbackForm = () => {
     } catch (error) {
       console.error('Error submitting feedback:', error);
       setModalType('error');
-      setModalMessage('❌ Failed to submit feedback. Please try again.');
+      setModalMessage('❌ Sorry, You submit your feedback before, please wait for the next event.');
     } finally {
       setSubmitting(false);
     }

@@ -9,7 +9,6 @@ import {
   FaUser,
   FaEnvelope,
   FaPhone,
-  FaGraduationCap,
   FaLinkedin,
   FaGithub,
   FaExternalLinkAlt,

@@ -7,57 +7,82 @@ const JobFairDashboard = () => {
   const [allQueuesData, setAllQueuesData] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
-  
-  // Get user ID from props, context, or authentication state
-  // For now, using a placeholder - replace with actual user ID source
-  const userId = 96; // Replace this with actual user ID from your auth system
+  const [error, setError] = useState(null);
 
-  const fetchQueueData = async () => {
-    setLoading(true);
+  // Get user ID safely from localStorage
+  const getUserIdFromStorage = () => {
+    const savedUser = localStorage.getItem('user');
+    if (!savedUser) return null;
+
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/job-fairs/1/queues/student/${userId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch queue data');
+      const parsedUser = JSON.parse(savedUser);
+      return parsedUser.id || parsedUser.user_id || parsedUser.studentId || null;
+    } catch (e) {
+      console.error('Error parsing user from localStorage:', e);
+      return null;
+    }
+  };
+
+  const fetchQueuesData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const userId = getUserIdFromStorage();
+      const token = localStorage.getItem('token');
+
+      console.log('📦 Stored userId:', userId);
+
+      if (!userId || !token) {
+        setError('⚠️ User ID or token not found. Please log in again.');
+        return;
       }
-      const result = await response.json();
-      
-      // Extract queue data from the new API response structure
-      const queuesArray = result.success && result.data && result.data.queue 
-        ? result.data.queue 
-        : [];
-      
+
+      const response = await fetch(`http://127.0.0.1:8000/api/job-fairs/1/queues/student/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const queuesArray = data.success && data.data && data.data.queue ? data.data.queue : [];
+
       setAllQueuesData(queuesArray);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching queue data:', error);
+    } catch (err) {
+      console.error('Error fetching queues data:', err);
+      setError('Failed to load interview data. Please try again.');
+    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchQueueData();
-  }, [userId]);
+    fetchQueuesData();
+  }, []);
 
   const refreshCurrentQueue = () => {
-    fetchQueueData();
+    fetchQueuesData();
   };
 
   const currentQueue = allQueuesData[activeTab];
 
-  // Format time for display
   const formatTime = (startTime, endTime) => {
     if (!startTime || !endTime) return 'TBD';
     return `${startTime.slice(0, 5)} - ${endTime.slice(0, 5)}`;
   };
 
-  // Format date for display
   const formatDate = (dateString) => {
     if (!dateString) return 'TBD';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
     });
   };
 
@@ -65,7 +90,6 @@ const JobFairDashboard = () => {
     <Layout>
       <div className="p-6">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          {/* Header */}
           <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-6">
             <h1 className="text-3xl font-bold mb-2">Job Fair Dashboard</h1>
             <p className="text-orange-100">Your interviews for today</p>
@@ -76,13 +100,23 @@ const JobFairDashboard = () => {
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
               <p className="text-gray-600">Loading your interviews...</p>
             </div>
+          ) : error ? (
+            <div className="p-8 text-center">
+              <div className="text-red-500 text-lg mb-4">{error}</div>
+              <button
+                onClick={refreshCurrentQueue}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span>Try Again</span>
+              </button>
+            </div>
           ) : allQueuesData.length === 0 ? (
             <div className="p-8 text-center">
               <p className="text-gray-600 text-lg">No interviews scheduled for today</p>
             </div>
           ) : (
             <>
-              {/* Tabs */}
               <div className="border-b border-gray-200">
                 <div className="flex overflow-x-auto">
                   {allQueuesData.map((queueItem, index) => (
@@ -121,11 +155,9 @@ const JobFairDashboard = () => {
                 </div>
               </div>
 
-              {/* Tab Content */}
               <div className="p-8">
                 {currentQueue && (
                   <div className="max-w-2xl mx-auto">
-                    {/* Company Info */}
                     <div className="text-center mb-8">
                       <div className="w-20 h-20 mx-auto mb-4 bg-orange-100 rounded-full flex items-center justify-center">
                         {currentQueue.company?.logo_path ? (
@@ -149,7 +181,6 @@ const JobFairDashboard = () => {
                       </div>
                     </div>
 
-                    {/* Queue Status */}
                     <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-8 mb-6">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
                         <div className="bg-white rounded-xl p-6 shadow-sm">
@@ -173,7 +204,6 @@ const JobFairDashboard = () => {
                       </div>
                     </div>
 
-                    {/* Status Badge */}
                     <div className="text-center mb-6">
                       <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
                         currentQueue.status === 'waiting' && currentQueue.queue_position === 1
@@ -188,13 +218,12 @@ const JobFairDashboard = () => {
                       </span>
                     </div>
 
-                    {/* Progress Bar */}
                     <div className="mb-6">
                       <div className="flex justify-between text-sm text-gray-600 mb-2">
                         <span>Queue Progress</span>
                         <span>
                           {currentQueue.queue_position > 0 ? 
-                            Math.round(((currentQueue.order_key) / (currentQueue.order_key + currentQueue.queue_position)) * 100) 
+                            Math.round((currentQueue.order_key / (currentQueue.order_key + currentQueue.queue_position)) * 100) 
                             : 0}%
                         </span>
                       </div>
@@ -203,14 +232,13 @@ const JobFairDashboard = () => {
                           className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full transition-all duration-500"
                           style={{
                             width: `${currentQueue.queue_position > 0 ? 
-                              ((currentQueue.order_key) / (currentQueue.order_key + currentQueue.queue_position)) * 100 
+                              (currentQueue.order_key / (currentQueue.order_key + currentQueue.queue_position)) * 100 
                               : 0}%`
                           }}
                         ></div>
                       </div>
                     </div>
 
-                    {/* Additional Info */}
                     {currentQueue.notes && (
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                         <h3 className="font-semibold text-blue-800 mb-2">Notes:</h3>
@@ -218,7 +246,6 @@ const JobFairDashboard = () => {
                       </div>
                     )}
 
-                    {/* Refresh Button */}
                     <div className="text-center">
                       <button
                         onClick={refreshCurrentQueue}

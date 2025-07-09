@@ -169,7 +169,7 @@ const InterviewRequestsManager = () => {
   }
 
   return (
- <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
+<div className="min-h-screen bg-gradient-to-br from-white/20 via-white/40 to-white/20">
       {/* Ultra Modern Header */}
       <div className="relative h-48 bg-gradient-to-br from-slate-900 via-[#203947] to-[#901b20] overflow-hidden">
         {/* Animated Background Elements */}

@@ -38,7 +38,7 @@ const Attendance_Reports = () => {
   const handleExportAttendance = async () => {
     try {
       const response = await fetch(
-        'http://127.0.0.1:8001/api/reports/export?type=json&report=attendance'
+        'http://127.0.0.1:8001/api/reports/export?type=xlsx&report=attendance'
       );
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
