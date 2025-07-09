@@ -36,7 +36,7 @@ const Navbar = () => {
   const fetchNotifications = () => {
     const token = localStorage.getItem('token');
     axios
-      .get(`${APP_URL}/api/notifications`, {
+      .get(`${APP_URL}/api/notify/notifications`, {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(res => {
