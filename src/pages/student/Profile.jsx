@@ -278,7 +278,7 @@ const Profile = () => {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen bg-gray-50">
-          <FaSpinner className="animate-spin text-orange-500 text-4xl" />
+          <FaSpinner className="animate-spin text-red-900 text-4xl" />
         </div>
       </Layout>
     );
@@ -286,7 +286,7 @@ const Profile = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gradient-to-br from-orange-50 to-white p-4">
+      <div className="min-h-screen bg-gradient-to-br from-red-900 to-white p-4">
         <div className="max-w-6xl mx-auto">
           {/* Success Message */}
           {success && (
@@ -319,9 +319,9 @@ const Profile = () => {
                 <img
                   src={editMode ? editForm.avatar || profile.avatar : profile.avatar}
                   alt="Profile"
-                  className="w-32 h-32 rounded-full object-cover border-4 border-orange-500 shadow-lg"
+                  className="w-32 h-32 rounded-full object-cover border-4 border-red-900 shadow-lg"
                 />
-                <div className="absolute -bottom-2 -right-2 bg-orange-500 rounded-full p-2">
+                <div className="absolute -bottom-2 -right-2 bg-red-900 rounded-full p-2">
                   <FaUser className="text-white text-lg" />
                 </div>
               </div>
@@ -330,29 +330,29 @@ const Profile = () => {
                 <h1 className="text-3xl font-bold text-gray-800 mb-2">
                   {editMode ? `${editForm.first_name || ''} ${editForm.last_name || ''}`.trim() : profile.name}
                 </h1>
-                <p className="text-orange-600 font-semibold mb-1">Student</p>
+                <p className="text-red-900 font-semibold mb-1">Student</p>
                 <div className="flex flex-wrap justify-center lg:justify-start gap-4">
                   {profile.email && (
                     <div className="flex items-center space-x-2 text-gray-600">
-                      <FaEnvelope className="text-orange-500" />
+                      <FaEnvelope className="text-red-900" />
                       <span>{profile.email}</span>
                     </div>
                   )}
                   {profile.phone && (
                     <div className="flex items-center space-x-2 text-gray-600">
-                      <FaPhone className="text-orange-500" />
+                      <FaPhone className="text-red-900" />
                       <span>{profile.phone}</span>
                     </div>
                   )}
                   {profile.program && (
                     <div className="flex items-center space-x-2 text-gray-600">
-                      <FaBook className="text-orange-500" />
+                      <FaBook className="text-red-900" />
                       <span>{profile.program}</span>
                     </div>
                   )}
                   {profile.branch && (
                     <div className="flex items-center space-x-2 text-gray-600">
-                      <FaMapMarkerAlt className="text-orange-500" />
+                      <FaMapMarkerAlt className="text-red-900" />
                       <span>{profile.branch}</span>
                     </div>
                   )}
@@ -379,7 +379,7 @@ const Profile = () => {
                       setEditMode(true);
                       setError(null);
                     }}
-                    className="flex items-center space-x-2 bg-orange-500 hover:bg-orange-600 text-white px-6 py-3 rounded-lg transition-colors"
+                    className="flex items-center space-x-2 bg-red-900 hover:bg-red-900 text-white px-6 py-3 rounded-lg transition-colors"
                   >
                     <FaEdit />
                     <span>Edit Profile</span>
@@ -431,7 +431,7 @@ const Profile = () => {
                   ].map(({ field, label, icon: Icon, type, readonly = false }) => (
                     <div key={field} className="space-y-2">
                       <label className="flex items-center space-x-2 text-sm font-medium text-gray-700">
-                        <Icon className="text-orange-500" />
+                        <Icon className="text-red-900" />
                         <span>{label}</span>
                       </label>
                       {editMode && !readonly ? (
@@ -439,7 +439,7 @@ const Profile = () => {
                           type={type}
                           value={editForm[field] || ''}
                           onChange={e => setEditForm(prev => ({ ...prev, [field]: e.target.value }))}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-900 focus:border-transparent transition-all"
                           placeholder={`Enter ${label.toLowerCase()}`}
                         />
                       ) : (
@@ -458,7 +458,7 @@ const Profile = () => {
                       value={editForm.bio || ''}
                       onChange={e => setEditForm(prev => ({ ...prev, bio: e.target.value }))}
                       rows={4}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-900 focus:border-transparent transition-all"
                       placeholder="Tell us about yourself..."
                     />
                   ) : (
@@ -492,7 +492,7 @@ const Profile = () => {
                           type="url"
                           value={editForm[field] || ''}
                           onChange={e => setEditForm(prev => ({ ...prev, [field]: e.target.value }))}
-                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all"
+                          className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-900 focus:border-transparent transition-all"
                           placeholder={`Enter ${label.toLowerCase()} URL`}
                         />
                       ) : (
@@ -521,7 +521,7 @@ const Profile = () => {
               <div className="bg-white rounded-2xl shadow-lg p-8">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-xl font-bold text-gray-800">CV/Resume</h3>
-                  <label className="flex items-center space-x-2 text-orange-500 cursor-pointer hover:text-orange-600 transition-colors">
+                  <label className="flex items-center space-x-2 text-red-900 cursor-pointer hover:text-red-900 transition-colors">
                     {uploading ? (
                       <FaSpinner className="animate-spin" />
                     ) : (
