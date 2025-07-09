@@ -2,9 +2,11 @@ import axios from 'axios';
 
 // Create axios instance with base configuration
 const api = axios.create({
+
   baseURL: import.meta.env.VITE_API_BASE_URL
     ? `${import.meta.env.VITE_API_BASE_URL}/api`
     : 'http://localhost:8000/api',
+
   headers: {
     'Content-Type': 'application/json',
   },
@@ -126,6 +128,7 @@ export const companyAPI = {
   getById: id => api.get(`/companies/${id}`),
   create: companyData => api.post('/companies', companyData),
   update: (id, companyData) => api.put(`/companies/${id}`, companyData),
+  reject:(id)=>api.post(`/companies/${id}/reject`),
   delete: id => api.delete(`/companies/${id}`),
   // Custom actions for companies
   approve: id => api.post(`/companies/${id}/approve`),
@@ -403,6 +406,7 @@ export const jobFairAPI = {
     }
   },
 };
+
 
 // Authentication API endpoints
 export const authAPI = {
