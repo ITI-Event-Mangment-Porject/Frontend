@@ -226,8 +226,63 @@ const JobFairTabs = () => {
 
               if (queueResponse.data && queueResponse.data.data) {
                 const queueData = queueResponse.data.data;
+                const queue = queueData.queue || [];
                 const summary = queueData.summary || {};
-                const avgTime = summary.average_interview_time_minutes || 0;
+
+                // Calculate average time from actual slot data
+                let calculatedAvgTime = 0;
+                let totalInterviews = 0;
+
+                if (queue.length > 0) {
+                  let totalMinutes = 0;
+                  let validSlots = 0;
+
+                  queue.forEach(item => {
+                    if (
+                      item.slot &&
+                      item.slot.start_time &&
+                      item.slot.end_time
+                    ) {
+                      // Parse time strings (HH:MM:SS format)
+                      const [startHours, startMinutes] = item.slot.start_time
+                        .split(':')
+                        .map(Number);
+                      const [endHours, endMinutes] = item.slot.end_time
+                        .split(':')
+                        .map(Number);
+
+                      // Convert to total minutes
+                      const startTotalMinutes = startHours * 60 + startMinutes;
+                      const endTotalMinutes = endHours * 60 + endMinutes;
+
+                      // Calculate duration in minutes
+                      const duration = endTotalMinutes - startTotalMinutes;
+
+                      if (duration > 0) {
+                        totalMinutes += duration;
+                        validSlots++;
+                      }
+                    }
+                  });
+
+                  // Calculate average
+                  if (validSlots > 0) {
+                    calculatedAvgTime = Math.round(totalMinutes / validSlots);
+                  }
+
+                  // Count total interviews (could be from summary or queue length)
+                  totalInterviews = summary.total || queue.length;
+                }
+
+                // Use calculated average time, fallback to summary if calculation fails
+                const avgTime =
+                  calculatedAvgTime > 0
+                    ? calculatedAvgTime
+                    : summary.average_interview_time_minutes || 0;
+
+                console.log(
+                  `Company ${company.name}: Calculated avg time: ${calculatedAvgTime}min, Total interviews: ${totalInterviews}`
+                );
 
                 // Calculate efficiency based on new thresholds
                 let efficiencyStatus = null;
@@ -243,17 +298,22 @@ const JobFairTabs = () => {
                   industry: company.industry,
                   actualDuration: avgTime,
                   targetDuration: 30, // Updated target to 30 minutes
-                  totalInterviews: summary.completed || 0,
+                  totalInterviews: totalInterviews,
                   efficiencyStatus: efficiencyStatus,
                   isEfficient: avgTime <= 30, // Keep for backward compatibility
                   trafficFlag: summary.traffic_flag || 'ok',
-                  totalInQueue: summary.total || 0,
-                  waitingInQueue: summary.waiting || 0,
+                  totalInQueue: summary.total || queue.length,
+                  waitingInQueue:
+                    summary.waiting ||
+                    queue.filter(item => item.status === 'waiting').length,
                   currentInterviewee: summary.in_interview_student_name || null,
+                  queueData: queue, // Store queue data for debugging
                 };
               } else {
                 // Fallback to mock data for this company if API fails
-                const mockAvgTime = 10 + Math.floor(Math.random() * 80); // Random 10-90 minutes
+                const mockAvgTime = 15 + Math.floor(Math.random() * 45); // Random 15-60 minutes for realistic range
+                const mockTotalInterviews = 5 + Math.floor(Math.random() * 15); // Random 5-20 interviews
+
                 let efficiencyStatus = null;
                 if (mockAvgTime <= 30) {
                   efficiencyStatus = 'okay';
@@ -267,13 +327,14 @@ const JobFairTabs = () => {
                   industry: company.industry,
                   actualDuration: mockAvgTime,
                   targetDuration: 30,
-                  totalInterviews: 10 + Math.floor(Math.random() * 40),
+                  totalInterviews: mockTotalInterviews,
                   efficiencyStatus: efficiencyStatus,
                   isEfficient: mockAvgTime <= 30,
                   trafficFlag: 'ok',
-                  totalInQueue: 0,
-                  waitingInQueue: 0,
+                  totalInQueue: Math.floor(Math.random() * 10),
+                  waitingInQueue: Math.floor(Math.random() * 5),
                   currentInterviewee: null,
+                  queueData: [], // Empty queue data for mock
                 };
               }
             } catch (error) {
@@ -282,18 +343,30 @@ const JobFairTabs = () => {
                 error
               );
               // Fallback to mock data for this company
+              const mockAvgTime = 15 + Math.floor(Math.random() * 45); // Random 15-60 minutes
+              const mockTotalInterviews = 5 + Math.floor(Math.random() * 15); // Random 5-20 interviews
+
+              let efficiencyStatus = null;
+              if (mockAvgTime <= 30) {
+                efficiencyStatus = 'okay';
+              } else if (mockAvgTime > 60) {
+                efficiencyStatus = 'too_long';
+              }
+
               return {
                 companyId: company.id,
                 companyName: company.name,
                 industry: company.industry,
-                actualDuration: 10 + Math.floor(Math.random() * 20),
-                targetDuration: 15,
-                totalInterviews: 10 + Math.floor(Math.random() * 40),
-                isEfficient: Math.random() > 0.5,
+                actualDuration: mockAvgTime,
+                targetDuration: 30,
+                totalInterviews: mockTotalInterviews,
+                efficiencyStatus: efficiencyStatus,
+                isEfficient: mockAvgTime <= 30,
                 trafficFlag: 'ok',
-                totalInQueue: 0,
-                waitingInQueue: 0,
+                totalInQueue: Math.floor(Math.random() * 10),
+                waitingInQueue: Math.floor(Math.random() * 5),
                 currentInterviewee: null,
+                queueData: [], // Empty queue data for mock
               };
             }
           });
