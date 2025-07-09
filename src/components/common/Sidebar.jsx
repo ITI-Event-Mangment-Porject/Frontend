@@ -27,6 +27,7 @@ const Sidebar = () => {
     {path:'/admin/jobfair', icon: FaClipboardList, label: 'Job Fair Management'},
     { path: '/admin/feedback', icon: FaChartBar, label: 'Feedback Analytics' },
     { path: '/admin/companies', icon: FaBriefcase, label: 'Companies Setup' },
+    { path: '/admin/brandingDay', icon: FaDesktop, label: 'Branding Day' },
     { path: '/admin/monitor', icon: FaDesktop, label: 'Live Monitor' },
     { path: '/admin/notifications', icon: FaBell, label: 'Notifications' },
     { path: '/admin/queue', icon: FaListAlt, label: 'Queue Management' },
