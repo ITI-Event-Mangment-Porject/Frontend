@@ -1,5 +1,6 @@
 "use client"
 
+import { getFriendlyErrorMessage } from '../../../utils/errorMessages'
 import { useState, useEffect, useMemo } from "react"
 import {
   Users,
@@ -26,6 +27,7 @@ import {
   Search,
   ChevronDown,
 } from "lucide-react"
+import { useNavigate } from 'react-router-dom';
 
 const LiveQueueManagement = ({ jobFairId = 1, className = "" }) => {
   const [loading, setLoading] = useState(true)
@@ -41,6 +43,16 @@ const LiveQueueManagement = ({ jobFairId = 1, className = "" }) => {
 
   // Static admin token
   const ADMIN_TOKEN = localStorage.getItem('token');
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login'); // redirect to login if token is missing
+    }
+  }, [navigate]);
+  
   // Fetch participating companies
   const fetchCompanies = async () => {
     try {
@@ -285,23 +297,26 @@ const LiveQueueManagement = ({ jobFairId = 1, className = "" }) => {
   }
 
   if (error) {
+    const message = getFriendlyErrorMessage(error);
     return (
-      <div className={`bg-white rounded-xl lg:rounded-2xl shadow-lg overflow-hidden ${className}`}>
-        <div className="p-4 lg:p-6">
-          <div className="text-center py-8 lg:py-12">
-            <AlertCircle className="w-12 h-12 lg:w-16 lg:h-16 text-red-500 mx-auto mb-3 lg:mb-4 animate-bounce" />
-            <h3 className="text-xl lg:text-2xl font-bold text-gray-900 mb-2 lg:mb-3">Error Loading Queue Data</h3>
-            <p className="text-gray-600 mb-4 lg:mb-6 text-sm lg:text-base px-4">{error}</p>
-            <button
-              onClick={fetchCompanies}
-              className="bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] text-white px-6 lg:px-8 py-2.5 lg:py-3 rounded-lg lg:rounded-xl font-semibold text-sm lg:text-base transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
-            >
-              Try Again
-            </button>
+      <div className="min-h-screen bg-white p-6 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white rounded-2xl p-8 text-center shadow-2xl animate-shake">
+          <div className="text-error mb-6 animate-bounce">
+            <AlertCircle className="w-16 h-16 mx-auto" />
           </div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-3">
+            Error Loading Analytics
+          </h3>
+          <p className="text-gray-600 mb-6">{message}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="button bg-primary hover:bg-primary-600 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg mx-auto"
+          >
+            Try Again
+          </button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -333,7 +348,7 @@ const LiveQueueManagement = ({ jobFairId = 1, className = "" }) => {
               {selectedCompany && (
                 <button
                   onClick={handleBackToList}
-                  className="group relative overflow-hidden bg-gradient-to-r from-[#203947] to-[#ad565a] hover:from-[#1a2f3a] hover:to-[#8a4548] text-white px-3 lg:px-6 py-2 lg:py-3 rounded-lg lg:rounded-2xl font-bold text-sm lg:text-base transition-all duration-500 transform hover:scale-105 lg:hover:scale-110 hover:shadow-xl lg:hover:shadow-2xl"
+                  className="group relative overflow-hidden bg-gradient-to-r from-[#203947] to-[#467c9b] hover:from-[#1a2f3a] hover:to-[#203947] text-white px-3 lg:px-6 py-2 lg:py-3 rounded-lg lg:rounded-2xl font-bold text-sm lg:text-base transition-all duration-500 transform hover:scale-105 lg:hover:scale-105 hover:shadow-xl lg:hover:shadow-2xl"
                 >
                   <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                   <div className="relative flex items-center gap-1.5 lg:gap-3">
@@ -344,22 +359,33 @@ const LiveQueueManagement = ({ jobFairId = 1, className = "" }) => {
                 </button>
               )}
 
-              <button
-                onClick={handleRefresh}
-                disabled={refreshing}
-                className="group relative overflow-hidden bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] disabled:from-gray-400 disabled:to-gray-500 text-white px-3 lg:px-6 py-2 lg:py-3 rounded-lg lg:rounded-2xl font-bold text-sm lg:text-base transition-all duration-500 transform hover:scale-105 lg:hover:scale-110 hover:shadow-xl lg:hover:shadow-2xl disabled:scale-100 disabled:shadow-none"
-              >
-                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-                <div className="relative flex items-center gap-1.5 lg:gap-3">
-                  {refreshing ? (
-                    <Loader2 className="w-4 h-4 lg:w-5 lg:h-5 animate-spin" />
-                  ) : (
-                    <RefreshCw className="w-4 h-4 lg:w-5 lg:h-5 group-hover:rotate-180 transition-transform duration-500" />
-                  )}
-                  <span className="hidden sm:inline">{refreshing ? "Refreshing..." : "Refresh"}</span>
-                  <span className="sm:hidden">{refreshing ? "..." : "↻"}</span>
-                </div>
-              </button>
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className="group relative overflow-hidden bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-2xl font-bold transition-all duration-500 transform hover:scale-105 hover:shadow-2xl disabled:scale-100 disabled:shadow-none"
+            >
+              <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+              <div className="relative flex items-center gap-3">
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <svg
+                    className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                    />
+                  </svg>
+                )}
+                <span>{loading ? "Loading..." : "Refresh"}</span>
+              </div>
+            </button>
             </div>
           </div>
         </div>
@@ -614,13 +640,13 @@ const LiveQueueManagement = ({ jobFairId = 1, className = "" }) => {
                           {selectedCompany.company.name}
                         </h2>
                         <div className="flex flex-wrap items-center gap-2 lg:gap-4">
-                          <span className="bg-white/20 rounded-full px-2 lg:px-4 py-1 lg:py-2 text-xs lg:text-sm font-bold backdrop-blur-sm">
+                          <span className="bg-gradient-to-r hover:from-[#7a1619] hover:to-[#901b20] from-[#7a1619] to-[#7a1619] rounded-full px-2 lg:px-4 py-1 lg:py-2 text-xs lg:text-sm font-bold backdrop-blur-sm">
                             {selectedCompany.company.industry}
                           </span>
-                          <span className="bg-white/20 rounded-full px-2 lg:px-4 py-1 lg:py-2 text-xs lg:text-sm font-bold backdrop-blur-sm">
+                          <span className="bg-gradient-to-r hover:from-[#7a1619] hover:to-[#901b20] from-[#7a1619] to-[#7a1619] rounded-full px-2 lg:px-4 py-1 lg:py-2 text-xs lg:text-sm font-bold backdrop-blur-sm">
                             {selectedCompany.company.size}
                           </span>
-                          <span className="bg-white/20 rounded-full px-2 lg:px-4 py-1 lg:py-2 text-xs lg:text-sm font-bold backdrop-blur-sm">
+                          <span className="bg-gradient-to-r hover:from-[#7a1619] hover:to-[#901b20] from-[#7a1619] to-[#7a1619] rounded-full px-2 lg:px-4 py-1 lg:py-2 text-xs lg:text-sm font-bold backdrop-blur-sm">
                             {selectedCompany.company.location}
                           </span>
                         </div>
