@@ -35,6 +35,8 @@ import AlFeedbackAnalyics from '../pages/admin/FeedbackAnalytics';
 
 // Not Found Page
 import NotFoundPage from '../pages/System/NotFoundPage';
+import AboutUs from '../pages/System/AboutUs';
+import ContactUs from '../pages/System/ContactUs';
 
 
 const AppRoutes = () => {
@@ -59,6 +61,8 @@ const AppRoutes = () => {
       />
       {/* Catch all route - 404 Not Found Page */}
       <Route path="/support" element={<Help />} />
+      <Route path="/about-us" element={<AboutUs />} />
+      <Route path="/contect-us" element={<ContactUs />} />
       <Route path="/login" element={<Login />} />
       <Route path="/student/feedback/:id" element={<FeedbackForm />} />
       <Route path="/student/event-details/:id" element={<EventDetails />} />
