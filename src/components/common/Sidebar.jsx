@@ -38,9 +38,10 @@ const Sidebar = () => {
     },
 
     { path: '/admin/companies', icon: FaBriefcase, label: 'Companies Setup' },
-    { path: '/admin/liveevents', icon: FaDesktop, label: 'Live Events' },
+    { path: '/admin/liveevents', icon: FaDesktop, label: 'Events Monitor' },
     { path: '/admin/notifications', icon: FaBell, label: 'Notifications' },
     { path: '/admin/LiveQueue', icon: FaListAlt, label: 'Live Interview Queues' },
+    { path: '/admin/createFeedbackForm', icon: FaListAlt, label: 'Create Feedback Form' },
   ];
   return (
     <aside className="fixed left-0 top-16 z-40 mt-3 w-14 sm:w-20 md:w-20 lg:w-60 bg-white shadow-lg h-[calc(100vh-4rem)] transition-all duration-300 ease-in-out border-r border-gray-200 rounded-lg overflow-hidden">

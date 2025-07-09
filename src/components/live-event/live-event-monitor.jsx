@@ -194,7 +194,7 @@ const LiveEventMonitor = () => {
       {
         name: "Ongoing",
         value: events.filter((e) => e.status === "ongoing").length,
-        color: "#10b981",
+        color: "var(--secondary-400)",
       },
     ]
 
@@ -452,7 +452,7 @@ const LiveEventMonitor = () => {
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-4">
             <div>
               <h1 className="text-3xl sm:text-4xl font-black text-primary bg-gradient-to-r from-[#901b20] to-[#ad565a] bg-clip-text text-transparent mb-2">
-                Live Event Monitor
+                Events Monitor
               </h1>
               <p className="text-lg text-gray-600 font-medium">Monitor and manage all active events in real-time</p>
             </div>
@@ -854,54 +854,11 @@ const LiveEventMonitor = () => {
                       }}
                     />
                     <Legend />
-                    <Bar dataKey="published" fill="#3b82f6" name="Published" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="ongoing" fill="#10b981" name="Ongoing" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="published" fill="var(--primary-400)" name="Published" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="ongoing" fill="var(--secondary-400)" name="Ongoing" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            </div>
-          </div>
-
-          {/* Events Timeline */}
-          <div className="bg-white rounded-2xl p-8 shadow-xl hover:shadow-2xl transition-all duration-500 border border-gray-100">
-            <div className="flex items-center justify-between mb-8">
-              <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-[#ad565a] to-[#cc9598] rounded-2xl flex items-center justify-center">
-                  <TrendingUp className="w-6 h-6 text-white" />
-                </div>
-                Events Timeline (Next 7 Days)
-              </h3>
-            </div>
-            <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={analyticsData.timelineData}>
-                  <defs>
-                    <linearGradient id="colorEvents" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#901b20" stopOpacity={0.8} />
-                      <stop offset="95%" stopColor="#901b20" stopOpacity={0.1} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="date" tick={{ fontSize: 12, font: 600 }} />
-                  <YAxis tick={{ fontSize: 12, fontWeight: 600 }} />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "white",
-                      border: "2px solid #901b20",
-                      borderRadius: "12px",
-                      boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-                    }}
-                  />
-                  <Area
-                    type="monotone"
-                    dataKey="events"
-                    stroke="#901b20"
-                    strokeWidth={3}
-                    fillOpacity={1}
-                    fill="url(#colorEvents)"
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
             </div>
           </div>
         </div>
@@ -1008,30 +965,10 @@ const LiveEventMonitor = () => {
                       </div>
 
                       {/* Interactive Features */}
-                      {(selectedEvent.slido_qr_code || selectedEvent.slido_embed_url) && (
+                      {(selectedEvent.slido_embed_url) && (
                         <div>
-                          <h3 className="text-2xl font-bold text-gray-900 mb-6">Interactive Features</h3>
+                          <h3 className="text-2xl font-bold text-gray-900 mb-6">Interactive Feature</h3>
                           <div className="space-y-6">
-                            {selectedEvent.slido_qr_code && (
-                              <div className="flex items-center justify-between p-6 bg-blue-50 rounded-2xl border-2 border-blue-200 hover:shadow-lg transition-all duration-300">
-                                <div className="flex items-center gap-6">
-                                  <div className="w-16 h-16 bg-blue-500 rounded-2xl flex items-center justify-center flex-shrink-0">
-                                    <QrCode className="w-8 h-8 text-white" />
-                                  </div>
-                                  <div>
-                                    <h4 className="font-bold text-gray-900 text-lg">QR Code Access</h4>
-                                    <p className="text-gray-600 font-medium">Scan to join interactive session</p>
-                                  </div>
-                                </div>
-                                <button
-                                  onClick={() => window.open(selectedEvent.slido_qr_code, "_blank")}
-                                  className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105"
-                                >
-                                  View QR
-                                </button>
-                              </div>
-                            )}
-
                             {selectedEvent.slido_embed_url && (
                               <div className="flex items-center justify-between p-6 bg-green-50 rounded-2xl border-2 border-green-200 hover:shadow-lg transition-all duration-300">
                                 <div className="flex items-center gap-6">
