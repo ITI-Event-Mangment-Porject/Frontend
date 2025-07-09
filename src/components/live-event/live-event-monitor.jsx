@@ -1,5 +1,6 @@
 "use client"
 
+import { getFriendlyErrorMessage } from '../../utils/errorMessages'
 import { useState, useEffect, useMemo } from "react"
 import {
   Search,
@@ -41,6 +42,7 @@ import {
   AreaChart,
   Pie,
 } from "recharts"
+import { useNavigate } from 'react-router-dom';
 
 const LiveEventMonitor = () => {
   const [events, setEvents] = useState([])
@@ -64,8 +66,16 @@ const LiveEventMonitor = () => {
   const itemsPerPage = 6
 
   // Static admin token as provided
-  const ADMIN_TOKEN =
-    "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3NTE3MzgwNzIsImV4cCI6MTc1MTc0MTY3MiwibmJmIjoxNzUxNzM4MDcyLCJqdGkiOiJuZUtrTkpFZHhrTmZqcHp4Iiwic3ViIjoiMTU3IiwicHJ2IjoiMTNlOGQwMjhiMzkxZjNiN2I2M2YyMTkzM2RiYWQ0NThmZjIxMDcyZSJ9.Xk3SbhDhMZlpvtN9899sbjARBb6I1SXh_04ssVZpBI4"
+  const ADMIN_TOKEN = localStorage.getItem('token');
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        navigate('/login'); // redirect to login if token is missing
+      }
+    }, [navigate]);
 
   const fetchAllActiveEvents = async () => {
     try {
@@ -388,16 +398,16 @@ const LiveEventMonitor = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#ebebeb] p-6">
+      <div className="min-h-screen bg-white p-6">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-300 rounded w-1/4 mb-6 shimmer-effect"></div>
+            <div className="h-8 bg-gray-300 border border-gray-200 rounded w-1/4 mb-6 shimmer-effect"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
                 <div key={i} className="bg-white rounded-lg p-6 space-y-4 shimmer-effect">
-                  <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-300 rounded w-1/2"></div>
-                  <div className="h-20 bg-gray-300 rounded"></div>
+                  <div className="h-4 bg-gray-300 border border-gray-200  rounded w-3/4"></div>
+                  <div className="h-3 bg-gray-300 border border-gray-200 rounded w-1/2"></div>
+                  <div className="h-20 bg-gray-300 border border-gray-200 rounded"></div>
                 </div>
               ))}
             </div>
@@ -408,23 +418,26 @@ const LiveEventMonitor = () => {
   }
 
   if (error) {
+    const message = getFriendlyErrorMessage(error);
     return (
-      <div className="min-h-screen bg-[#ebebeb] p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-white p-6 flex items-center justify-center">
         <div className="max-w-md w-full bg-white rounded-2xl p-8 text-center shadow-2xl animate-shake">
           <div className="text-error mb-6 animate-bounce">
             <AlertCircle className="w-16 h-16 mx-auto" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-3">Error Loading Events</h3>
-          <p className="text-gray-600 mb-6">{error}</p>
+          <h3 className="text-2xl font-bold text-gray-900 mb-3">
+            Error Loading Analytics
+          </h3>
+          <p className="text-gray-600 mb-6">{message}</p>
           <button
             onClick={() => window.location.reload()}
-            className="button bg-primary hover:bg-primary-600 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+            className="button bg-primary hover:bg-primary-600 text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg mx-auto"
           >
             Try Again
           </button>
         </div>
       </div>
-    )
+    );
   }
 
   if (accessDenied) {

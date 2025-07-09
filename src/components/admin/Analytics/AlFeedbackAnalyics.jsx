@@ -41,6 +41,7 @@ import {
   LineChart,
   Line,
 } from 'recharts';
+import { useNavigate } from 'react-router-dom';
 
 const FeedbackAnalytics = () => {
   const [insights, setInsights] = useState([]);
@@ -59,6 +60,15 @@ const FeedbackAnalytics = () => {
 
   // Static admin token as provided
   const ADMIN_TOKEN = localStorage.getItem('token');
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login'); // redirect to login if token is missing
+    }
+  }, [navigate]);
 
   const fetchAllInsights = async () => {
     try {
@@ -369,19 +379,19 @@ const FeedbackAnalytics = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#ebebeb] p-6">
+      <div className="min-h-screen bg-white p-6">
         <div className="max-w-7xl mx-auto">
           <div className="animate-pulse">
-            <div className="h-8 bg-gray-300 rounded w-1/4 mb-6 shimmer-effect"></div>
+            <div className="h-8 bg-gray-300 border border-gray-200 rounded w-1/4 mb-6 shimmer-effect"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
                 <div
                   key={i}
                   className="bg-white rounded-lg p-6 space-y-4 shimmer-effect"
                 >
-                  <div className="h-4 bg-gray-300 rounded w-3/4"></div>
-                  <div className="h-3 bg-gray-300 rounded w-1/2"></div>
-                  <div className="h-20 bg-gray-300 rounded"></div>
+                  <div className="h-4 bg-gray-300 border border-gray-200 rounded w-3/4"></div>
+                  <div className="h-3 bg-gray-300 border border-gray-200 rounded w-1/2"></div>
+                  <div className="h-20 bg-gray-300 border border-gray-200 rounded"></div>
                 </div>
               ))}
             </div>
@@ -394,7 +404,7 @@ const FeedbackAnalytics = () => {
   if (error) {
     const message = getFriendlyErrorMessage(error);
     return (
-      <div className="min-h-screen bg-[#ebebeb] p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-white p-6 flex items-center justify-center">
         <div className="max-w-md w-full bg-white rounded-2xl p-8 text-center shadow-2xl animate-shake">
           <div className="text-error mb-6 animate-bounce">
             <AlertCircle className="w-16 h-16 mx-auto" />

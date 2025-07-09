@@ -27,7 +27,7 @@ import HomePage from '../pages/homePage/HomePage';
 import AdminDashboard from '../pages/admin/Dashboard';
 import ManageEvents from '../pages/admin/ManageEvents';
 import Notifications from '../pages/admin/Notifications';
-import LiveQueueManagement from '../components/admin/jobFairSetupComponent/LiveQueue'
+import LiveQueue from '../pages/admin/LiveInterviewQueue'
 import JobFairSetup from '../pages/admin/JobFairSetup';
 
 import LiveMonitor from '../pages/admin/LiveMonitor';
@@ -53,7 +53,7 @@ const AppRoutes = () => {
       <Route path="/admin/notifications" element={<Notifications />} />
       <Route path="/admin/liveevents" element={<LiveMonitor />} />
       <Route path="/admin/FeedbackAnalytics" element={<AlFeedbackAnalyics />} />
-      <Route path="/admin/LiveQueueManagement" element={<LiveQueueManagement />} />
+      <Route path="/admin/LiveQueue" element={<LiveQueue />} />
       <Route
         path="/admin"
         element={<Navigate to="/admin/dashboard" replace />}
