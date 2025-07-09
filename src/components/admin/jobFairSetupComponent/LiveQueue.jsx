@@ -326,7 +326,7 @@ const LiveQueueManagement = ({ jobFairId = 1, className = "" }) => {
         <div className="mb-6 lg:mb-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:justify-between lg:items-center lg:gap-4">
             <div className="flex-1 min-w-0">
-              <h1 className="text-2xl lg:text-4xl font-black bg-gradient-to-r from-[#901b20] to-[#ad565a] bg-clip-text text-transparent mb-1 lg:mb-2 leading-tight">
+              <h1 className="text-2xl lg:text-4xl font-black bg-gradient-to-r from-[#901b20] to-[#901b20] bg-clip-text text-transparent mb-1 lg:mb-2 leading-tight">
                 {selectedCompany ? (
                   <span className="block lg:inline">
                     <span className="block lg:inline">{selectedCompany.company.name}</span>

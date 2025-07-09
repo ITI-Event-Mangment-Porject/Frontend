@@ -451,7 +451,7 @@ const LiveEventMonitor = () => {
         <div className="mb-8 animate-fade-in">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-4">
             <div>
-              <h1 className="text-3xl sm:text-4xl font-black text-primary bg-gradient-to-r from-[#901b20] to-[#ad565a] bg-clip-text text-transparent mb-2">
+              <h1 className="text-3xl sm:text-4xl font-black text-primary bg-gradient-to-r from-[#901b20] to-[#901b20] bg-clip-text text-transparent mb-2">
                 Events Monitor
               </h1>
               <p className="text-lg text-gray-600 font-medium">Monitor and manage all active events in real-time</p>

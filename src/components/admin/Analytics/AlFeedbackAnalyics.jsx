@@ -797,7 +797,7 @@ const FeedbackAnalytics = () => {
                       dataKey="name"
                       tick={{ fontSize: 10, fontWeight: 600 }}
                       interval={0}
-                      angle={-45}
+                      angle={-30}
                       textAnchor="end"
                       height={60}
                     />
@@ -805,13 +805,13 @@ const FeedbackAnalytics = () => {
                     <Tooltip
                       contentStyle={{
                         backgroundColor: "white",
-                        border: "2px solid #901b20",
+                        border: "2px solid var(--primary-400)",
                         borderRadius: "12px",
-                        boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+                        boxShadow: "0 0 10px var(--primary-400)",
                         fontSize: "12px",
                       }}
                     />
-                    <Bar dataKey="score" fill="#901b20" name="Satisfaction Score" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="score" fill="var(--secondary-400)" name="Satisfaction Score" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
