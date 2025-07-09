@@ -73,7 +73,6 @@ const Attendance_Reports = () => {
       phone: attendee.phone,
       eventTitle: activeEvent.event,
       date: new Date(activeEvent.event_date).toLocaleDateString(),
-      
     }));
   };
 
@@ -88,14 +87,16 @@ const Attendance_Reports = () => {
           phone: attendee.phone,
           eventTitle: event.event,
           date: new Date(event.event_date).toLocaleDateString(),
-         
         });
       });
     });
     return allAttendees;
   };
 
-  const attendeeData = activeEventTab === 'all' ? getAllAttendeesData() : getActiveEventAttendees();
+  const attendeeData =
+    activeEventTab === 'all'
+      ? getAllAttendeesData()
+      : getActiveEventAttendees();
   const activeEvent = getActiveEventData();
 
   const filteredAttendees = attendeeData.filter(attendee => {
@@ -138,7 +139,7 @@ const Attendance_Reports = () => {
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
             <h1 className="text-3xl font-bold text-gray-900">
-              Attendance  Reports
+              Attendance Reports
             </h1>
             <button
               onClick={handleExportAttendance}
@@ -180,24 +181,34 @@ const Attendance_Reports = () => {
             </div>
           </div>
 
-         
-
           {/* Event Details (only show when specific event is selected) */}
           {activeEventTab !== 'all' && activeEvent && (
             <div className="bg-white p-6 rounded-xl shadow-sm border mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Event Details</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                Event Details
+              </h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Event Name</label>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                    Event Name
+                  </label>
                   <p className="text-gray-900">{activeEvent.event}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Date</label>
-                  <p className="text-gray-900">{new Date(activeEvent.event_date).toLocaleDateString()}</p>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                    Date
+                  </label>
+                  <p className="text-gray-900">
+                    {new Date(activeEvent.event_date).toLocaleDateString()}
+                  </p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-1">Total Registered</label>
-                  <p className="text-gray-900">{activeEvent.attendees.length} attendees</p>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                    Total Registered
+                  </label>
+                  <p className="text-gray-900">
+                    {activeEvent.attendees.length} attendees
+                  </p>
                 </div>
               </div>
             </div>
@@ -206,7 +217,6 @@ const Attendance_Reports = () => {
           {/* Filters */}
           <div className="bg-white p-6 rounded-xl shadow-sm border mb-6">
             <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-              
               <div className="md:col-span-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Search
@@ -250,7 +260,6 @@ const Attendance_Reports = () => {
               <table className="w-full">
                 <thead className="border-b">
                   <tr>
-                   
                     <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">
                       Name
                     </th>
@@ -268,13 +277,11 @@ const Attendance_Reports = () => {
                     <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">
                       Date
                     </th>
-                   
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {paginatedAttendees.map(attendee => (
                     <tr key={`${attendee.id}-${attendee.eventTitle}`}>
-                     
                       <td className="py-4 px-6 text-sm text-gray-900">
                         {attendee.name}
                       </td>
@@ -292,7 +299,6 @@ const Attendance_Reports = () => {
                       <td className="py-4 px-6 text-sm text-gray-600">
                         {attendee.date}
                       </td>
-                      
                     </tr>
                   ))}
                 </tbody>
@@ -315,23 +321,27 @@ const Attendance_Reports = () => {
                 </button>
 
                 <div className="flex space-x-1">
-                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                    <button
-                      key={page}
-                      onClick={() => setCurrentPage(page)}
-                      className={`px-3 py-1 rounded border ${
-                        currentPage === page
-                          ? 'bg-(--primary-600) text-white'
-                          : 'bg-white text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      {page}
-                    </button>
-                  ))}
+                  {Array.from({ length: totalPages }, (_, i) => i + 1).map(
+                    page => (
+                      <button
+                        key={page}
+                        onClick={() => setCurrentPage(page)}
+                        className={`px-3 py-1 rounded border ${
+                          currentPage === page
+                            ? 'bg-(--primary-600) text-white'
+                            : 'bg-white text-gray-700 hover:bg-gray-100'
+                        }`}
+                      >
+                        {page}
+                      </button>
+                    )
+                  )}
                 </div>
 
                 <button
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                  onClick={() =>
+                    setCurrentPage(prev => Math.min(prev + 1, totalPages))
+                  }
                   disabled={currentPage === totalPages}
                   className={`px-3 py-1 rounded border ${
                     currentPage === totalPages
