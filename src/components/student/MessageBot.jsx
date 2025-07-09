@@ -10,6 +10,10 @@ const Messenger = () => {
   useEffect(() => {
     if (open) {
       const token = localStorage.getItem('token');
+        if (!token) {
+          console.warn('User not logged in');
+          return;
+        }
       fetch(`${API_BASE_URL}/api/bulk-messages`, {
         headers: { Authorization: `Bearer ${token}` },
       })

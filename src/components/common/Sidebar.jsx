@@ -17,7 +17,7 @@ const Sidebar = () => {
 
   const navItems = [
     { path: '/admin/dashboard', icon: FaHome, label: 'Dashboard' },
-    { path: '/admin/users', icon: FaUsers, label: 'Student Management' },
+    { path: '/admin/users', icon: FaUsers, label: 'User Management' },
     { path: '/admin/events', icon: FaCalendarAlt, label: 'Manage Events' },
     {
       path: '/admin/attendance',
@@ -25,13 +25,26 @@ const Sidebar = () => {
       label: 'Attendance Reports',
     },
 
-    {path:'/admin/jobfair', icon: FaClipboardList, label: 'Job Fair Management'},
+    {
+      path: '/admin/jobfair',
+      icon: FaClipboardList,
+      label: 'Job Fair Management',
+    },
     { path: '/admin/feedback', icon: FaChartBar, label: 'Feedback Analytics' },
 
-    { path: '/admin/FeedbackAnalytics', icon: FaChartBar, label: 'Feedback Analytics' },
+    {
+      path: '/admin/FeedbackAnalytics',
+      icon: FaChartBar,
+      label: 'Feedback Analytics',
+    },
 
     { path: '/admin/companies', icon: FaBriefcase, label: 'Companies Setup' },
+
+    { path: '/admin/brandingDay', icon: FaDesktop, label: 'Branding Day' },
+    { path: '/admin/monitor', icon: FaDesktop, label: 'Live Monitor' },
+
     { path: '/admin/liveevents', icon: FaDesktop, label: 'Live Events' },
+
     { path: '/admin/notifications', icon: FaBell, label: 'Notifications' },
     { path: '/admin/queue', icon: FaListAlt, label: 'Queue Management' },
   ];

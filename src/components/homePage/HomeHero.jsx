@@ -65,7 +65,7 @@ const animationStyles = `
 
 const HomeHero = () => {
   return (
-    <section className="relative bg-gradient-to-r from-[var(--secondary-500)] to-[var(--primary-500)] text-white pt-40 pb-35 overflow-hidden">
+    <section className="relative bg-gradient-to-r from-[var(--primary-500)] to-[var(--secondary-500)] text-white pt-40 pb-35 overflow-hidden">
       {/* Inject custom animations */}
       <style dangerouslySetInnerHTML={{ __html: animationStyles }} />
 
@@ -196,7 +196,7 @@ const HomeHero = () => {
               Get Started
             </Link>
             <Link
-              to="/about"
+              to="/about-us"
               className="btn px-8 py-3 border-2 border-white text-white hover:bg-white hover:text-[var(--primary-500)] transition-all duration-300 font-semibold rounded-md text-center hover:scale-105"
             >
               Learn More
