@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import Navbar from '../../components/student/Navbar';
 import Sidebar from '../../components/student/Sidebar';
 import Footer from '../../components/student/Footer';
+import defaultEvent from '../../assets/images/Business-Event1.jpg';
 
 const API_BASE_URL = 'http://127.0.0.1:8000';
 
@@ -193,11 +194,16 @@ const EventDetails = () => {
           )}
 
           <div className="relative rounded-2xl overflow-hidden shadow-lg mb-10">
-            <img
-              src={event.banner_image || 'https://via.placeholder.com/1200x600?text=No+Image'}
-              alt={event.title}
-              className="w-full h-64 sm:h-96 object-cover"
-            />
+          <img
+            src={event.banner_image && event.banner_image.trim() !== '' ? event.banner_image : defaultEvent}
+            alt={event.title}
+            onError={(e) => {
+              if (e.target.src !== defaultEvent) e.target.src = defaultEvent;
+            }}
+            className="w-full h-64 sm:h-96 object-cover"
+          />
+
+
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-8">
               <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-3">{event.title}</h1>
               <span className="inline-block bg-white/90 text-gray-800 px-4 py-2 rounded-full text-base font-semibold mb-2">

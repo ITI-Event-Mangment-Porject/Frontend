@@ -103,10 +103,8 @@ const FeedbackForm = () => {
     try {
       const token = localStorage.getItem('token');
       
-      // تحديد الـ form ID من البيانات المسترجعة
       const formId = form.id || form.form_id || 1;
       
-      // POST request للـ endpoint الصحيح
       const res = await fetch(
         `${API_BASE_URL}/api/feedback/forms/${formId}/responses`,
         {
@@ -129,7 +127,7 @@ const FeedbackForm = () => {
       setResponses({});
       setModalType('success');
       setModalMessage('✅ Thank you for your feedback!');
-      setTimeout(() => navigate(`/events/${id}`), 2000);
+      setTimeout(() => navigate(`/student/show-events`), 2000);
     } catch (error) {
       console.error('Error submitting feedback:', error);
       setModalType('error');
@@ -139,7 +137,7 @@ const FeedbackForm = () => {
     }
   };
 
-  const handleCancel = () => navigate(`/events/${id}`);
+  const handleCancel = () => navigate(`/student/show-events`);
 
   if (loadingForm) {
     return (

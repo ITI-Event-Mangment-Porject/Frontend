@@ -18,6 +18,7 @@ import {
   FaMapMarkerAlt,
   FaBook,
 } from 'react-icons/fa';
+import defaultProfileImage from '../../assets/images/profile.png';
 import Layout from '../../components/student/Layout'; 
 import Footer from '../../components/student/Footer';
 
@@ -112,7 +113,6 @@ const Profile = () => {
       
       const token = localStorage.getItem('token');
       
-      // تحضير البيانات للإرسال حسب الـ API المطلوب
       const updateData = {
         first_name: editForm.first_name || '',
         last_name: editForm.last_name || '',
@@ -123,10 +123,10 @@ const Profile = () => {
         portfolio_url: editForm.portfolio_url || '',
         intake_year: editForm.intake_year ? parseInt(editForm.intake_year) : null,
         graduation_year: editForm.graduation_year ? parseInt(editForm.graduation_year) : null,
-        profile_img: editForm.profile_img || '', // إضافة profile_img
+        profile_img: editForm.profile_img || defaultProfileImage, 
       };
 
-      // إزالة الحقول الفارغة أو null
+     
       Object.keys(updateData).forEach(key => {
         if (updateData[key] === null || updateData[key] === '') {
           delete updateData[key];
@@ -204,7 +204,6 @@ const Profile = () => {
       const formData = new FormData();
       formData.append('cv', file);
 
-      // رفع الـ CV للـ API
       const response = await fetch(`${API_BASE_URL}/api/users/${currentUserId}`, {
         method: 'POST',
         headers: {
@@ -317,7 +316,7 @@ const Profile = () => {
             <div className="flex flex-col lg:flex-row items-center lg:items-start space-y-6 lg:space-y-0 lg:space-x-8">
               <div className="relative">
                 <img
-                  src={editMode ? editForm.avatar || profile.avatar : profile.avatar}
+                  src={editMode ? editForm.avatar || profile : defaultProfileImage}
                   alt="Profile"
                   className="w-32 h-32 rounded-full object-cover border-4 border-red-900 shadow-lg"
                 />
@@ -373,8 +372,8 @@ const Profile = () => {
                         portfolio_url: profile.portfolio_url || '',
                         intake_year: profile.intake_year || '',
                         graduation_year: profile.graduation_year || '',
-                        avatar: profile.avatar || '',
-                        profile_img: profile.avatar || '',
+                        avatar: profile.avatar || defaultProfileImage,
+                        profile_img: profile.avatar || defaultProfileImage,
                       });
                       setEditMode(true);
                       setError(null);
@@ -426,7 +425,7 @@ const Profile = () => {
                     { field: 'phone', label: 'Phone', icon: FaPhone, type: 'tel' },
                     { field: 'program', label: 'Program', icon: FaBook, type: 'text', readonly: true },
                     { field: 'branch', label: 'Branch', icon: FaMapMarkerAlt, type: 'text', readonly: true },
-                    { field: 'intake_year', label: 'Intake Year', icon: FaCalendarAlt, type: 'number' },
+                    { field: 'intake_year', label: 'Intake', icon: FaCalendarAlt, type: 'number' },
                     { field: 'graduation_year', label: 'Graduation Year', icon: FaCalendarAlt, type: 'number' },
                   ].map(({ field, label, icon: Icon, type, readonly = false }) => (
                     <div key={field} className="space-y-2">

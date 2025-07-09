@@ -241,7 +241,7 @@ const CompanyDirectory = () => {
                         <div key={profile.id} className="border rounded-lg p-4 bg-gray-50">
                           <div className="flex justify-between items-start mb-3">
                             <h5 className="font-semibold">{profile.title}</h5>
-                            <span className="px-2 py-1 text-xs rounded bg-red-900 text-red-900">
+                            <span className="px-2 py-1 text-xs rounded bg-red-900 text-white">
                               {profile.employment_type}
                             </span>
                           </div>
