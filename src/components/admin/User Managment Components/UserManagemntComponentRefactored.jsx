@@ -480,11 +480,11 @@ const UserManagementComponent = () => {
                     <span
                       className="px-2 py-1 rounded-full text-xs whitespace-nowrap"
                       style={{
-                        backgroundColor: `${user.track.color}20`,
-                        color: user.track.color,
+                        backgroundColor: `${user.track?.color || '#6B7280'}20`,
+                        color: user.track?.color || '#6B7280',
                       }}
                     >
-                      {user.track.name}
+                      {user.track?.name || 'No Track'}
                     </span>
                   </div>
                   <div className="truncate">
