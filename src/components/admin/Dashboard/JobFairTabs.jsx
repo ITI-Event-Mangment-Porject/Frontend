@@ -851,21 +851,6 @@ const JobFairTabs = () => {
             <h3 className="text-lg font-semibold text-gray-800">
               Companies by Industry
             </h3>
-            {prepareIndustryChartData.length > 0 && (
-              <div className="text-sm text-gray-600">
-                <span className="font-medium">
-                  {prepareIndustryChartData.reduce(
-                    (sum, item) => sum + item.value,
-                    0
-                  )}
-                </span>{' '}
-                companies across{' '}
-                <span className="font-medium">
-                  {prepareIndustryChartData.length}
-                </span>{' '}
-                industries
-              </div>
-            )}
           </div>
 
           {/* Industry Legend - Show only industries present in data */}

@@ -2,7 +2,6 @@ import axios from 'axios';
 
 // Create axios instance with base configuration
 const api = axios.create({
-
   baseURL: import.meta.env.VITE_API_BASE_URL
     ? `${import.meta.env.VITE_API_BASE_URL}/api`
     : 'http://localhost:8000/api',
@@ -24,7 +23,7 @@ const PROTECTED_ROUTES = [
   '/auth/refresh',
   '/auth/me',
   '/notifications',
-  '/bulk-messages', // Add this line for bulk message endpoints
+  '/message/bulk-messages', // Add this line for bulk message endpoints
   '/dashboard',
   '/analytics',
   '/reports',
@@ -128,7 +127,6 @@ export const companyAPI = {
   getById: id => api.get(`/companies/${id}`),
   create: companyData => api.post('/companies', companyData),
   update: (id, companyData) => api.put(`/companies/${id}`, companyData),
-  reject:(id)=>api.post(`/companies/${id}/reject`),
   delete: id => api.delete(`/companies/${id}`),
   // Custom actions for companies
   approve: id => api.post(`/companies/${id}/approve`),
@@ -138,23 +136,37 @@ export const companyAPI = {
 export const messageAPI = {
   getAll: params => {
     console.log('messageAPI.getAll - Token:', localStorage.getItem('token'));
-    return api.get('/bulk-messages', { params });
+    return api.get('/message/bulk-messages', { params });
+  },
+  getAllMessages: params => {
+    console.log(
+      'messageAPI.getAllMessages - Token:',
+      localStorage.getItem('token')
+    );
+    return api.get('/message/bulk-messages', { params });
+  },
+  getStats: () => {
+    console.log('messageAPI.getStats - Token:', localStorage.getItem('token'));
+    return api.get('/message/bulk-messages/stats').catch(() => {
+      // If stats endpoint doesn't exist, return null
+      return null;
+    });
   },
   getById: id => {
     console.log('messageAPI.getById - Token:', localStorage.getItem('token'));
-    return api.get(`/bulk-messages/${id}`);
+    return api.get(`/message/bulk-messages/${id}`);
   },
   create: messageData => {
     console.log('messageAPI.create - Token:', localStorage.getItem('token'));
     console.log('messageAPI.create - Data:', messageData);
-    return api.post('/bulk-messages', messageData);
+    return api.post('/message/bulk-messages', messageData);
   },
   sendBulkMessages: messageData => {
     console.log(
       'messageAPI.sendBulkMessages - Token:',
       localStorage.getItem('token')
     );
-    return api.post('/bulk-messages', messageData);
+    return api.post('/message/bulk-messages', messageData);
   }, // Keep for backward compatibility
   sendMessage: id => {
     console.log(
@@ -162,12 +174,12 @@ export const messageAPI = {
       localStorage.getItem('token')
     );
     console.log('messageAPI.sendMessage - ID:', id);
-    return api.post(`/bulk-messages/${id}/send`);
+    return api.post(`/message/bulk-messages/${id}/send`);
   },
   getStatus: id => {
     console.log('messageAPI.getStatus - Token:', localStorage.getItem('token'));
     console.log('messageAPI.getStatus - ID:', id);
-    return api.get(`/bulk-messages/${id}/status`);
+    return api.get(`/message/bulk-messages/${id}/status`);
   },
 };
 
@@ -406,7 +418,6 @@ export const jobFairAPI = {
     }
   },
 };
-
 
 // Authentication API endpoints
 export const authAPI = {
