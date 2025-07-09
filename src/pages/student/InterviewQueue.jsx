@@ -7,57 +7,104 @@ const JobFairDashboard = () => {
   const [allQueuesData, setAllQueuesData] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
-  
-  // Get user ID from props, context, or authentication state
-  // For now, using a placeholder - replace with actual user ID source
-  const userId = 96; // Replace this with actual user ID from your auth system
-
-  const fetchQueueData = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(`http://127.0.0.1:8000/api/job-fairs/1/queues/student/${userId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch queue data');
-      }
-      const result = await response.json();
-      
-      // Extract queue data from the new API response structure
-      const queuesArray = result.success && result.data && result.data.queue 
-        ? result.data.queue 
-        : [];
-      
-      setAllQueuesData(queuesArray);
-      setLoading(false);
-    } catch (error) {
-      console.error('Error fetching queue data:', error);
-      setLoading(false);
-    }
-  };
 
   useEffect(() => {
-    fetchQueueData();
-  }, [userId]);
+    const staticResponse = {
+      success: true,
+      data: {
+        queue: [
+          {
+            queue_id: 126,
+            queue_position: 1,
+            order_key: 9,
+            status: "waiting",
+            company: {
+              id: 15,
+              name: "Huel-Jones",
+              logo_path: "https://via.placeholder.com/200x200.png/00aacc?text=Huel-Jones"
+            },
+            slot: {
+              id: 106,
+              date: "2025-08-06T00:00:00.000000Z",
+              start_time: "10:30:00",
+              end_time: "11:00:00"
+            },
+            interview_request_id: 130,
+            notes: null
+          },
+          {
+            queue_id: 127,
+            queue_position: 3,
+            order_key: 12,
+            status: "waiting",
+            company: {
+              id: 16,
+              name: "TechCorp",
+              logo_path: "https://via.placeholder.com/200x200.png/ffaa00?text=TechCorp"
+            },
+            slot: {
+              id: 107,
+              date: "2025-08-06T00:00:00.000000Z",
+              start_time: "11:30:00",
+              end_time: "12:00:00"
+            },
+            interview_request_id: 131,
+            notes: "Bring a printed resume."
+          },
+          {
+            queue_id: 128,
+            queue_position: 2,
+            order_key: 10,
+            status: "waiting",
+            company: {
+              id: 17,
+              name: "InnoSoft",
+              logo_path: "https://via.placeholder.com/200x200.png/55cc99?text=InnoSoft"
+            },
+            slot: {
+              id: 108,
+              date: "2025-08-06T00:00:00.000000Z",
+              start_time: "12:30:00",
+              end_time: "13:00:00"
+            },
+            interview_request_id: 132,
+            notes: "Expect a technical screening."
+          }
+        ]
+      },
+      message: "Student queue retrieved successfully."
+    };
+
+    const queuesArray = staticResponse.success && staticResponse.data && staticResponse.data.queue
+      ? staticResponse.data.queue
+      : [];
+
+    setAllQueuesData(queuesArray);
+    setLoading(false);
+  }, []);
 
   const refreshCurrentQueue = () => {
-    fetchQueueData();
+    // لإعادة تحميل نفس البيانات
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+    }, 500);
   };
 
   const currentQueue = allQueuesData[activeTab];
 
-  // Format time for display
   const formatTime = (startTime, endTime) => {
     if (!startTime || !endTime) return 'TBD';
     return `${startTime.slice(0, 5)} - ${endTime.slice(0, 5)}`;
   };
 
-  // Format date for display
   const formatDate = (dateString) => {
     if (!dateString) return 'TBD';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
-      year: 'numeric' 
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
     });
   };
 
@@ -65,7 +112,6 @@ const JobFairDashboard = () => {
     <Layout>
       <div className="p-6">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          {/* Header */}
           <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-6">
             <h1 className="text-3xl font-bold mb-2">Job Fair Dashboard</h1>
             <p className="text-orange-100">Your interviews for today</p>
@@ -82,7 +128,6 @@ const JobFairDashboard = () => {
             </div>
           ) : (
             <>
-              {/* Tabs */}
               <div className="border-b border-gray-200">
                 <div className="flex overflow-x-auto">
                   {allQueuesData.map((queueItem, index) => (
@@ -121,11 +166,9 @@ const JobFairDashboard = () => {
                 </div>
               </div>
 
-              {/* Tab Content */}
               <div className="p-8">
                 {currentQueue && (
                   <div className="max-w-2xl mx-auto">
-                    {/* Company Info */}
                     <div className="text-center mb-8">
                       <div className="w-20 h-20 mx-auto mb-4 bg-orange-100 rounded-full flex items-center justify-center">
                         {currentQueue.company?.logo_path ? (
@@ -149,7 +192,6 @@ const JobFairDashboard = () => {
                       </div>
                     </div>
 
-                    {/* Queue Status */}
                     <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-2xl p-8 mb-6">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
                         <div className="bg-white rounded-xl p-6 shadow-sm">
@@ -173,7 +215,6 @@ const JobFairDashboard = () => {
                       </div>
                     </div>
 
-                    {/* Status Badge */}
                     <div className="text-center mb-6">
                       <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
                         currentQueue.status === 'waiting' && currentQueue.queue_position === 1
@@ -188,7 +229,6 @@ const JobFairDashboard = () => {
                       </span>
                     </div>
 
-                    {/* Progress Bar */}
                     <div className="mb-6">
                       <div className="flex justify-between text-sm text-gray-600 mb-2">
                         <span>Queue Progress</span>
@@ -210,7 +250,6 @@ const JobFairDashboard = () => {
                       </div>
                     </div>
 
-                    {/* Additional Info */}
                     {currentQueue.notes && (
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                         <h3 className="font-semibold text-blue-800 mb-2">Notes:</h3>
@@ -218,7 +257,6 @@ const JobFairDashboard = () => {
                       </div>
                     )}
 
-                    {/* Refresh Button */}
                     <div className="text-center">
                       <button
                         onClick={refreshCurrentQueue}

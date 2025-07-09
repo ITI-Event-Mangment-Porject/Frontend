@@ -85,7 +85,7 @@ const EventDetails = () => {
         return;
       }
       
-      if (!res.ok) throw new Error('Registration failed');
+      if (!res.ok) throw new Error('You already registered for this event');
       
       setIsRegistered(true);
       showMessage('Registration successful!');
@@ -105,7 +105,7 @@ const EventDetails = () => {
         // Ignore status check error
       }
       
-      showMessage('Registration failed');
+      showMessage('You already registered for this event');
     } finally {
       setRegisterLoading(false);
     }
@@ -226,7 +226,7 @@ const EventDetails = () => {
                 onClick={handleRegister}
                 disabled={isRegistered || registerLoading || event.status === 'completed'}
               >
-                {registerLoading ? 'Registering...' : isRegistered ? 'Registered ✓' : 'Register'}
+                {registerLoading ? 'Registering...' : isRegistered ? 'Applied ✓' : 'Apply'}
               </button>
               
               {event.status === 'completed' && (
