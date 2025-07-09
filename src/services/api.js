@@ -99,7 +99,7 @@ export const userAPI = {
   getAll: params => api.get('/users', { params }),
   getById: id => api.get(`/users/${id}`),
   create: userData => api.post('/users', userData),
-  update: (id, userData) => api.put(`/users/${id}`, userData),
+  update: (id, userData) => api.post(`/users/${id}`, userData),
   delete: id => api.delete(`/users/${id}`),
 };
 
@@ -129,7 +129,9 @@ export const companyAPI = {
   update: (id, companyData) => api.put(`/companies/${id}`, companyData),
   delete: id => api.delete(`/companies/${id}`),
   // Custom actions for companies
-  approve: id => api.post(`/companies/${id}/approve`),
+  approve: id =>
+    api.post(`/compa
+  nies/${id}/approve`),
   reject: (id, reason) => api.post(`/companies/${id}/reject`, { reason }),
 };
 

@@ -31,12 +31,6 @@ export const useUserManagement = () => {
         per_page: pagination.perPage,
         search: searchTerm || undefined,
         track_id: selectedTrack || undefined,
-        is_active:
-          selectedStatus === 'Active'
-            ? 1
-            : selectedStatus === 'Inactive'
-              ? 0
-              : undefined,
       };
 
       const result = await fetchUsers(() => userAPI.getAll(params));
