@@ -216,22 +216,90 @@ const JobFairTabs = () => {
           setEventCompanies(companies);
 
           // Generate interview data based on real companies
-          const interviewData = companies.map(company => {
-            // For now, using mock interview data since we don't have real data
-            const actualDuration = 10 + Math.floor(Math.random() * 20); // 10-30 minutes
-            const targetDuration = 15; // 15 minutes target
-            const totalInterviews = 10 + Math.floor(Math.random() * 40); // 10-50 interviews
+          const interviewDataPromises = companies.map(async company => {
+            try {
+              // Fetch real queue data for each company
+              const queueResponse = await jobFairAPI.getCompanyQueue(
+                activeEvent.id,
+                company.id
+              );
 
-            return {
-              companyId: company.id,
-              companyName: company.name,
-              industry: company.industry,
-              actualDuration,
-              targetDuration,
-              totalInterviews,
-              isEfficient: actualDuration <= targetDuration,
-            };
+              if (queueResponse.data && queueResponse.data.data) {
+                const queueData = queueResponse.data.data;
+                const summary = queueData.summary || {};
+                const avgTime = summary.average_interview_time_minutes || 0;
+
+                // Calculate efficiency based on new thresholds
+                let efficiencyStatus = null;
+                if (avgTime <= 30) {
+                  efficiencyStatus = 'okay';
+                } else if (avgTime > 60) {
+                  efficiencyStatus = 'too_long';
+                }
+
+                return {
+                  companyId: company.id,
+                  companyName: company.name,
+                  industry: company.industry,
+                  actualDuration: avgTime,
+                  targetDuration: 30, // Updated target to 30 minutes
+                  totalInterviews: summary.completed || 0,
+                  efficiencyStatus: efficiencyStatus,
+                  isEfficient: avgTime <= 30, // Keep for backward compatibility
+                  trafficFlag: summary.traffic_flag || 'ok',
+                  totalInQueue: summary.total || 0,
+                  waitingInQueue: summary.waiting || 0,
+                  currentInterviewee: summary.in_interview_student_name || null,
+                };
+              } else {
+                // Fallback to mock data for this company if API fails
+                const mockAvgTime = 10 + Math.floor(Math.random() * 80); // Random 10-90 minutes
+                let efficiencyStatus = null;
+                if (mockAvgTime <= 30) {
+                  efficiencyStatus = 'okay';
+                } else if (mockAvgTime > 60) {
+                  efficiencyStatus = 'too_long';
+                }
+
+                return {
+                  companyId: company.id,
+                  companyName: company.name,
+                  industry: company.industry,
+                  actualDuration: mockAvgTime,
+                  targetDuration: 30,
+                  totalInterviews: 10 + Math.floor(Math.random() * 40),
+                  efficiencyStatus: efficiencyStatus,
+                  isEfficient: mockAvgTime <= 30,
+                  trafficFlag: 'ok',
+                  totalInQueue: 0,
+                  waitingInQueue: 0,
+                  currentInterviewee: null,
+                };
+              }
+            } catch (error) {
+              console.error(
+                `Error fetching queue data for company ${company.id}:`,
+                error
+              );
+              // Fallback to mock data for this company
+              return {
+                companyId: company.id,
+                companyName: company.name,
+                industry: company.industry,
+                actualDuration: 10 + Math.floor(Math.random() * 20),
+                targetDuration: 15,
+                totalInterviews: 10 + Math.floor(Math.random() * 40),
+                isEfficient: Math.random() > 0.5,
+                trafficFlag: 'ok',
+                totalInQueue: 0,
+                waitingInQueue: 0,
+                currentInterviewee: null,
+              };
+            }
           });
+
+          // Wait for all queue data to be fetched
+          const interviewData = await Promise.all(interviewDataPromises);
 
           setInterviewData(interviewData);
           setSelectedCompanies(interviewData.map(c => c.companyId));
@@ -257,7 +325,7 @@ const JobFairTabs = () => {
     };
 
     // Fallback function to generate mock data if API fails
-    const generateMockCompanyData = () => {
+    const generateMockCompanyData = async () => {
       // Generate mock companies data with industry distribution
       const industries = Object.keys(INDUSTRY_CATEGORIES);
       const mockCompanies = Array.from({ length: 20 }, (_, i) => {
@@ -280,11 +348,46 @@ const JobFairTabs = () => {
 
       setEventCompanies(mockCompanies);
 
-      // Generate interview duration data
-      const interviewData = mockCompanies.map(company => {
-        const actualDuration = 10 + Math.floor(Math.random() * 20); // 10-30 minutes
-        const targetDuration = 15; // 15 minutes target
-        const totalInterviews = 10 + Math.floor(Math.random() * 40); // 10-50 interviews
+      // Try to fetch real queue data for mock companies, fallback to mock data if needed
+      const interviewDataPromises = mockCompanies.map(async company => {
+        try {
+          if (activeEvent?.id) {
+            const queueResponse = await jobFairAPI.getCompanyQueue(
+              activeEvent.id,
+              company.id
+            );
+
+            if (queueResponse.data && queueResponse.data.data) {
+              const queueData = queueResponse.data.data;
+              const summary = queueData.summary || {};
+
+              return {
+                companyId: company.id,
+                companyName: company.name,
+                industry: company.industry,
+                actualDuration: summary.average_interview_time_minutes || 0,
+                targetDuration: 15,
+                totalInterviews: summary.completed || 0,
+                isEfficient:
+                  (summary.average_interview_time_minutes || 0) <= 15,
+                trafficFlag: summary.traffic_flag || 'ok',
+                totalInQueue: summary.total || 0,
+                waitingInQueue: summary.waiting || 0,
+                currentInterviewee: summary.in_interview_student_name || null,
+              };
+            }
+          }
+        } catch (error) {
+          console.log(error);
+          console.log(
+            `No queue data available for mock company ${company.id}, using fallback`
+          );
+        }
+
+        // Fallback to completely mock data
+        const actualDuration = 10 + Math.floor(Math.random() * 20);
+        const targetDuration = 15;
+        const totalInterviews = 10 + Math.floor(Math.random() * 40);
 
         return {
           companyId: company.id,
@@ -294,9 +397,14 @@ const JobFairTabs = () => {
           targetDuration,
           totalInterviews,
           isEfficient: actualDuration <= targetDuration,
+          trafficFlag: 'ok',
+          totalInQueue: Math.floor(Math.random() * 10),
+          waitingInQueue: Math.floor(Math.random() * 5),
+          currentInterviewee: Math.random() > 0.5 ? 'John Doe' : null,
         };
       });
 
+      const interviewData = await Promise.all(interviewDataPromises);
       setInterviewData(interviewData);
       // Initially select all companies
       setSelectedCompanies(interviewData.map(c => c.companyId));
@@ -764,20 +872,15 @@ const JobFairTabs = () => {
                     }}
                   />
                   <Tooltip
-                    formatter={(value, name) => {
-                      return [
-                        `${value} minutes`,
-                        name === 'actualDuration'
-                          ? 'Actual Time'
-                          : 'Target Time',
-                      ];
+                    formatter={value => {
+                      return [`${value} minutes`, 'Average Time'];
                     }}
                     labelFormatter={label => `Company: ${label}`}
                   />
                   <Bar
                     dataKey="actualDuration"
                     fill="#8884d8"
-                    name="Actual Time"
+                    // name="Average Time"
                   >
                     <LabelList
                       dataKey="actualDuration"
@@ -785,11 +888,6 @@ const JobFairTabs = () => {
                       style={{ fontSize: 10 }}
                     />
                   </Bar>
-                  <Bar
-                    dataKey="targetDuration"
-                    fill="#82ca9d"
-                    name="Target Time"
-                  />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -805,10 +903,7 @@ const JobFairTabs = () => {
                       Company
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actual Time
-                    </th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Target
+                      Average Time
                     </th>
                     <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Efficiency
@@ -827,28 +922,30 @@ const JobFairTabs = () => {
                       <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
                         {company.actualDuration} min
                       </td>
-                      <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
-                        {company.targetDuration} min
-                      </td>
                       <td className="px-4 py-2 whitespace-nowrap">
-                        <span
-                          className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            company.isEfficient
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}
-                        >
-                          {company.isEfficient ? (
-                            <>
-                              <FaCheck className="w-3 h-3 mr-1" /> Efficient
-                            </>
-                          ) : (
-                            <>
-                              <FaClock className="w-3 h-3 mr-1" /> Needs
-                              Improvement
-                            </>
-                          )}
-                        </span>
+                        {company.efficiencyStatus ? (
+                          <span
+                            className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                              company.efficiencyStatus === 'okay'
+                                ? 'bg-green-100 text-green-800'
+                                : 'bg-red-100 text-red-800'
+                            }`}
+                          >
+                            {company.efficiencyStatus === 'okay' ? (
+                              <>
+                                <FaCheck className="w-3 h-3 mr-1" /> Okay
+                              </>
+                            ) : (
+                              <>
+                                <FaTimes className="w-3 h-3 mr-1" /> Too Long
+                              </>
+                            )}
+                          </span>
+                        ) : (
+                          <span className="text-sm text-gray-400">
+                            No Data is Avaliable
+                          </span>
+                        )}
                       </td>
                       <td className="px-4 py-2 whitespace-nowrap text-sm text-gray-500">
                         {company.totalInterviews}

@@ -22,6 +22,7 @@ const PROTECTED_ROUTES = [
   '/auth/refresh',
   '/auth/me',
   '/notifications',
+  '/bulk-messages', // Add this line for bulk message endpoints
   '/dashboard',
   '/analytics',
   '/reports',
@@ -132,9 +133,39 @@ export const companyAPI = {
 };
 
 export const messageAPI = {
-  getAll: params => api.get('/bulk-messages', { params }),
-  getById: id => api.get(`/bulk-messages/${id}`),
-  sendBulkMessages: messageData => api.post('/bulk-messages', messageData),
+  getAll: params => {
+    console.log('messageAPI.getAll - Token:', localStorage.getItem('token'));
+    return api.get('/bulk-messages', { params });
+  },
+  getById: id => {
+    console.log('messageAPI.getById - Token:', localStorage.getItem('token'));
+    return api.get(`/bulk-messages/${id}`);
+  },
+  create: messageData => {
+    console.log('messageAPI.create - Token:', localStorage.getItem('token'));
+    console.log('messageAPI.create - Data:', messageData);
+    return api.post('/bulk-messages', messageData);
+  },
+  sendBulkMessages: messageData => {
+    console.log(
+      'messageAPI.sendBulkMessages - Token:',
+      localStorage.getItem('token')
+    );
+    return api.post('/bulk-messages', messageData);
+  }, // Keep for backward compatibility
+  sendMessage: id => {
+    console.log(
+      'messageAPI.sendMessage - Token:',
+      localStorage.getItem('token')
+    );
+    console.log('messageAPI.sendMessage - ID:', id);
+    return api.post(`/bulk-messages/${id}/send`);
+  },
+  getStatus: id => {
+    console.log('messageAPI.getStatus - Token:', localStorage.getItem('token'));
+    console.log('messageAPI.getStatus - ID:', id);
+    return api.get(`/bulk-messages/${id}/status`);
+  },
 };
 
 // Job Fair Participation API endpoints
@@ -162,6 +193,23 @@ export const jobFairAPI = {
       }
       return Promise.reject(error);
     });
+  },
+  getCompanyQueue: (eventId, companyId) => {
+    if (!eventId || !companyId) {
+      console.error('Missing eventId or companyId in getCompanyQueue call');
+      return Promise.reject(new Error('Event ID and Company ID are required'));
+    }
+
+    return api
+      .get(`/job-fairs/${eventId}/queues/company/${companyId}`)
+      .catch(error => {
+        console.error(
+          'Error fetching company queue:',
+          error.response?.status,
+          error.response?.data
+        );
+        return Promise.reject(error);
+      });
   },
   getParticipationsWithFallback: jobFairId => {
     if (!jobFairId) {

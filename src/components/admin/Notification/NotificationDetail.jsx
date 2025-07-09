@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   FaTimes,
   FaCheckCircle,
@@ -9,9 +9,39 @@ import {
   FaUsers,
   FaEnvelope,
   FaRedo,
+  FaSync,
 } from 'react-icons/fa';
+import { messageAPI } from '../../../services/api';
 
 const NotificationDetail = ({ notification, onClose }) => {
+  const [currentStatus, setCurrentStatus] = useState(notification?.status);
+  const [statusLoading, setStatusLoading] = useState(false);
+  const [statusError, setStatusError] = useState(null);
+
+  // Check notification status
+  const checkNotificationStatus = async () => {
+    if (!notification?.id) return;
+
+    try {
+      setStatusLoading(true);
+      setStatusError(null);
+
+      const response = await messageAPI.getStatus(notification.id);
+      console.log('Status response:', response);
+
+      // Extract status from response
+      let status = response.data?.status || response.data?.data?.status;
+      if (status) {
+        setCurrentStatus(status);
+      }
+    } catch (error) {
+      console.error('Error checking notification status:', error);
+      setStatusError('Failed to check status');
+    } finally {
+      setStatusLoading(false);
+    }
+  };
+
   // Add escape key listener to close modal
   useEffect(() => {
     const handleEscKey = event => {
@@ -23,6 +53,10 @@ const NotificationDetail = ({ notification, onClose }) => {
     window.addEventListener('keydown', handleEscKey);
     return () => window.removeEventListener('keydown', handleEscKey);
   }, [onClose]);
+
+  useEffect(() => {
+    checkNotificationStatus();
+  }, [notification]);
 
   if (!notification) {
     return (
@@ -56,7 +90,7 @@ const NotificationDetail = ({ notification, onClose }) => {
 
   // Status badge styling
   const getStatusBadge = () => {
-    switch (notification.status?.toLowerCase()) {
+    switch (currentStatus?.toLowerCase()) {
       case 'success':
       case 'completed':
         return (
@@ -192,7 +226,26 @@ const NotificationDetail = ({ notification, onClose }) => {
         </div>
 
         <div className="p-6">
-          {getStatusBadge()}
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex-1">{getStatusBadge()}</div>
+            <button
+              onClick={checkNotificationStatus}
+              disabled={statusLoading}
+              className="ml-4 px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors duration-200 flex items-center text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Refresh status"
+            >
+              <FaSync
+                className={`mr-1 ${statusLoading ? 'animate-spin' : ''}`}
+              />
+              {statusLoading ? 'Checking...' : 'Refresh'}
+            </button>
+          </div>
+
+          {statusError && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-md text-sm">
+              {statusError}
+            </div>
+          )}
 
           <div className="space-y-5 animate-[fadeIn_0.6s_ease-in-out]">
             <div className="border-b border-gray-100 pb-4">

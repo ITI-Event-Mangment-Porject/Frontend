@@ -6,6 +6,7 @@ import NotificationTable from '../../components/admin/Notification/NotificationT
 import NotificationDetail from '../../components/admin/Notification/NotificationDetail';
 import NotificationForm from '../../components/admin/Notification/NotificationForm';
 import { generateMockNotifications } from '../../utils/notificationUtils';
+import { messageAPI } from '../../services/api';
 import Layout from '../../components/common/Layout';
 import useScrollToTop from '../../hooks/useScrollToTop';
 
@@ -15,6 +16,8 @@ const Notifications = () => {
   const [selectedNotification, setSelectedNotification] = useState(null);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [formLoading, setFormLoading] = useState(false);
+  const [formError, setFormError] = useState(null);
 
   useScrollToTop();
 
@@ -58,28 +61,107 @@ const Notifications = () => {
   };
 
   // Create new notification
-  const handleCreateNotification = newNotification => {
-    const id =
-      notifications.length > 0
-        ? Math.max(...notifications.map(n => n.id)) + 1
-        : 1;
-    const completeNotification = {
-      ...newNotification,
-      id,
-      recipients:
-        newNotification.recipientType === 'specific'
-          ? newNotification.specificRecipients.join(', ')
-          : newNotification.recipientType === 'all'
-            ? 'All Users'
-            : `All ${newNotification.recipientType}`,
-    };
+  const handleCreateNotification = async newNotification => {
+    try {
+      setFormLoading(true);
+      setFormError(null);
 
-    const updatedNotifications = [completeNotification, ...notifications];
-    setNotifications(updatedNotifications);
-    setFilteredNotifications(updatedNotifications);
+      // Transform the form data to match API structure
+      const apiPayload = {
+        title: newNotification.title,
+        message: newNotification.message,
+        target_criteria: {
+          roles:
+            newNotification.recipientType === 'all'
+              ? ['student', 'company', 'staff']
+              : newNotification.recipientType === 'specific'
+                ? ['student'] // Default to students for specific recipients
+                : [
+                    newNotification.recipientType === 'students'
+                      ? 'student'
+                      : newNotification.recipientType === 'companies'
+                        ? 'company'
+                        : 'staff',
+                  ],
+          events: ['job_fair'], // Default to job_fair events
+        },
+        scheduled_at:
+          newNotification.scheduledDate && newNotification.scheduledTime
+            ? `${newNotification.scheduledDate} ${newNotification.scheduledTime}:00`
+            : null,
+      };
 
-    // Show success message
-    alert('Notification created successfully!');
+      console.log('Creating notification with payload:', apiPayload);
+
+      // Step 1: Create the notification
+      const createResponse = await messageAPI.create(apiPayload);
+      console.log('Notification created:', createResponse);
+
+      let notificationId;
+      if (createResponse.data?.data?.id) {
+        notificationId = createResponse.data.data.id;
+      } else if (createResponse.data?.id) {
+        notificationId = createResponse.data.id;
+      } else {
+        throw new Error('Failed to get notification ID from response');
+      }
+
+      // Step 2: Send the notification if not scheduled
+      if (!newNotification.scheduledDate) {
+        console.log('Sending notification immediately:', notificationId);
+        const sendResponse = await messageAPI.sendMessage(notificationId);
+        console.log('Notification sent:', sendResponse);
+      }
+
+      // Update local state with the new notification
+      const completeNotification = {
+        id: notificationId,
+        title: newNotification.title,
+        message: newNotification.message,
+        recipientType: newNotification.recipientType,
+        recipients:
+          newNotification.recipientType === 'specific'
+            ? newNotification.specificRecipients.join(', ')
+            : newNotification.recipientType === 'all'
+              ? 'All Users'
+              : `All ${newNotification.recipientType}`,
+        status: newNotification.scheduledDate ? 'scheduled' : 'sent',
+        sentDate:
+          newNotification.scheduledDate || new Date().toLocaleDateString(),
+        sentTime:
+          newNotification.scheduledTime || new Date().toLocaleTimeString(),
+        scheduledDate: newNotification.scheduledDate,
+        scheduledTime: newNotification.scheduledTime,
+      };
+
+      const updatedNotifications = [completeNotification, ...notifications];
+      setNotifications(updatedNotifications);
+      setFilteredNotifications(updatedNotifications);
+
+      // Close form and show success
+      setIsFormOpen(false);
+      alert(
+        newNotification.scheduledDate
+          ? 'Notification scheduled successfully!'
+          : 'Notification created and sent successfully!'
+      );
+    } catch (error) {
+      console.error('Error creating/sending notification:', error);
+
+      // Extract error message
+      let errorMessage = 'Failed to create notification';
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      setFormError(errorMessage);
+    } finally {
+      setFormLoading(false);
+    }
   };
 
   return (
@@ -125,8 +207,13 @@ const Notifications = () => {
         {/* Notification Form Modal */}
         <NotificationForm
           isOpen={isFormOpen}
-          onClose={() => setIsFormOpen(false)}
+          onClose={() => {
+            setIsFormOpen(false);
+            setFormError(null); // Clear error when closing
+          }}
           onSubmit={handleCreateNotification}
+          isLoading={formLoading}
+          error={formError}
         />
       </div>
     </Layout>
