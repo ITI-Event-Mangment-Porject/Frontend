@@ -906,7 +906,7 @@ const JobFairTabs = () => {
                   <Pie
                     data={prepareIndustryChartData}
                     cx="50%"
-                    cy="40%" /* Moved the pie chart up to make room for legend below */
+                    cy="50%" /* Moved the pie chart up to make room for legend below */
                     labelLine={false}
                     label={renderCustomizedLabel}
                     outerRadius={100} /* Slightly reduced the radius */
