@@ -23,8 +23,10 @@ import {
   Shield,
   Zap,
 } from 'lucide-react';
+import useScrollToTop from '@/hooks/useScrollToTop';
 
 const ContactUs = () => {
+  useScrollToTop();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -137,6 +139,7 @@ const ContactUs = () => {
         message: '',
       });
     } catch (error) {
+      console.log(error);
       setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);

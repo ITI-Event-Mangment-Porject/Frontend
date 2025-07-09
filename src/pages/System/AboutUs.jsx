@@ -23,8 +23,10 @@ import {
   Target,
   Award,
 } from 'lucide-react';
+import useScrollToTop from '@/hooks/useScrollToTop';
 
 const AboutUs = () => {
+  useScrollToTop();
   const teamMembers = [
     {
       id: 1,
