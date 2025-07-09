@@ -311,7 +311,7 @@ const UserManagementComponent = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4 sm:mb-6 w-full transform transition-all duration-300 ease-out">
         <h1 className="text-xl sm:text-2xl  font-bold  leading-6 sm:leading-8 text-[var(--gray-900)] w-full sm:w-auto text-left">
-          Student Management
+          User Management
         </h1>
         <div className="w-full sm:w-auto flex justify-stretch sm:justify-end">
           <button
@@ -480,11 +480,11 @@ const UserManagementComponent = () => {
                     <span
                       className="px-2 py-1 rounded-full text-xs whitespace-nowrap"
                       style={{
-                        backgroundColor: `${user.track.color}20`,
-                        color: user.track.color,
+                        backgroundColor: `${user.track?.color || '#6B7280'}20`,
+                        color: user.track?.color || '#6B7280',
                       }}
                     >
-                      {user.track.name}
+                      {user.track?.name || 'No Track'}
                     </span>
                   </div>
                   <div className="truncate">

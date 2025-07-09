@@ -5,6 +5,7 @@ const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL
     ? `${import.meta.env.VITE_API_BASE_URL}/api`
     : 'http://localhost:8000/api',
+
   headers: {
     'Content-Type': 'application/json',
   },
@@ -22,6 +23,7 @@ const PROTECTED_ROUTES = [
   '/auth/refresh',
   '/auth/me',
   '/notifications',
+  '/message/bulk-messages', // Add this line for bulk message endpoints
   '/dashboard',
   '/analytics',
   '/reports',
@@ -131,6 +133,56 @@ export const companyAPI = {
   reject: (id, reason) => api.post(`/companies/${id}/reject`, { reason }),
 };
 
+export const messageAPI = {
+  getAll: params => {
+    console.log('messageAPI.getAll - Token:', localStorage.getItem('token'));
+    return api.get('/message/bulk-messages', { params });
+  },
+  getAllMessages: params => {
+    console.log(
+      'messageAPI.getAllMessages - Token:',
+      localStorage.getItem('token')
+    );
+    return api.get('/message/bulk-messages', { params });
+  },
+  getStats: () => {
+    console.log('messageAPI.getStats - Token:', localStorage.getItem('token'));
+    return api.get('/message/bulk-messages/stats').catch(() => {
+      // If stats endpoint doesn't exist, return null
+      return null;
+    });
+  },
+  getById: id => {
+    console.log('messageAPI.getById - Token:', localStorage.getItem('token'));
+    return api.get(`/message/bulk-messages/${id}`);
+  },
+  create: messageData => {
+    console.log('messageAPI.create - Token:', localStorage.getItem('token'));
+    console.log('messageAPI.create - Data:', messageData);
+    return api.post('/message/bulk-messages', messageData);
+  },
+  sendBulkMessages: messageData => {
+    console.log(
+      'messageAPI.sendBulkMessages - Token:',
+      localStorage.getItem('token')
+    );
+    return api.post('/message/bulk-messages', messageData);
+  }, // Keep for backward compatibility
+  sendMessage: id => {
+    console.log(
+      'messageAPI.sendMessage - Token:',
+      localStorage.getItem('token')
+    );
+    console.log('messageAPI.sendMessage - ID:', id);
+    return api.post(`/message/bulk-messages/${id}/send`);
+  },
+  getStatus: id => {
+    console.log('messageAPI.getStatus - Token:', localStorage.getItem('token'));
+    console.log('messageAPI.getStatus - ID:', id);
+    return api.get(`/message/bulk-messages/${id}/status`);
+  },
+};
+
 // Job Fair Participation API endpoints
 export const jobFairAPI = {
   getParticipations: jobFairId => {
@@ -156,6 +208,23 @@ export const jobFairAPI = {
       }
       return Promise.reject(error);
     });
+  },
+  getCompanyQueue: (eventId, companyId) => {
+    if (!eventId || !companyId) {
+      console.error('Missing eventId or companyId in getCompanyQueue call');
+      return Promise.reject(new Error('Event ID and Company ID are required'));
+    }
+
+    return api
+      .get(`/job-fairs/${eventId}/queues/company/${companyId}`)
+      .catch(error => {
+        console.error(
+          'Error fetching company queue:',
+          error.response?.status,
+          error.response?.data
+        );
+        return Promise.reject(error);
+      });
   },
   getParticipationsWithFallback: jobFairId => {
     if (!jobFairId) {

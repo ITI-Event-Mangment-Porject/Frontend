@@ -10,8 +10,13 @@ const Messenger = () => {
   useEffect(() => {
     if (open) {
       const token = localStorage.getItem('token');
-      fetch(`${API_BASE_URL}/api/bulk-messages`, {
+      if (!token) {
+        console.warn('User not logged in');
+        return;
+      }
+      fetch(`${API_BASE_URL}/api/message/bulk-messages`, {
         headers: { Authorization: `Bearer ${token}` },
+        Accept: 'application/json',
       })
         .then(res => res.json())
         .then(data => setMessages(data.data || []));
