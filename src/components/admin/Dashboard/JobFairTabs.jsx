@@ -25,16 +25,54 @@ import {
 } from 'recharts';
 import { eventAPI, jobFairAPI } from '@/services/api';
 
-// Predefined industry categories with colors
+// Predefined industry categories with vibrant, distinct colors
 const INDUSTRY_CATEGORIES = {
-  'Software House': '#8884d8',
-  'Business Services': '#82ca9d',
-  Healthcare: '#ffc658',
-  Finance: '#ff8042',
-  'E-commerce': '#0088fe',
-  Education: '#00C49F',
-  Manufacturing: '#FFBB28',
-  Other: '#FF8042',
+  'Software House': '#6366f1', // Indigo
+  'Business Services': '#10b981', // Emerald
+  Healthcare: '#f59e0b', // Amber
+  Finance: '#ef4444', // Red
+  'E-commerce': '#3b82f6', // Blue
+  Education: '#8b5cf6', // Violet
+  Manufacturing: '#f97316', // Orange
+  Retail: '#ec4899', // Pink
+  Consulting: '#06b6d4', // Cyan
+  Technology: '#84cc16', // Lime
+  'Non-Profit': '#a855f7', // Purple
+  Government: '#64748b', // Slate
+  Media: '#f43f5e', // Rose
+  'Real Estate': '#0ea5e9', // Sky
+  Transportation: '#22c55e', // Green
+  Energy: '#eab308', // Yellow
+  Other: '#6b7280', // Gray
+};
+
+// Generate a vibrant color for unknown industries
+const generateVibrantColor = industry => {
+  const vibrantColors = [
+    '#ff6b6b',
+    '#4ecdc4',
+    '#45b7d1',
+    '#96ceb4',
+    '#ffeaa7',
+    '#dda0dd',
+    '#98d8c8',
+    '#f7dc6f',
+    '#bb8fce',
+    '#85c1e9',
+    '#f8c471',
+    '#82e0aa',
+    '#f1948a',
+    '#85c1e9',
+    '#d7bde2',
+  ];
+
+  // Use string hash to consistently assign the same color to the same industry
+  let hash = 0;
+  for (let i = 0; i < industry.length; i++) {
+    hash = industry.charCodeAt(i) + ((hash << 5) - hash);
+  }
+
+  return vibrantColors[Math.abs(hash) % vibrantColors.length];
 };
 
 const JobFairTabs = () => {
@@ -513,19 +551,23 @@ const JobFairTabs = () => {
   // Prepare data for industry chart
   const prepareIndustryChartData = useMemo(() => {
     if (!companiesByIndustry.length) {
-      // Fallback data if no companies
-      return Object.keys(INDUSTRY_CATEGORIES).map(industry => ({
-        name: industry,
-        value: Math.floor(Math.random() * 10) + 1, // Random count between 1-10
-        color: INDUSTRY_CATEGORIES[industry],
-      }));
+      // Fallback data if no companies - show only first 5 categories
+      return Object.keys(INDUSTRY_CATEGORIES)
+        .slice(0, 5)
+        .map(industry => ({
+          name: industry,
+          value: Math.floor(Math.random() * 5) + 1, // Random count between 1-5
+          color: INDUSTRY_CATEGORIES[industry],
+        }));
     }
 
-    return companiesByIndustry.map(([industry, companies]) => ({
-      name: industry,
-      value: companies.length,
-      color: INDUSTRY_CATEGORIES[industry] || '#ccc',
-    }));
+    return companiesByIndustry
+      .filter(([companies]) => companies.length > 0) // Only include industries with companies
+      .map(([industry, companies]) => ({
+        name: industry,
+        value: companies.length,
+        color: INDUSTRY_CATEGORIES[industry] || generateVibrantColor(industry),
+      }));
   }, [companiesByIndustry]);
 
   // Toggle company selection for chart
@@ -587,6 +629,9 @@ const JobFairTabs = () => {
     const x = cx + radius * Math.cos((-midAngle * Math.PI) / 180);
     const y = cy + radius * Math.sin((-midAngle * Math.PI) / 180);
 
+    // Only show percentage if it's significant enough (>= 5%)
+    if (percent < 0.05) return null;
+
     return (
       <text
         x={x}
@@ -594,8 +639,11 @@ const JobFairTabs = () => {
         fill="white"
         textAnchor="middle"
         dominantBaseline="central"
-        fontSize={12}
+        fontSize={11}
         fontWeight="bold"
+        style={{
+          textShadow: '1px 1px 2px rgba(0,0,0,0.7)',
+        }}
       >
         {`${(percent * 100).toFixed(0)}%`}
       </text>
@@ -802,12 +850,12 @@ const JobFairTabs = () => {
             Companies by Industry
           </h3>
 
-          {/* Industry Legend */}
+          {/* Industry Legend - Show only industries present in data */}
           <div className="mb-4 flex flex-wrap gap-2">
-            {Object.entries(INDUSTRY_CATEGORIES).map(([industry, color]) => (
+            {prepareIndustryChartData.map(({ name: industry, color }) => (
               <span
                 key={industry}
-                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium transition-all duration-200 hover:scale-105"
                 style={{
                   backgroundColor: `${color}20`,
                   color: color,
@@ -846,19 +894,39 @@ const JobFairTabs = () => {
                     outerRadius={100} /* Slightly reduced the radius */
                     fill="#8884d8"
                     dataKey="value"
+                    stroke="#ffffff"
+                    strokeWidth={2}
                   >
                     {prepareIndustryChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={entry.color}
+                        style={{
+                          filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))',
+                        }}
+                      />
                     ))}
                   </Pie>
                   <Tooltip
                     formatter={value => [`${value} Companies`, 'Count']}
+                    contentStyle={{
+                      backgroundColor: '#ffffff',
+                      border: '1px solid #e5e7eb',
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    }}
+                    labelStyle={{ color: '#374151', fontWeight: '600' }}
                   />
                   <Legend
                     layout="horizontal"
                     verticalAlign="bottom"
                     align="center"
-                    wrapperStyle={{ paddingTop: '30px' }}
+                    wrapperStyle={{
+                      paddingTop: '30px',
+                      fontSize: '12px',
+                      fontWeight: '500',
+                    }}
+                    iconType="circle"
                   />
                 </PieChart>
               </ResponsiveContainer>
