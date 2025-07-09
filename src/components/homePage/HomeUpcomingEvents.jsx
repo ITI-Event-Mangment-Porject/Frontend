@@ -205,7 +205,7 @@ const HomeUpcomingEvents = () => {
           viewport={{ once: true, amount: 0.3 }}
           transition={{ duration: 0.6 }}
         >
-          <h2 className="text-3xl font-bold mb-4 text-secondary-500">
+          <h2 className="text-3xl font-bold mb-4 text-[var(--secondary-500)]">
             Upcoming Events
           </h2>
           <motion.div
