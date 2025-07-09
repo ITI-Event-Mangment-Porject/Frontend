@@ -8,8 +8,10 @@ import HomeTestimonials from '../../components/homePage/HomeTestimonials';
 import HomeCTA from '../../components/homePage/HomeCTA';
 import HomeNavbar from '../../components/homePage/HomeNavbar';
 import HomeFooter from '../../components/homePage/HomeFooter';
+import useScrollToTop from '@/hooks/useScrollToTop';
 
 const HomePage = () => {
+  useScrollToTop();
   return (
     <div className="min-h-screen bg-white">
       <HomeNavbar />
