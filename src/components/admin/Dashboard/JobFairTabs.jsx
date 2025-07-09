@@ -624,12 +624,13 @@ const JobFairTabs = () => {
     innerRadius,
     outerRadius,
     percent,
+    name,
   }) => {
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos((-midAngle * Math.PI) / 180);
     const y = cy + radius * Math.sin((-midAngle * Math.PI) / 180);
 
-    // Only show percentage if it's significant enough (>= 5%)
+    // Only show label if it's significant enough (>= 5%)
     if (percent < 0.05) return null;
 
     return (
@@ -639,13 +640,13 @@ const JobFairTabs = () => {
         fill="white"
         textAnchor="middle"
         dominantBaseline="central"
-        fontSize={11}
+        fontSize={10}
         fontWeight="bold"
         style={{
           textShadow: '1px 1px 2px rgba(0,0,0,0.7)',
         }}
       >
-        {`${(percent * 100).toFixed(0)}%`}
+        {name.length > 12 ? name.substring(0, 12) + '...' : name}
       </text>
     );
   };
@@ -846,9 +847,26 @@ const JobFairTabs = () => {
       >
         {/* Companies by Industry Pie Chart */}
         <div className="bg-white rounded-lg shadow-md p-6 border border-primary hover:shadow-lg ">
-          <h3 className="text-lg font-semibold mb-4 text-gray-800">
-            Companies by Industry
-          </h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Companies by Industry
+            </h3>
+            {prepareIndustryChartData.length > 0 && (
+              <div className="text-sm text-gray-600">
+                <span className="font-medium">
+                  {prepareIndustryChartData.reduce(
+                    (sum, item) => sum + item.value,
+                    0
+                  )}
+                </span>{' '}
+                companies across{' '}
+                <span className="font-medium">
+                  {prepareIndustryChartData.length}
+                </span>{' '}
+                industries
+              </div>
+            )}
+          </div>
 
           {/* Industry Legend - Show only industries present in data */}
           <div className="mb-4 flex flex-wrap gap-2">
@@ -908,14 +926,61 @@ const JobFairTabs = () => {
                     ))}
                   </Pie>
                   <Tooltip
-                    formatter={value => [`${value} Companies`, 'Count']}
+                    formatter={value => [
+                      `${value} ${value === 1 ? 'Company' : 'Companies'}`,
+                      'Count',
+                    ]}
+                    labelFormatter={label => `Industry: ${label}`}
                     contentStyle={{
                       backgroundColor: '#ffffff',
                       border: '1px solid #e5e7eb',
                       borderRadius: '8px',
                       boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                      padding: '12px',
                     }}
-                    labelStyle={{ color: '#374151', fontWeight: '600' }}
+                    labelStyle={{
+                      color: '#374151',
+                      fontWeight: '600',
+                      marginBottom: '4px',
+                    }}
+                    itemStyle={{
+                      color: '#6b7280',
+                      fontSize: '14px',
+                    }}
+                    content={({ active, payload, label }) => {
+                      if (active && payload && payload.length) {
+                        const data = payload[0].payload;
+                        return (
+                          <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
+                            <div className="flex items-center mb-2">
+                              <span
+                                className="w-3 h-3 rounded-full mr-2"
+                                style={{ backgroundColor: data.color }}
+                              ></span>
+                              <span className="font-semibold text-gray-800">
+                                {label}
+                              </span>
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              <span className="font-medium">{data.value}</span>{' '}
+                              {data.value === 1 ? 'Company' : 'Companies'}
+                            </div>
+                            <div className="text-xs text-gray-500 mt-1">
+                              {(
+                                (data.value /
+                                  prepareIndustryChartData.reduce(
+                                    (sum, item) => sum + item.value,
+                                    0
+                                  )) *
+                                100
+                              ).toFixed(1)}
+                              % of total
+                            </div>
+                          </div>
+                        );
+                      }
+                      return null;
+                    }}
                   />
                   <Legend
                     layout="horizontal"
