@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Layout from '../../components/student/Layout';
 import Footer from '../../components/student/Footer';
+import defaultEvent from '../../assets/images/Business-Event1.jpg';
+
 
 const API_BASE_URL = 'http://127.0.0.1:8000';
 
@@ -86,12 +88,10 @@ const ShowEvents = () => {
     event => new Date(event.start_date) < now
   );
 
-  // أحدث حدث بناءً على أكبر ID
   const latestEventId = events.reduce((max, e) => (e.id > max ? e.id : max), 0);
 
  const EventCard = ({ event, isPast = false }) => (
   <div className={`group relative flex flex-col bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden ${isPast ? 'opacity-75' : ''}`}>
-    {/* NEW Badge للحدث الأحدث */}
     {event.id === latestEventId && !isPast && (
       <div className="absolute top-4 right-4 z-20">
         <span className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-3 py-1 rounded-full shadow-lg animate-pulse">
@@ -100,13 +100,12 @@ const ShowEvents = () => {
       </div>
     )}
 
-    {/* صورة الحدث */}
     <div className="relative overflow-hidden">
       <img
         src={
           event.banner_image
             ? `${API_BASE_URL}/storage/${event.banner_image}`
-            : 'https://via.placeholder.com/400x250?text=No+Image'
+            : defaultEvent
         }
         alt={event.title}
         className="w-full h-52 object-cover group-hover:scale-110 transition-transform duration-300"
@@ -114,7 +113,6 @@ const ShowEvents = () => {
 
 
       <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>      
-      {/* نوع الحدث */}
       <div className="absolute bottom-4 left-4">
         <span className={`inline-block px-4 py-2 rounded-full text-xs font-bold shadow-lg ${
           eventTypeColors[event.type] || eventTypeColors.Default
@@ -124,14 +122,12 @@ const ShowEvents = () => {
       </div>
     </div>
 
-    {/* محتوى الحدث */} 
     <div className="flex flex-col justify-between flex-1 p-6">
       <div>
         <h3 className="font-bold text-xl text-gray-800 mb-3 line-clamp-2 group-hover:text-[#901b20] transition-colors">
           {event.title}
         </h3>
 
-        {/* تاريخ ومكان الحدث */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
           <div className="flex items-center text-gray-600">
             <i className="fa-regular fa-calendar text-[#901b20] mr-2"></i>
@@ -143,13 +139,11 @@ const ShowEvents = () => {
           </div>
         </div>
 
-        {/* وصف الحدث */}
         <p className="text-gray-600 text-sm mb-6 line-clamp-3 leading-relaxed">
           {event.description}
         </p>
       </div>
 
-      {/* زر عرض التفاصيل في أسفل الكارت */}
       <div className="mt-auto flex justify-end">
         <Link
           to={`/student/event-details/${event.id}`}
