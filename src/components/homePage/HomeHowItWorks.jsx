@@ -26,7 +26,7 @@ const steps = [
 const HomeHowItWorks = () => {
   return (
     <section
-      className="py-20 bg-gradient-to-br from-[var(--primary-200)] via-white to-[var(--primary-300)] relative overflow-hidden"
+      className="py-20 bg-gradient-to-br from-[var(--primary-300)] via-white to-[var(--primary-300)] relative overflow-hidden"
       id="how-it-works"
     >
       {/* Background decoration */}
