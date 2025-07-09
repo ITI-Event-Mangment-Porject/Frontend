@@ -53,7 +53,7 @@ const LoginPage = () => {
             navigate('/student/show-events');
             break;
           case 'company_representative':
-            navigate('/company/dashboard');
+            navigate('/company/:companyId/dashboard'); // Replace with actual company ID if available
             break;
           default:
             navigate('/');

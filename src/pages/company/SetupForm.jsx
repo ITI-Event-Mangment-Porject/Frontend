@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CheckCircle, Mail, Phone, Shield, ArrowRight, ArrowLeft, Building } from 'lucide-react';
+import { CheckCircle, Mail, Phone, Shield, ArrowRight, ArrowLeft, Building, Speaker } from 'lucide-react';
 import { useParams } from 'react-router-dom';
 import api from '../../api/axios';
 import axios from 'axios';
@@ -27,8 +27,18 @@ const MultiStepVerificationWithSetup = () => {
   const [stepLocked, setStepLocked] = useState(false);
   const [initialStepLoaded, setInitialStepLoaded] = useState(false);
   const [interviewSlots, setInterviewSlots] = useState([]);
-
-
+  const [speakers, setSpeakers] = useState([]);
+  const [forceStepUnlock, setForceStepUnlock] = useState(false);
+  const [speakerForm, setSpeakerForm] = useState({
+    speaker_name: '',
+    position: '',
+    mobile: '',
+    photo: ''
+  });
+  const [isLoadingSpeaker, setIsLoadingSpeaker] = useState(false);
+  const [speakerSuccessMsg, setSpeakerSuccessMsg] = useState('');
+  const [speakerErrorMsg, setSpeakerErrorMsg] = useState('');
+  
   const [formData, setFormData] = useState({
   specialRequirements: '',
   needBranding: false,
@@ -53,16 +63,18 @@ const [interviewSlot, setInterviewSlot] = useState({
   is_available: true,
 });
 
-
-const steps = [
+const getSteps = () => [
   { id: 1, title: 'Job Fair Participation', icon: Building, description: 'Complete company registration' },
-  { id: 2, title: 'Interview Slot Setup', icon: Shield, description: 'Add interview slots' }, 
-  { id: 3, title: 'Job Fair Profiles', icon: Mail, description: 'Add required job profiles' },
+  { id: 2, title: 'Interview Slot Setup', icon: Shield, description: 'Add interview slots' },
+  ...(formData.needBranding ? [
+    { id: 3, title: 'Branding Speaker Setup', icon: Speaker, description: 'Add your branding speaker' }
+  ] : []),
+  { id: 4, title: 'Job Fair Profiles', icon: Mail, description: 'Add required job profiles' }
 ];
 
 
 
-  const setCurrentStepProtected = (newStep, force = false) => {
+const setCurrentStepProtected = (newStep, force = false) => {
   console.log(`Attempting to set step to: ${newStep}, current step: ${currentStep}, locked: ${stepLocked}, force: ${force}`);
   
   if (!force && stepLocked && newStep < currentStep) {
@@ -98,6 +110,14 @@ const fetchParticipationStatus = async () => {
       }
 
       const currentCompany = companies.find(company => company.companyId == companyId);
+      console.log("currentCompany in fetchParticipationStatus", currentCompany);
+      
+      if (currentCompany?.need_branding !== undefined) {
+        setFormData(prev => ({
+          ...prev,
+          needBranding: currentCompany.need_branding
+        }));
+      }
 
       if (!currentCompany) {
         return false;
@@ -132,7 +152,6 @@ const fetchParticipationStatus = async () => {
     return false;
   }
 };
-
 
 const formatDateForInput = (dateString) => {
   if (!dateString) return '';
@@ -193,18 +212,43 @@ const addInterviewSlot = async () => {
   }
 };
 
-
-const fetchExistingInterviewSlots = async () => {
-  if (!participationId) return;
-  
-  try {
-    const response = await api.get(`/job-fairs/${jobFairId}/participations/${participationId}/interview-slots`);
-    if (response.status === 200) {
-      setInterviewSlots(response.data?.data?.interview_slots || []);
-    }
-  } catch (error) {
-    console.error("Error fetching interview slots:", error);
+const addSpeaker = async () => {
+  if (!speakerForm.speaker_name || !speakerForm.position || !speakerForm.mobile) {
+    setSpeakerErrorMsg('Please fill in all required fields');
+    setTimeout(() => setSpeakerErrorMsg(''), 3000);
+    return;
   }
+
+  setIsLoadingSpeaker(true);
+  setSpeakerErrorMsg('');
+  setSpeakerSuccessMsg('');
+
+  try {
+    await api.post(
+      `/job-fairs/${jobFairId}/participations/${participationId}/speakers`,
+      speakerForm
+    );
+
+    setSpeakers([...speakers, speakerForm]);
+    setSpeakerForm({
+      speaker_name: '',
+      position: '',
+      mobile: '',
+      photo: ''
+    });
+    setSpeakerSuccessMsg('Speaker added successfully!');
+    setTimeout(() => setSpeakerSuccessMsg(''), 3000);
+  } catch (error) {
+    const message = error.response?.data?.message || 'An error occurred while adding the speaker';
+    setSpeakerErrorMsg(message);
+    setTimeout(() => setSpeakerErrorMsg(''), 3000);
+  } finally {
+    setIsLoadingSpeaker(false);
+  }
+};
+
+const removeSpeaker = (index) => {
+  setSpeakers(speakers.filter((_, i) => i !== index));
 };
 
 const fetchExistingJobProfiles = async (participationId) => {
@@ -226,9 +270,6 @@ const fetchExistingJobProfiles = async (participationId) => {
   }
 };
 
-  
-
-
 useEffect(() => {
   const initializeComponent = async () => {
     try {
@@ -248,14 +289,14 @@ useEffect(() => {
 
       const result = response.data?.data?.result || {};
 
-setCompanyData({
-  ...result,
-  logo_path: result.logo_path 
-    ? result.logo_path.startsWith('http')
-      ? result.logo_path
-      : `http://127.0.0.1:8000/storage/${result.logo_path}`
-    : ''
-});
+      setCompanyData({
+        ...result,
+        logo_path: result.logo_path 
+          ? result.logo_path.startsWith('http')
+            ? result.logo_path
+            : `http://127.0.0.1:8000/storage/${result.logo_path}`
+          : ''
+      });
 
       try {
         const tracksResponse = await api.get('/test/tracks?sort_order=desc');
@@ -271,22 +312,21 @@ setCompanyData({
       const participated = await fetchParticipationStatus();
       setHasParticipated(participated);
 
-if (participated) {
-  setHasParticipated(true);
-  setCompletedSteps(prev => new Set([...prev, 1]));
+      if (participated) {
+        setHasParticipated(true);
+        setCompletedSteps(prev => new Set([...prev, 1]));
 
-  if (savedStepNumber === 1) {
-    console.log('Participated user on step 1, moving to step 2');
-    setCurrentStepProtected(2, true); 
-  } else {
-    console.log(`Participated user, staying at saved step: ${savedStepNumber}`);
-    setCurrentStepProtected(savedStepNumber, true);
-  }
-} else {
-  console.log('Non-participated user, forcing back to step 1');
-  setCurrentStepProtected(1, true);
-}
-
+        if (savedStepNumber === 1) {
+          console.log('Participated user on step 1, moving to step 2');
+          setCurrentStepProtected(2, true); 
+        } else {
+          console.log(`Participated user, staying at saved step: ${savedStepNumber}`);
+          setCurrentStepProtected(savedStepNumber, true);
+        }
+      } else {
+        console.log('Non-participated user, forcing back to step 1');
+        setCurrentStepProtected(1, true);
+      }
 
       try {
         const jobFairResponse = await api.get(`/job-fairs/${jobFairId}`);
@@ -314,25 +354,21 @@ if (participated) {
 
 useEffect(() => {
   if (initialStepLoaded) {
-    console.log('Saving step to localStorage:', currentStep);
+    if (currentStep === 3 && formData.needBranding === false) {
+      localStorage.setItem('currentStep', 4); 
+    }else{
     localStorage.setItem('currentStep', currentStep);
-  }
-}, [currentStep, initialStepLoaded]);
 
-
-useEffect(() => {
-  if (initialStepLoaded) {
-    console.log('Saving step to localStorage:', currentStep);
-    localStorage.setItem('currentStep', currentStep);
+    } 
   }
-}, [currentStep, initialStepLoaded]);
+}, [currentStep, initialStepLoaded, formData.needBranding]);
+
 
 useEffect(() => {
   if (participationId && initialStepLoaded) {
     fetchExistingJobProfiles(participationId);
   }
 }, [participationId, initialStepLoaded, jobFairId]);
-
 
 const handleSubmit = async (e) => {
   if (e) e.preventDefault();
@@ -408,28 +444,22 @@ const handleSubmit = async (e) => {
   }
 };
 
-
-
-  if (!companyData) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 text-lg">Loading company information...</p>
-        </div>
+if (!companyData) {
+  return (
+    <div className="min-h-screen bg-gray-100 flex items-center justify-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600 text-lg">Loading company information...</p>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
+const handleInputChange = (field, value) => {
+  setFormData(prev => ({ ...prev, [field]: value }));
+};
 
-
-
-
-  const handleInputChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const submitInterviewSlot = async () => {
+const submitInterviewSlot = async () => {
   if (!participationId) {
     setErrorMsg('Participation ID not found. Please complete participation first.');
     return false;
@@ -454,11 +484,11 @@ const handleSubmit = async (e) => {
     const response = await api.post(
       `/job-fairs/${jobFairId}/participations/${participationId}/interview-slots`,
       payload,
-        {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    }
-  }
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        }
+      }
     );
 
     if (response.status === 200 || response.status === 201) {
@@ -477,7 +507,43 @@ const handleSubmit = async (e) => {
   }
 };
 
+const submitParticipation = async () => {
+  setIsLoadingSpeaker(true);
+  setErrorMsg('');
+  setSuccessMsg('');
 
+  if (!participationId) {
+    setErrorMsg("Participation ID is missing. Please complete previous steps.");
+    setIsLoadingSpeaker(false);
+    return { success: false };
+  }
+
+  try {
+    const response = await api.post(
+      `/job-fairs/${jobFairId}/participations/${participationId}/speakers`,
+      speakerForm
+    );
+
+    if (response.status === 200 || response.status === 201) {
+      setSuccessMsg("Speaker added successfully!");
+      setSpeakers([...speakers, speakerForm]);
+      setCompletedSteps(prev => new Set([...prev, 3]));
+      return { success: true };
+    }
+  } catch (error) {
+    if (error.response?.status === 409) {
+      setSuccessMsg("You already added a speaker. Proceeding to the next step.");
+      setCompletedSteps(prev => new Set([...prev, 3]));
+      return { success: true };
+    }
+
+    const message = error.response?.data?.message || 'An error occurred while adding the speaker.';
+    setErrorMsg(message);
+    return { success: false };
+  } finally {
+    setIsLoadingSpeaker(false);
+  }
+};
 
 const handleJobProfileSubmit = async () => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -489,7 +555,6 @@ const handleJobProfileSubmit = async () => {
     setErrorMsg("Participation ID not found. Please complete participation first.");
     setIsSubmitting(false);
     return false;
-    
   }
 
   if (
@@ -518,13 +583,13 @@ const handleJobProfileSubmit = async () => {
     };
 
     const response = await api.post(
-  `/job-fairs/${jobFairId}/participations/${participationId}/job-profiles`, 
+      `/job-fairs/${jobFairId}/participations/${participationId}/job-profiles`, 
       jobProfilePayload
     );
 
     if (response.status === 200 || response.status === 201) {
       setSuccessMsg("Job profile submitted successfully!");
-      setCompletedSteps((prev) => new Set([...prev, 2]));
+      setCompletedSteps((prev) => new Set([...prev, 4]));
       window.scrollTo({ top: 0, behavior: 'smooth' });
 
       setFormData({
@@ -538,7 +603,6 @@ const handleJobProfileSubmit = async () => {
       });
 
       await fetchExistingJobProfiles(participationId);
-
       return true;
     } else {
       setErrorMsg("Failed to submit job profile. Please try again.");
@@ -554,53 +618,7 @@ const handleJobProfileSubmit = async () => {
   }
 };
 
-
-
-
 const handleNext = async () => {
-  const submitInterviewSlot = async () => {
-    if (!participationId) {
-      setErrorMsg('Participation ID not found. Please complete participation first.');
-      return false;
-    }
-
-    setIsLoading(true);
-    setErrorMsg('');
-    setSuccessMsg('');
-
-    try {
-      const payload = {
-        slot_date: interviewSlot.slot_date,
-        start_time: interviewSlot.start_time,
-        end_time: interviewSlot.end_time,
-        duration_minutes: Number(interviewSlot.duration_minutes),
-        max_interviews_per_slot: Number(interviewSlot.max_interviews_per_slot),
-        is_break: interviewSlot.is_break,
-        break_reason: interviewSlot.is_break ? interviewSlot.break_reason : null,
-        is_available: interviewSlot.is_available,
-      };
-
-      const response = await api.post(
-        `/job-fairs/${jobFairId}/participations/${participationId}/interview-slots`,
-        payload
-      );
-
-      if (response.status === 200 || response.status === 201) {
-        setSuccessMsg('Interview slot added successfully!');
-        return true;
-      } else {
-        setErrorMsg('Failed to add interview slot.');
-        return false;
-      }
-    } catch (error) {
-      console.error('Interview slot submission error:', error);
-      setErrorMsg(error.response?.data?.message || 'An unexpected error occurred.');
-      return false;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   if (currentStep === 1) {
     if (!hasParticipated) {
       setIsLoading(true);
@@ -611,7 +629,7 @@ const handleNext = async () => {
         const participationPayload = {
           company_id: parseInt(companyId),
           special_requirements: formData.specialRequirements || null,
-          need_branding: formData.needBranding || false,
+          need_branding: formData.needBranding,
           company: {
             name: companyData.name,
             contact_email: companyData.contact_email || companyData.email
@@ -634,6 +652,10 @@ const handleNext = async () => {
           const responseData = response.data?.data;
           if (responseData?.id) {
             setParticipationId(responseData.id);
+          }
+          
+          if (responseData?.need_branding !== undefined) {
+            setFormData(prev => ({ ...prev, needBranding: responseData.need_branding }));
           }
 
           const isApproved = await fetchParticipationStatus();
@@ -672,13 +694,30 @@ const handleNext = async () => {
   } else if (currentStep === 2) {
     const success = await submitInterviewSlot();
     if (success) {
-      setCurrentStep(3); 
+      setCompletedSteps(prev => new Set([...prev, 2]));
+      if (formData.needBranding) {
+  setCurrentStep(3);
+} else {
+  setCurrentStep(4); 
+}
       setErrorMsg('');
       setSuccessMsg('');
     }
   } else if (currentStep === 3) {
+    const result = await submitParticipation();
+
+    if (result.success) {
+      setErrorMsg('');
+      setSuccessMsg('');
+      setCurrentStep(4);
+      setCompletedSteps(prev => new Set([...prev, 3]));
+
+    }
+  } else if (currentStep === 4) {
     setCandidateError('');
     setCandidateSuccess('');
+    setCompletedSteps(prev => new Set([...prev, 2]));
+
 
     if (!formData.title?.trim() || !formData.description?.trim() || 
         !formData.positions_available || Number(formData.positions_available) <= 0) {
@@ -718,6 +757,7 @@ const handleNext = async () => {
       );
 
       if (response.status === 200 || response.status === 201) {
+        setCompletedSteps(prev => new Set([...prev, 4]));
         setFormData({
           ...formData,
           title: '',
@@ -754,12 +794,8 @@ const handleNext = async () => {
   }
 };
 
+const isStepComplete = (stepId) => completedSteps.has(stepId);
 
-
-
-
-  const isStepComplete = (stepId) => completedSteps.has(stepId);
-  
 const isCurrentStepValid = () => {
   switch (currentStep) {
     case 1:
@@ -772,15 +808,22 @@ const isCurrentStepValid = () => {
         interviewSlot?.end_time && 
         interviewSlot?.duration_minutes > 0 && 
         interviewSlot?.max_interviews_per_slot > 0
-        
       );
       
     case 3:
+      if (!formData.needBranding) return true;
       return (
-        formData.title.trim() &&
-        formData.description.trim() &&
+        speakerForm?.speaker_name?.trim() &&
+        speakerForm?.position?.trim() &&
+        speakerForm?.mobile?.trim()
+      );
+
+    case 4:
+      return (
+        formData.title?.trim() &&
+        formData.description?.trim() &&
         formData.positions_available &&
-        formData.tracks.length > 0
+        formData.tracks?.length > 0
       );
       
     default:
@@ -788,12 +831,11 @@ const isCurrentStepValid = () => {
   }
 };
 
+const logoURL = companyData.logo_path?.startsWith('http')
+  ? companyData.logo_path
+  : `http://127.0.0.1:8000/storage/${companyData.logo_path}`;
 
-  const logoURL = companyData.logo_path?.startsWith('http')
-    ? companyData.logo_path
-    : `http://127.0.0.1:8000/storage/${companyData.logo_path}`;
-
-  const renderStepContent = () => {
+const renderStepContent = () => {
    switch (currentStep) {
       case 1:
         return (
@@ -1012,11 +1054,11 @@ const isCurrentStepValid = () => {
                   </div>
                 </div>
 
-                {/* Success/Error Messages */}
+             
                 {successMsg && (
-                  <div className="bg-gradient-to-r from-green-100 to-green-50 border-2 border-green-300 text-green-800 px-6 py-4 rounded-xl shadow-lg animate-fade-in">
+                  <div className="bg-gradient-to-r from-[#203947]-100 to-[#203947]/50 border-2 border-[#203947]/30 text-[#203947]/10 px-6 py-4 rounded-xl shadow-lg animate-fade-in">
                     <div className="flex items-center space-x-2">
-                      <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-[#203947]/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                       <span className="font-medium">{successMsg}</span>
@@ -1079,10 +1121,10 @@ const isCurrentStepValid = () => {
           <h3 className="text-xl font-bold text-gray-900 mb-6">Added Interview Slots</h3>
           <div className="space-y-4">
             {interviewSlots.map((slot, index) => (
-              <div key={index} className="p-6 bg-white rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-blue-200 group">
+              <div key={index} className="p-6 bg-white rounded-2xl border border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 hover:border-[#203947]/20 group">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                    <div className="w-2 h-2 bg-[#203947]/60 rounded-full"></div>
                     <div>
                       <span className="text-gray-600">Date:</span>
                       <div className="font-semibold text-gray-900">{slot.slot_date}</div>
@@ -1096,7 +1138,7 @@ const isCurrentStepValid = () => {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-purple-600 rounded-full"></div>
+                    <div className="w-2 h-2 bg-[#901b20]-600 rounded-full"></div>
                     <div>
                       <span className="text-gray-600">Duration:</span>
                       <div className="font-semibold text-gray-900">{slot.duration_minutes} min</div>
@@ -1131,7 +1173,7 @@ const isCurrentStepValid = () => {
         e.preventDefault();
         await addInterviewSlot();
       }}>
-        <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300 hover:border-blue-200 mb-8">
+        <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300 hover:border-[#203947]/20 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="block text-base font-semibold text-gray-900 mb-3">
@@ -1143,7 +1185,7 @@ const isCurrentStepValid = () => {
                 min={dateRange.minDate}
                 max={dateRange.maxDate}
                 onChange={(e) => setInterviewSlot({...interviewSlot, slot_date: e.target.value})}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-gray-300 text-base"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#203947]/50 focus:border-[#203947]/50 transition-all duration-300 hover:border-gray-300 text-base"
                 required
               />
               {dateRange.minDate && dateRange.maxDate && (
@@ -1162,7 +1204,7 @@ const isCurrentStepValid = () => {
                 min="1"
                 value={interviewSlot.duration_minutes}
                 onChange={(e) => setInterviewSlot({...interviewSlot, duration_minutes: e.target.value})}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-gray-300 text-base"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#203947]/50 focus:border-[#203947]/50 transition-all duration-300 hover:border-gray-300 text-base"
                 required
               />
             </div>
@@ -1177,7 +1219,7 @@ const isCurrentStepValid = () => {
                 min={interviewSlot.slot_date === dateRange.minDate ? dateRange.minTime : undefined}
                 max={interviewSlot.slot_date === dateRange.maxDate ? dateRange.maxTime : undefined}
                 onChange={(e) => setInterviewSlot({...interviewSlot, start_time: e.target.value})}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-gray-300 text-base"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#203947]/50 focus:border-[#203947]/50 transition-all duration-300 hover:border-gray-300 text-base"
                 required
               />
               {!isTimeInRange(interviewSlot.start_time, interviewSlot.slot_date) && (
@@ -1202,7 +1244,7 @@ const isCurrentStepValid = () => {
                 min={interviewSlot.start_time}
                 max={interviewSlot.slot_date === dateRange.maxDate ? dateRange.maxTime : undefined}
                 onChange={(e) => setInterviewSlot({...interviewSlot, end_time: e.target.value})}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-gray-300 text-base"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#203947]/50 focus:border-[#203947]/50 transition-all duration-300 hover:border-gray-300 text-base"
                 required
               />
               {!isTimeInRange(interviewSlot.end_time, interviewSlot.slot_date) && (
@@ -1226,36 +1268,58 @@ const isCurrentStepValid = () => {
                 min="1"
                 value={interviewSlot.max_interviews_per_slot}
                 onChange={(e) => setInterviewSlot({...interviewSlot, max_interviews_per_slot: e.target.value})}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-gray-300 text-base"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#203947]/50 focus:border-[#203947]/50 transition-all duration-300 hover:border-gray-300 text-base"
                 required
               />
             </div>
 
-            <div className="flex flex-col space-y-4">
-              {/* <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
-                <label className="flex items-center space-x-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={interviewSlot.is_break}
-                    onChange={(e) => setInterviewSlot({...interviewSlot, is_break: e.target.checked, break_reason: e.target.checked ? interviewSlot.break_reason : null})}
-                    className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 transition-all duration-200"
-                  />
-                  <span className="text-base font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200">Is Break Slot</span>
-                </label>
-              </div> */}
-              
-              {/* <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
-                <label className="flex items-center space-x-3 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={interviewSlot.is_available}
-                    onChange={(e) => setInterviewSlot({...interviewSlot, is_available: e.target.checked})}
-                    className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 transition-all duration-200"
-                  />
-                  <span className="text-base font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200">Is Available</span>
-                </label>
-              </div> */}
-            </div>
+<div className="flex flex-col space-y-4">
+  {/* Break Slot */}
+  <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+    <label className="flex items-center space-x-3 cursor-pointer group">
+      <input
+        type="checkbox"
+        checked={interviewSlot.is_break}
+        onChange={(e) =>
+          setInterviewSlot({
+            ...interviewSlot,
+            is_break: e.target.checked,
+            break_reason: e.target.checked ? interviewSlot.break_reason : null,
+            is_available: e.target.checked ? false : interviewSlot.is_available, // إذا اختار break نلغي available
+          })
+        }
+        className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-[#203947]/50 focus:ring-2 transition-all duration-200"
+      />
+      <span className="text-base font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200">
+        Break Slot
+      </span>
+    </label>
+  </div>
+
+  {/* Interview Slot */}
+  <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+    <label className="flex items-center space-x-3 cursor-pointer group">
+      <input
+        type="checkbox"
+        checked={interviewSlot.is_available}
+        onChange={(e) =>
+          setInterviewSlot({
+            ...interviewSlot,
+            is_available: e.target.checked,
+            is_break: e.target.checked ? false : interviewSlot.is_break, // إذا اختار available نلغي break
+            break_reason: e.target.checked ? null : interviewSlot.break_reason,
+          })
+        }
+        className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-[#203947]/50 focus:ring-2 transition-all duration-200"
+      />
+      <span className="text-base font-medium text-gray-900 group-hover:text-blue-600 transition-colors duration-200">
+        Interview Slot
+      </span>
+    </label>
+  </div>
+</div>
+
+            
           </div>
 
           {/* {interviewSlot.is_break && (
@@ -1277,8 +1341,13 @@ const isCurrentStepValid = () => {
           <div className="flex gap-4 mt-8">
             <button 
               type="submit" 
-              disabled={isLoading || !isCurrentStepValid()}
-              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-xl font-semibold hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center space-x-2"
+              disabled={
+  isLoading ||
+  !isCurrentStepValid() ||
+  (!interviewSlot.is_break && !interviewSlot.is_available)
+}
+
+              className="px-8 py-3 bg-gradient-to-r from-[#203947]/60 to-[#203947]/70 text-white rounded-xl font-semibold hover:from-[#203947]/70 hover:to-[#203947]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center space-x-2"
             >
               {isLoading ? (
                 <>
@@ -1300,23 +1369,23 @@ const isCurrentStepValid = () => {
             {interviewSlots.length > 0 && (
               <button
                 type="button"
-                onClick={() => setCurrentStep(3)}
-                className="px-8 py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-semibold hover:from-green-700 hover:to-green-800 transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center space-x-2"
+                onClick={() => setCurrentStep(formData.needBranding ? 3 : 4)}
+                className="px-8 py-3 bg-gradient-to-r from-[#901b20] to-[#901b20]/90 text-white rounded-xl font-semibold hover:from-[#901b20]/90 hover:to-[#901b20] transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center space-x-2"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                 </svg>
-                <span>Continue to Job Profiles</span>
+                <span>Continue</span>
               </button>
             )}
+
           </div>
         </div>
       </form>
-
       {successMsg && (
-        <div className="bg-gradient-to-r from-green-100 to-green-50 border-2 border-green-300 text-green-800 px-6 py-4 rounded-xl shadow-lg animate-fade-in">
+        <div className="bg-gradient-to-r from-[#203947]]/10 to-[#203947]/30 border-2 border-[#203947]/50 text-[#203947]/90 px-6 py-4 rounded-xl shadow-lg animate-fade-in">
           <div className="flex items-center space-x-2">
-            <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-[#203947]/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
             <span className="font-medium">{successMsg}</span>
@@ -1336,9 +1405,140 @@ const isCurrentStepValid = () => {
       )}
     </div>
   );
+  case 3:
+  
+  return (
+    <div className="space-y-8">
+{/* Branding Section - Rearranged for better structure and readability */}
+{formData.needBranding && (
+  <div className="mb-8">
+    {/* Hero Header Section */}
+<div className="relative h-50 mb-12 rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 via-[#203947] to-[#901b20] shadow-2xl">
+  {/* Decorative gradients */}     
+  <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/20"></div>
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_80%,rgba(255,255,255,0.1),transparent_50%)]"></div>
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(144,27,32,0.3),transparent_50%)]"></div>
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_40%,rgba(255,255,255,0.05),transparent)] animate-pulse"></div>
+      
+      {/* Floating Elements */}
+      <div className="absolute top-6 right-6 w-12 h-12 bg-white/10 rounded-full blur-md animate-pulse"></div>
+      <div className="absolute bottom-6 left-6 w-20 h-20 bg-[#901b20]-600/20 rounded-full blur-2xl animate-pulse delay-1000"></div>
+
+      {/* Content */}
+      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
+        <div className="bg-white/10 p-3 rounded-2xl mb-4 backdrop-blur-sm border border-white/20">
+          <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+          </svg>
+        </div>
+        <h3 className="text-white text-2xl font-bold mb-2">Branding Day Speaker</h3>
+        <p className="text-white/80 text-base">Add your company representative for the branding day</p>
+      </div>
+    </div>
+
+    {/* Add Speaker Form */}
+    <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300 hover:border-[#901b20]-200 mb-8">
+      <h4 className="text-lg font-bold text-gray-900 mb-6">Add Speaker Information</h4>
+      
+      <form onSubmit={async (e) => {
+        e.preventDefault();
+        await addSpeaker();
+      }}>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Speaker Name */}
+          <div>
+            <label className="block text-base font-semibold text-gray-900 mb-3">
+              Speaker Name *
+            </label>
+            <input
+              type="text"
+              value={speakerForm.speaker_name}
+              onChange={(e) => setSpeakerForm({...speakerForm, speaker_name: e.target.value})}
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#901b20]-500 focus:border-[#901b20]-500 transition-all duration-300 hover:border-gray-300 text-base"
+              placeholder="Enter speaker's full name"
+              required
+            />
+          </div>
+
+          {/* Position */}
+          <div>
+            <label className="block text-base font-semibold text-gray-900 mb-3">
+              Position *
+            </label>
+            <input
+              type="text"
+              value={speakerForm.position}
+              onChange={(e) => setSpeakerForm({...speakerForm, position: e.target.value})}
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#901b20]-500 focus:border-[#901b20]-500 transition-all duration-300 hover:border-gray-300 text-base"
+              placeholder="e.g., Marketing Director"
+              required
+            />
+          </div>
+
+          {/* Mobile Number */}
+          <div>
+            <label className="block text-base font-semibold text-gray-900 mb-3">
+              Mobile Number *
+            </label>
+            <input
+              type="tel"
+              value={speakerForm.mobile}
+              onChange={(e) => setSpeakerForm({...speakerForm, mobile: e.target.value})}
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#901b20]-500 focus:border-[#901b20]-500 transition-all duration-300 hover:border-gray-300 text-base"
+              placeholder="+1234567890"
+              required
+            />
+          </div>
+
+          {/* Photo URL */}
+          <div>
+            <label className="block text-base font-semibold text-gray-900 mb-3">
+              Photo URL
+            </label>
+            <input
+              type="url"
+              value={speakerForm.photo}
+              onChange={(e) => setSpeakerForm({...speakerForm, photo: e.target.value})}
+              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#901b20]-500 focus:border-[#901b20]-500 transition-all duration-300 hover:border-gray-300 text-base"
+              placeholder="https://example.com/photo.jpg"
+            />
+          </div>
+        </div>
+
+        {/* Submit Button */}
+        <div className="flex gap-4 mt-8">
+          <button 
+            type="submit" 
+            disabled={isLoadingSpeaker}
+            className="px-8 py-3 bg-gradient-to-r from-[#901b20] to-[#901b20]/90 text-white rounded-xl font-semibold hover:from-[#901b20]/90 hover:to-[#901b20] transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isLoadingSpeaker ? (
+              <>
+                <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a7.646 7.646 0 100 15.292 7.646 7.646 0 000-15.292zm0 0V1m0 3.354a7.646 7.646 0 100 15.292 7.646 7.646 0 000-15.292z" />
+                </svg>
+                <span>Adding Speaker...</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+                <span>Add Speaker</span>
+              </>
+            )}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+)}
+    </div>
+  );
 
 
-case 3:
+
+case 4:
         return (
           <div className="space-y-8 max-w-3xl mx-auto p-6">
 <div className="relative h-48 mb-12 rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 via-[#203947] to-[#901b20] shadow-2xl">
@@ -1538,9 +1738,9 @@ case 3:
               </div>
 
               {candidateSuccess && (
-                <div className="text-[#203947] font-semibold text-sm bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl border-2 border-green-200 animate-slide-in">
+                <div className="text-[#203947] font-semibold text-sm bg-gradient-to-r from-[#203947] to-[#203947]/30 p-4 rounded-xl border-2 border-[#203947]/60 animate-slide-in">
                   <div className="flex items-center space-x-2">
-                    <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                    <div className="w-5 h-5 bg-[#203947]/50 rounded-full flex items-center justify-center">
                       <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
@@ -1550,7 +1750,7 @@ case 3:
                 </div>
               )}
               {candidateError && (
-                <div className="text-[#901b20] font-semibold text-sm bg-gradient-to-r from-red-50 to-red-100 p-4 rounded-xl border-2 border-red-200 animate-slide-in">
+                <div className="text-[#901b20] font-semibold text-sm bg-gradient-to-r from-red-50 to-red-100 p-4 rounded-xl border-2 border-[#901b20]/40 animate-slide-in">
                   <div className="flex items-center space-x-2">
                     <div className="w-5 h-5 bg-[#901b20] rounded-full flex items-center justify-center">
                       <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1600,55 +1800,60 @@ case 3:
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 py-8">
+    <div className="min-h-screen py-8 ">
       <div className="max-w-4xl mx-auto px-4">
         {/* Progress Steps */}
-        <div className="mb-8">
+        <div className="mb-9">
           <div className="flex items-center justify-between">
-            {steps.map((step, index) => {
-              const Icon = step.icon;
-              const isComplete = isStepComplete(step.id);
-              const isCurrent = step.id === currentStep;
-              
-              return (
-                <div key={step.id} className="flex items-center">
-                  <div className={`flex items-center justify-center w-12 h-12 rounded-full border-2 ${
-                    isComplete 
-                      ? 'bg-green-500 border-green-500 text-white' 
-                      : isCurrent 
-                        ? 'bg-red-500 border-red-500 text-white' 
-                        : 'bg-white border-gray-300 text-gray-400'
-                  }`}>
-                    {isComplete ? (
-                      <CheckCircle className="w-6 h-6" />
-                    ) : (
-                      <Icon className="w-6 h-6" />
-                    )}
-                  </div>
-                  <div className="ml-4">
-                    <p className={`text-sm font-medium ${isCurrent ? 'text-red-600' : 'text-gray-500'}`}>
-                      {step.title}
-                    </p>
-                    <p className="text-xs text-gray-400">{step.description}</p>
-                  </div>
-                  {index < steps.length - 1 && (
-                    <div className={`w-24 h-0.5 mx-8 ${isComplete ? 'bg-green-500' : 'bg-gray-300'}`} />
-                  )}
-                </div>
-              );
-            })}
+{getSteps().map((step, index) => {
+  const Icon = step.icon;
+  const isComplete = step.id < currentStep;
+  const isCurrent = step.id === currentStep;
+
+  return (
+    <div key={step.id} className="flex flex-col items-center text-center relative">
+      <div className={`flex items-center justify-center w-12 h-12 rounded-full border-2 z-10
+        ${isComplete
+          ? 'bg-[#203947] border-[#203947] text-white'         
+          : isCurrent
+            ? 'bg-[#901b20] border-[#901b20] text-white'       
+            : 'bg-white border-gray-300 text-gray-400'}       
+      `}>
+        {isComplete ? (
+          <CheckCircle className="w-6 h-6" />
+        ) : (
+          <Icon className="w-6 h-6" />
+        )}
+      </div>
+
+      <div className="mt-2">
+        <p className={`text-sm font-medium ${isCurrent ? 'text-[#901b20]' : 'text-gray-500'}`}>
+          {step.title}
+        </p>
+        <p className="text-xs text-gray-400">{step.description}</p>
+      </div>
+
+      {index < getSteps().length - 1 && (
+        <div
+          className="absolute top-1/4 left-full w-24 h-0.5 ml-2"
+          style={{ backgroundColor: isComplete ? '#203947' : '#d1d5db' }}
+        />
+      )}
+    </div>
+  );
+})}
           </div>
         </div>
 
         {/* Messages */}
         {successMsg && (
-          <div className="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded">
+          <div className="mb-4 p-4 bg-[#203947]/20 border border-[#203947]/30 text-[#203947]-700 rounded">
             {successMsg}
           </div>
         )}
         
         {errorMsg && (
-          <div className="mb-4 p-4 bg-red-100 border border-red-400 text-red-700 rounded">
+          <div className="mb-4 p-4 bg-[#901b20]/20 border border-[#901b20]/30 text-[#901b20]/70 rounded">
             {errorMsg}
           </div>
         )}
@@ -1658,16 +1863,16 @@ case 3:
           {renderStepContent()}
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between items-center mt-8 pt-6 border-t">
+          <div className="flex justify-between items-center mt-8 pt-6 ">
             {currentStep !== 2 && (
               <button
                 onClick={handleNext}
-                disabled={!isCurrentStepValid() || isSubmitting || isLoading}
-                className="flex items-center px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={(!isCurrentStepValid() && !forceStepUnlock) || isSubmitting || isLoading}
+                className="flex items-center px-6 py-2 bg-[#901b20]/60 text-white rounded-lg hover:bg-[#901b20]/70 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting || isLoading ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <div className="animate-spin rounded-full h-4 w-4  border-white mr-2"></div>
                     Saving...
                   </>
                 ) : (

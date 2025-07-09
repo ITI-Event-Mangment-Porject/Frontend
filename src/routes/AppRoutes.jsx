@@ -68,10 +68,7 @@ const AppRoutes = () => {
         <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="job-fairs/:jobFairId/setup" element={<SetupForm />} />
-        <Route
-          path="job-fairs/:jobFairId/requests"
-          element={<ManageRequests />}
-        />
+        <Route path="job-fairs/:jobFairId/requests" element={<ManageRequests />} />
         <Route path="tracking" element={<InterviewTracking />} />
         <Route path="profile" element={<CompanyProfile />} />
       </Route>
