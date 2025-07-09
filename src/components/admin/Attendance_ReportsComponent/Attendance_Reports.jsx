@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Calendar, Search, ChevronDown, Users, FileText } from 'lucide-react';
+import { attendanceAPI } from '../../../services/api.js';
+import { toast } from 'react-toastify';
 
 const Attendance_Reports = () => {
   const [statusFilter, setStatusFilter] = useState('');
@@ -14,19 +16,24 @@ const Attendance_Reports = () => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(
-          'http://127.0.0.1:8001/api/reports/attendance'
-        );
-        const data = await response.json();
-        if (data.success) {
-          setEventsData(data.data.result);
+        const response = await attendanceAPI.getReports();
+
+        if (response?.data?.success) {
+          setEventsData(response.data.data.result);
           // Set first event as active by default
-          if (data.data.result.length > 0) {
-            setActiveEventTab(data.data.result[0].event);
+          if (response.data.data.result.length > 0) {
+            setActiveEventTab(response.data.data.result[0].event);
           }
+        } else {
+          console.error(
+            'Failed to fetch attendance data:',
+            response?.data?.message || 'Unknown error'
+          );
+          toast.error('Failed to load attendance data');
         }
       } catch (error) {
         console.error('Error fetching attendance data:', error);
+        toast.error('Error loading attendance data');
       } finally {
         setLoading(false);
       }
@@ -37,24 +44,27 @@ const Attendance_Reports = () => {
 
   const handleExportAttendance = async () => {
     try {
-      const response = await fetch(
-        'http://127.0.0.1:8001/api/reports/export?type=xlsx&report=attendance'
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      const response = await attendanceAPI.exportAttendance('xlsx');
+
+      if (response?.data) {
+        const blob = new Blob([response.data], {
+          type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'attendance_report.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        toast.success('Attendance report exported successfully!');
+      } else {
+        throw new Error('No data received from server');
       }
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = 'attendance_report.xlsx';
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
     } catch (error) {
       console.error('Error exporting attendance:', error);
-      alert('Failed to export attendance report');
+      toast.error('Failed to export attendance report');
     }
   };
 

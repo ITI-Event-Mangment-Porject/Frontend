@@ -421,6 +421,60 @@ export const jobFairAPI = {
   },
 };
 
+// Attendance API endpoints
+export const attendanceAPI = {
+  getReports: () => {
+    console.log(
+      'attendanceAPI.getReports - Token:',
+      localStorage.getItem('token')
+    );
+    return api.get('/reports/attendance');
+  },
+
+  getEventAttendance: eventId => {
+    console.log(
+      'attendanceAPI.getEventAttendance - Token:',
+      localStorage.getItem('token')
+    );
+    console.log('attendanceAPI.getEventAttendance - Event ID:', eventId);
+    return api.get(`/reports/attendance/${eventId}`);
+  },
+
+  exportAttendance: (format = 'xlsx', eventId = null) => {
+    console.log(
+      'attendanceAPI.exportAttendance - Token:',
+      localStorage.getItem('token')
+    );
+    console.log(
+      'attendanceAPI.exportAttendance - Format:',
+      format,
+      'Event ID:',
+      eventId
+    );
+
+    const params = { type: format, report: 'attendance' };
+    if (eventId) {
+      params.event_id = eventId;
+    }
+
+    return api.get('/reports/export', {
+      params,
+      responseType: 'blob', // Important for file downloads
+    });
+  },
+
+  getAttendanceStats: () => {
+    console.log(
+      'attendanceAPI.getAttendanceStats - Token:',
+      localStorage.getItem('token')
+    );
+    return api.get('/reports/attendance/stats').catch(() => {
+      // If stats endpoint doesn't exist, return null
+      return null;
+    });
+  },
+};
+
 // Authentication API endpoints
 export const authAPI = {
   login: credentials => api.post('/auth/login', credentials),
