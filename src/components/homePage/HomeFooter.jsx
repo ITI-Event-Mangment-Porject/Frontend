@@ -86,7 +86,7 @@ const HomeFooter = () => {
                 </li>
                 <li>
                   <Link
-                    to="/about"
+                    to="/about-us"
                     className="text-gray-300 hover:text-white transition-colors"
                   >
                     About Us
@@ -94,7 +94,7 @@ const HomeFooter = () => {
                 </li>
                 <li>
                   <Link
-                    to="/contact"
+                    to="/contect-us"
                     className="text-gray-300 hover:text-white transition-colors"
                   >
                     Contact

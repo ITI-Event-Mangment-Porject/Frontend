@@ -12,21 +12,21 @@ const steps = [
   {
     title: 'Manage Registrations',
     description:
-      'Monitor attendee sign-ups, view details, and manage invitation flows with advanced filtering options.',
-    image: 'https://placehold.co/600x400?text=Registration+Management',
+      'Monitor attendee sign-ups, view details with exporting attendees data.',
+    image: 'public/attendance.png',
   },
   {
     title: 'Analyze Performance',
     description:
-      'Gain valuable insights into attendance patterns and overall event success through comprehensive reports.',
-    image: 'https://placehold.co/600x400?text=Analytics+Dashboard',
+      'Gain valuable insights into average interview duration and overall event success through comprehensive reports.',
+    image: 'public/analytics.png',
   },
 ];
 
 const HomeHowItWorks = () => {
   return (
     <section
-      className="py-20 bg-gradient-to-br from-[var(--primary-200)] via-white to-[var(--primary-300)] relative overflow-hidden"
+      className="py-20 bg-gradient-to-br from-[var(--primary-300)] via-white to-[var(--primary-300)] relative overflow-hidden"
       id="how-it-works"
     >
       {/* Background decoration */}

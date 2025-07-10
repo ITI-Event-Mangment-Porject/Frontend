@@ -4,6 +4,7 @@ import HomeNavbar from '../../components/homePage/HomeNavbar';
 import HomeFooter from '../../components/homePage/HomeFooter';
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
+// import { Suspense, lazy } from 'react';
 import {
   Users,
   Calendar,
