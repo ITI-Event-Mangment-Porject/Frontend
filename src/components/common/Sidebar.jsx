@@ -30,7 +30,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, setIsCollapsed }) => {
     { path: "/admin/jobfair", icon: Building2, label: "Job Fair Management" },
     { path: "/admin/FeedbackAnalytics", icon: BarChart3, label: "Feedback Analytics" },
     { path: "/admin/companies", icon: Building2, label: "Companies Setup" },
-    { path: "/admin/liveevents", icon: Eye, label: "Live Events" },
+    { path: "/admin/liveevents", icon: Eye, label: "Events Monitoring" },
     { path: "/admin/brandingDay", icon: Zap, label: "Branding Day" },
     { path: "/admin/notifications", icon: Bell, label: "Notifications" },
     { path: "/admin/LiveQueue", icon: UserCheck, label: "Live Interview Queues" },
