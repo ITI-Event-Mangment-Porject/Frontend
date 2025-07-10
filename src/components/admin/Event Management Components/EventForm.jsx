@@ -721,34 +721,7 @@ const EventForm = ({
               </div>
             </div>
 
-            {/* Status */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1 animate-[fadeIn_0.3s_0.2s_forwards]">
-                Status <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <select
-                  value={event.status || 'draft'}
-                  onChange={e => setEvent({ ...event, status: e.target.value })}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:border-0 appearance-none pr-8 animate-[fadeIn_0.3s_0.2s_forwards]"
-                >
-                  <option value="draft">Draft</option>
-                  <option value="published">Published</option>
-                  <option value="ongoing">Ongoing</option>
-                  <option value="completed">Completed</option>
-                  <option value="cancelled">Cancelled</option>
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                  <svg
-                    className="fill-current h-4 w-4"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                  </svg>
-                </div>
-              </div>
-            </div>
+            {/* Status field removed - events are created as draft by default */}
           </div>
 
           {/* Visibility Settings */}

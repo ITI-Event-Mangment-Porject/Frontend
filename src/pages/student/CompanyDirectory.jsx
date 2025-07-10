@@ -191,7 +191,7 @@ const CompanyDirectory = () => {
                   <div
                     key={c.id}
                     className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-orange-50 ${
-                      selected === i ? 'border-l-4 border-orange-500 bg-orange-50' : ''
+                      selected === i ? 'border-l-4 border-red-900 bg-orange-50' : ''
                     }`}
                     onClick={() => setSelected(i)}
                   >
@@ -241,7 +241,7 @@ const CompanyDirectory = () => {
                         <div key={profile.id} className="border rounded-lg p-4 bg-gray-50">
                           <div className="flex justify-between items-start mb-3">
                             <h5 className="font-semibold">{profile.title}</h5>
-                            <span className="px-2 py-1 text-xs rounded bg-orange-100 text-orange-700">
+                            <span className="px-2 py-1 text-xs rounded bg-red-900 text-white">
                               {profile.employment_type}
                             </span>
                           </div>

@@ -90,7 +90,7 @@ const JobFairDashboard = () => {
     <Layout>
       <div className="p-6">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-6">
+          <div className="bg-gradient-to-r from-red-900 to-red-500 text-white p-6">
             <h1 className="text-3xl font-bold mb-2">Job Fair Dashboard</h1>
             <p className="text-orange-100">Your interviews for today</p>
           </div>

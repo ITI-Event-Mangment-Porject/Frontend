@@ -4,6 +4,7 @@ import HomeNavbar from '../../components/homePage/HomeNavbar';
 import HomeFooter from '../../components/homePage/HomeFooter';
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
+// import { Suspense, lazy } from 'react';
 import {
   Users,
   Calendar,
@@ -69,7 +70,7 @@ const AboutUs = () => {
       name: 'Merna Tera',
       role: 'Frontend Developer',
       type: 'frontend',
-      image: '',
+      image: '/public/team/merna.jpg',
       github: 'https://github.com/khaled-ibrahim',
       linkedin: '/',
     },
@@ -87,7 +88,7 @@ const AboutUs = () => {
       name: 'Ahmed El-Gendy',
       role: 'Backend Developer',
       type: 'backend',
-      image: '',
+      image: '/public/team/ahmed.jpg',
       github: 'https://github.com/mohamed-ali',
       linkedin: 'https://www.linkedin.com/in/ahmed-elgendy-982836218/',
     },

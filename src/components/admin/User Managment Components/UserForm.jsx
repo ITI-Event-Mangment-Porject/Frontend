@@ -116,7 +116,6 @@ const UserForm = ({
             pattern: 'portfolio_url:',
             selector: 'input[value="' + (user.portfolio_url || '') + '"]',
           },
-          { pattern: 'is_active:', selector: 'select' },
         ];
 
         // Find the first field that has an error
@@ -226,7 +225,7 @@ const UserForm = ({
   };
 
   const removeProfileImage = () => {
-    setUser(prev => ({ ...prev, profile_image: null }));
+    setUser(prev => ({ ...prev, profile_image: '' }));
     setProfileImagePreview(null);
   };
 
@@ -281,10 +280,12 @@ const UserForm = ({
                   </svg>
                 </button>
               </div>
-            ) : isEdit && user.profile_image ? (
+            ) : isEdit &&
+              user.profile_image &&
+              typeof user.profile_image === 'string' ? (
               <div className="relative w-full max-w-md mx-auto animate-[fadeIn_0.3s_0.2s_forwards]">
                 <img
-                  src={user.profile_image}
+                  src={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${user.profile_image}`}
                   alt="Current profile"
                   className="h-44 w-44 object-cover rounded-full mx-auto"
                 />
@@ -818,49 +819,6 @@ const UserForm = ({
               </p>
             )}
           </div>
-        </div>
-
-        {/* Status */}
-        <div className="animate-[fadeIn_0.5s_1.4s_forwards] opacity-0">
-          <label className="block text-sm font-medium text-gray-700 mb-1 animate-[fadeIn_0.3s_0.2s_forwards]">
-            Status <span className="text-red-500">*</span>
-          </label>
-          <div className="relative">
-            <select
-              value={user.is_active ? '1' : '0'}
-              onChange={e =>
-                setUser(prev => ({
-                  ...prev,
-                  is_active: e.target.value === '1',
-                }))
-              }
-              className={`w-full p-2 border border-primary rounded-md focus:border-0 appearance-none pr-8 animate-[fadeIn_0.3s_0.2s_forwards]${
-                errors.is_active ||
-                getFieldErrorFromApiError(error, 'is_active')
-                  ? 'border-red-500 bg-red-50'
-                  : 'border-gray-300'
-              }`}
-            >
-              <option value="1">Active</option>
-              <option value="0">Inactive</option>
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-              <svg
-                className="fill-current h-4 w-4"
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 20 20"
-              >
-                <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-              </svg>
-            </div>
-          </div>
-          {(errors.is_active ||
-            getFieldErrorFromApiError(error, 'is_active')) && (
-            <p className="mt-1 text-sm text-red-600">
-              {errors.is_active ||
-                getFieldErrorFromApiError(error, 'is_active')}
-            </p>
-          )}
         </div>
 
         {/* Action Buttons */}

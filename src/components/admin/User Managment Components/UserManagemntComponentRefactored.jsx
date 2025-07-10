@@ -64,17 +64,38 @@ const UserManagementComponent = () => {
       if (newUser.profile_image instanceof File) {
         userData = new FormData();
         const cleanedData = cleanUserData(newUser);
+
+        // Debug: Log what we're sending
+        console.log('Profile image file:', newUser.profile_image);
+        console.log('Cleaned data:', cleanedData);
+
         Object.keys(cleanedData).forEach(key => {
           if (key === 'profile_image' && cleanedData[key] instanceof File) {
             userData.append(key, cleanedData[key]);
-          } else if (cleanedData[key] !== null && cleanedData[key] !== '') {
+          } else if (key === 'is_active') {
+            // Explicitly handle boolean for FormData
+            userData.append(key, cleanedData[key] ? '1' : '0');
+          } else if (
+            cleanedData[key] !== null &&
+            cleanedData[key] !== '' &&
+            cleanedData[key] !== undefined
+          ) {
             userData.append(key, cleanedData[key]);
           }
         });
-        console.log('Sending FormData with profile image');
+
+        // Debug: Log FormData contents
+        console.log('FormData contents:');
+        for (let [key, value] of userData.entries()) {
+          console.log(key, value);
+        }
       } else {
         // Otherwise use regular JSON
         userData = cleanUserData(newUser);
+        // Remove profile_image if it's empty to avoid sending empty string
+        if (userData.profile_image === '' || userData.profile_image === null) {
+          delete userData.profile_image;
+        }
         console.log('Sending JSON data:', userData);
       }
 
@@ -137,16 +158,44 @@ const UserManagementComponent = () => {
       if (editUser.profile_image instanceof File) {
         userData = new FormData();
         const cleanedData = cleanUserData(editUser);
+
+        // Debug: Log what we're sending for edit
+        console.log('Edit - Profile image file:', editUser.profile_image);
+        console.log('Edit - Cleaned data:', cleanedData);
+
         Object.keys(cleanedData).forEach(key => {
           if (key === 'profile_image' && cleanedData[key] instanceof File) {
             userData.append(key, cleanedData[key]);
-          } else if (cleanedData[key] !== null && cleanedData[key] !== '') {
+          } else if (key === 'is_active') {
+            // Explicitly handle boolean for FormData
+            userData.append(key, cleanedData[key] ? '1' : '0');
+          } else if (
+            cleanedData[key] !== null &&
+            cleanedData[key] !== '' &&
+            cleanedData[key] !== undefined
+          ) {
             userData.append(key, cleanedData[key]);
           }
         });
+
+        // Debug: Log FormData contents for edit
+        console.log('Edit - FormData contents:');
+        for (let [key, value] of userData.entries()) {
+          console.log(key, value);
+        }
       } else {
         // Otherwise use regular JSON
         userData = cleanUserData(editUser);
+        // Handle profile image removal - send empty string to indicate removal
+        if (editUser.profile_image === '') {
+          userData.profile_image = '';
+        } else if (
+          editUser.profile_image === null ||
+          editUser.profile_image === undefined
+        ) {
+          delete userData.profile_image;
+        }
+        console.log('Edit - Sending JSON data:', userData);
       }
 
       const result = await submitUser(() =>
@@ -264,10 +313,16 @@ const UserManagementComponent = () => {
       track_id: user.track_id || '',
       intake_year: user.intake_year || '',
       graduation_year: user.graduation_year || '',
-      is_active: user.is_active !== undefined ? user.is_active : true,
+      is_active: user.is_active !== undefined ? user.is_active : true, // Preserve existing status
     });
-    // Set the existing profile image as preview for editing
-    setEditProfileImagePreview(user.profile_image || null);
+    // Set the existing profile image as preview for editing - construct full URL
+    if (user.profile_image && typeof user.profile_image === 'string') {
+      setEditProfileImagePreview(
+        `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${user.profile_image}`
+      );
+    } else {
+      setEditProfileImagePreview(null);
+    }
     setIsEditModalOpen(true);
   };
 
@@ -461,15 +516,6 @@ const UserManagementComponent = () => {
                       </p>
                     </div>
                   </div>
-                  <span
-                    className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${
-                      user.is_active
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-red-100 text-red-800'
-                    }`}
-                  >
-                    {user.is_active ? 'Active' : 'Inactive'}
-                  </span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 mb-3">
                   <div className="truncate">

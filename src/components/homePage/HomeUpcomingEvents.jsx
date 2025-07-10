@@ -118,6 +118,17 @@ const HomeUpcomingEvents = () => {
     return events.slice(start, end);
   };
 
+  // Get gradient colors for event placeholder
+  const getEventGradient = index => {
+    const gradients = [
+      'linear-gradient(135deg, var(--primary-500) 0%, var(--secondary-500) 100%)',
+      'linear-gradient(135deg, var(--secondary-500) 0%, var(--primary-500) 100%)',
+      'linear-gradient(45deg, var(--primary-500) 0%, var(--secondary-500) 100%)',
+      'linear-gradient(225deg, var(--primary-500) 0%, var(--secondary-500) 100%)',
+    ];
+    return gradients[index % gradients.length];
+  };
+
   // Format date function
   const formatDate = dateString => {
     try {
@@ -259,22 +270,83 @@ const HomeUpcomingEvents = () => {
                 >
                   <div className="relative">
                     {/* Event image */}
-                    <motion.img
-                      src={
-                        event.banner_image ||
-                        `https://placehold.co/400x250?text=${encodeURIComponent(event.title)}`
-                      }
-                      alt={event.title}
-                      className="w-full h-48 object-cover"
-                      initial={{ scale: 1.1 }}
-                      whileInView={{ scale: 1 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.6, delay: index * 0.1 + 0.2 }}
-                      onError={e => {
-                        e.target.onerror = null;
-                        e.target.src = `https://placehold.co/400x250?text=${encodeURIComponent(event.title)}`;
+                    {event.banner_image ? (
+                      <motion.img
+                        src={event.banner_image}
+                        alt={event.title}
+                        className="w-full h-48 object-cover"
+                        initial={{ scale: 1.1 }}
+                        whileInView={{ scale: 1 }}
+                        viewport={{ once: true }}
+                        transition={{ duration: 0.6, delay: index * 0.1 + 0.2 }}
+                        onError={e => {
+                          e.target.onerror = null;
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'block';
+                        }}
+                      />
+                    ) : null}
+
+                    {/* Colorful placeholder for events without banner */}
+                    <div
+                      className={`w-full h-48 ${!event.banner_image ? 'block' : 'hidden'} relative overflow-hidden`}
+                      style={{
+                        background: getEventGradient(index),
                       }}
-                    />
+                    >
+                      {/* Decorative elements */}
+                      <div className="absolute inset-0 opacity-10">
+                        <div className="absolute -top-8 -left-8 w-24 h-24 bg-white rounded-full"></div>
+                        <div className="absolute -bottom-12 -right-12 w-32 h-32 bg-white rounded-full"></div>
+                        <div className="absolute top-8 right-8 w-16 h-16 bg-white rounded-full"></div>
+                        <div className="absolute bottom-8 left-8 w-12 h-12 bg-white rounded-full"></div>
+                      </div>
+
+                      {/* Pattern overlay */}
+                      <div className="absolute inset-0 opacity-5">
+                        <div
+                          className="w-full h-full"
+                          style={{
+                            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                          }}
+                        ></div>
+                      </div>
+
+                      {/* Main content */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-center px-4">
+                          {/* Event icon with backdrop */}
+                          <div className="relative inline-block mb-3">
+                            <div className="absolute inset-0 bg-white/20 rounded-full blur-sm"></div>
+                            <div className="relative bg-white/10 rounded-full p-3 backdrop-blur-sm">
+                              <svg
+                                className="w-12 h-12 text-white"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={1.5}
+                                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+
+                          {/* Event title */}
+                          <div className="bg-white/10 backdrop-blur-sm rounded-lg px-3 py-2 max-w-full">
+                            <p className="text-white text-sm font-semibold leading-tight">
+                              {event.title.length > 25
+                                ? event.title.substring(0, 25) + '...'
+                                : event.title}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
 
                     {/* Event type badge */}
                     {event.type && (
@@ -513,28 +585,85 @@ const HomeUpcomingEvents = () => {
                 <div className="relative z-10 p-2">
                   {/* Event Image with enhanced animation */}
                   <motion.div
-                    className="mb-6 overflow-hidden rounded-lg shadow-lg"
+                    className="mb-6 overflow-hidden rounded-lg shadow-lg relative"
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.7, delay: 0.1 }}
                     whileHover={{ scale: 1.02, transition: { duration: 0.3 } }}
                   >
-                    <img
-                      src={
-                        selectedEvent.banner_image ||
-                        `https://placehold.co/800x400?text=${encodeURIComponent(selectedEvent.title)}`
-                      }
-                      alt={selectedEvent.title}
-                      className="w-full h-64 object-cover rounded-lg transition-all duration-700 hover:saturate-150"
-                      onError={e => {
-                        e.target.onerror = null;
-                        e.target.src = `https://placehold.co/800x400?text=${encodeURIComponent(
-                          selectedEvent.title
-                        )}`;
+                    {selectedEvent.banner_image ? (
+                      <img
+                        src={selectedEvent.banner_image}
+                        alt={selectedEvent.title}
+                        className="w-full h-64 object-cover rounded-lg transition-all duration-700 hover:saturate-150"
+                        onError={e => {
+                          e.target.onerror = null;
+                          e.target.style.display = 'none';
+                          e.target.nextSibling.style.display = 'block';
+                        }}
+                      />
+                    ) : null}
+
+                    {/* Colorful gradient placeholder for modal */}
+                    <div
+                      className={`w-full h-64 ${!selectedEvent.banner_image ? 'block' : 'hidden'} relative overflow-hidden rounded-lg`}
+                      style={{
+                        background: getEventGradient(0), // Use first gradient for consistency
                       }}
-                    />
-                    {/* Gradient overlay on image for depth */}
-                    {/* <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent rounded-lg opacity-60"></div> */}
+                    >
+                      {/* Decorative elements */}
+                      <div className="absolute inset-0 opacity-10">
+                        <div className="absolute -top-12 -left-12 w-32 h-32 bg-white rounded-full"></div>
+                        <div className="absolute -bottom-16 -right-16 w-40 h-40 bg-white rounded-full"></div>
+                        <div className="absolute top-12 right-12 w-20 h-20 bg-white rounded-full"></div>
+                        <div className="absolute bottom-12 left-12 w-16 h-16 bg-white rounded-full"></div>
+                      </div>
+
+                      {/* Pattern overlay */}
+                      <div className="absolute inset-0 opacity-5">
+                        <div
+                          className="w-full h-full"
+                          style={{
+                            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+                          }}
+                        ></div>
+                      </div>
+
+                      {/* Main content */}
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="text-center px-6">
+                          {/* Event icon with backdrop */}
+                          <div className="relative inline-block mb-4">
+                            <div className="absolute inset-0 bg-white/20 rounded-full blur-sm"></div>
+                            <div className="relative bg-white/10 rounded-full p-4 backdrop-blur-sm">
+                              <svg
+                                className="w-16 h-16 text-white"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={1.5}
+                                  d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+
+                          {/* Event title */}
+                          <div className="bg-white/10 backdrop-blur-sm rounded-lg px-4 py-3 max-w-full">
+                            <p className="text-white text-lg font-semibold leading-tight">
+                              {selectedEvent.title.length > 35
+                                ? selectedEvent.title.substring(0, 35) + '...'
+                                : selectedEvent.title}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </motion.div>
 
                   {/* Event Status Badge with enhanced styling */}
