@@ -54,8 +54,9 @@ const CompaniesSetUp = () => {
 
       // Add filters if they exist
       if (searchTerm) params['filter[name]'] = searchTerm;
-      if (statusFilter === 'approved') params['filter[is_approved]'] = 1;
-      if (statusFilter === 'rejected') params['filter[is_approved]'] = 0;
+      if (statusFilter === 'approved') params['filter[status]'] = 'approved';
+      if (statusFilter === 'rejected') params['filter[status]'] = 'rejected';
+      if(statusFilter === 'pending') params['filter[status]'] = 'pending';
 
       // If a specific URL is provided (for pagination), extract page number
       if (url) {

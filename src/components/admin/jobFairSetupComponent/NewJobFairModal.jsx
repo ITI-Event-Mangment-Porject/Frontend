@@ -5,8 +5,7 @@ import { X } from 'lucide-react';
 
 const NewJobFairModal = ({ onClose }) => {
     const JWT_TOKEN =
-  'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDEvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3NTE5Mjg5MzEsImV4cCI6MTc4MTkyODkzMSwibmJmIjoxNzUxOTI4OTMxLCJqdGkiOiJUNE5LS3FvRkpuU1pKQXN0Iiwic3ViIjoiMTYyIiwicHJ2IjoiMTNlOGQwMjhiMzkxZjNiN2I2M2YyMTkzM2RiYWQ0NThmZjIxMDcyZSJ9.HQa7FjeiYPCBuyWVBzuOCeWJaoJeYriqF4_wMBDvyoI';
-
+  'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDEvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3NTIwODg2MDAsImV4cCI6MTc4MjA4ODYwMCwibmJmIjoxNzUyMDg4NjAwLCJqdGkiOiJ4NmFVanJnWkhYSU80QmtzIiwic3ViIjoiMTY5IiwicHJ2IjoiMTNlOGQwMjhiMzkxZjNiN2I2M2YyMTkzM2RiYWQ0NThmZjIxMDcyZSJ9.K-NvVcElOSANFjKLUmuceSVbhGryfdvjF07ez3Bb6-A';
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -38,11 +37,11 @@ const NewJobFairModal = ({ onClose }) => {
       });
 
       const data = await res.json();
+      console.log(data);
       alert('Job Fair Created: ' + data?.data?.result?.title);
       onClose();
     } catch (err) {
-      console.error(err);
-      alert('Failed to create job fair');
+      console.error('Error is',err);
     } finally {
       setLoading(false);
     }

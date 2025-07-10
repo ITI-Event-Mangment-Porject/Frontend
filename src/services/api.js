@@ -94,6 +94,7 @@ api.interceptors.request.use(
 //   }
 // );
 
+
 // User API endpoints
 export const userAPI = {
   getAll: params => api.get('/users', { params }),

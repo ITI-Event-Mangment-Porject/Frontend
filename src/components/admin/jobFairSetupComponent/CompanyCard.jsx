@@ -1,4 +1,5 @@
 import React from 'react';
+import { useState } from 'react';
 import {
   MapPin,
   Calendar,
@@ -9,6 +10,7 @@ import {
   Globe,
   FileText,
 } from 'lucide-react';
+import RejectReasonModal from './RejectModal';
 
 const CompanyCard = ({
   participation,
@@ -16,6 +18,24 @@ const CompanyCard = ({
   onViewDetails,
   processing,
 }) => {
+  const [showModal, setShowModal] = useState(false);
+  const [rejectReason, setRejectReason] = useState('');
+  const openRejectModal = () => setShowModal(true);
+  const closeRejectModal = () => {
+    setShowModal(false);
+    setRejectReason('');
+  };
+
+  const handleSubmitReason = () => {
+    handleAction({
+      participationId: participation.id,
+      companyId: company.id,
+      action: 'rejected',
+      reason: rejectReason,
+    });
+    closeRejectModal();
+  };
+
   const company = participation.company;
 
   const getStatusColor = status => {
@@ -172,14 +192,7 @@ const CompanyCard = ({
               <button
                 disabled={processing}
                 className="flex items-center gap-1 px-3 py-1 text-sm text-white bg-red-500 hover:bg-red-600 disabled:opacity-50 rounded transition-colors"
-                onClick={() =>
-                  handleAction({
-                    participationId: participation.id,
-                    companyId: company.id,
-                    action: 'rejected',
-                    reason: 'Not relevant',
-                  })
-                }
+                onClick={openRejectModal}
               >
                 <X size={14} />
                 {processing ? 'Rejecting...' : 'Reject'}
@@ -188,6 +201,13 @@ const CompanyCard = ({
           )}
         </div>
       </div>
+      <RejectReasonModal
+        isOpen={showModal}
+        onClose={closeRejectModal}
+        onSubmit={handleSubmitReason}
+        reason={rejectReason}
+        setReason={setRejectReason}
+      />
     </div>
   );
 };

@@ -5,8 +5,8 @@ import SearchAndFilterBar from './SearchAndFilterBar';
 import DetailModal from './DetailModal';
 import NewJobFairModal from './NewJobFairModal';
 
-const JWT_TOKEN ='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDEvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3NTE5OTg3OTMsImV4cCI6MTc4MTk5ODc5MywibmJmIjoxNzUxOTk4NzkzLCJqdGkiOiJzckhHaWpQZmN0WU96bWU2Iiwic3ViIjoiMTYyIiwicHJ2IjoiMTNlOGQwMjhiMzkxZjNiN2I2M2YyMTkzM2RiYWQ0NThmZjIxMDcyZSJ9.fXlhOX24U9dyZyqi9dABx9cucgbV_vYnxQ1aKG3R4qg';
- const JobFairSetUp = () => {
+const JWT_TOKEN='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDEvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3NTIwOTYyMTAsImV4cCI6MjA1MjA5NjIxMCwibmJmIjoxNzUyMDk2MjEwLCJqdGkiOiJZWURiaVVVUUQxdTVKakhuIiwic3ViIjoiMTY5IiwicHJ2IjoiMTNlOGQwMjhiMzkxZjNiN2I2M2YyMTkzM2RiYWQ0NThmZjIxMDcyZSJ9.z33GIrTduO6-nK5FZ0DROhnghCCcWgfw8nK5decaZF0';
+const JobFairSetUp = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Statuses');
   const [companies, setCompanies] = useState([]);

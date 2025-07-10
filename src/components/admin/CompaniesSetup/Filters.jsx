@@ -29,6 +29,7 @@ const Filters = ({
           <option value="all">All Statuses</option>
           <option value="approved">Approved</option>
           <option value="rejected">Rejected</option>
+          <option value='pending'>pending</option>
         </select>
         <button
           onClick={onRefresh}
