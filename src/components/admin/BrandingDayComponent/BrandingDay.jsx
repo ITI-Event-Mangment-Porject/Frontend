@@ -17,6 +17,8 @@ import {
   Edit3,
   X,
   Plus,
+  Loader2,
+  TrendingUp,
 } from "lucide-react"
 
 const BrandingDay = () => {
@@ -36,6 +38,7 @@ const BrandingDay = () => {
   const [lastUpdated, setLastUpdated] = useState(new Date())
   const [userRole, setUserRole] = useState(null)
   const [accessDenied, setAccessDenied] = useState(false)
+  const [error, setError] = useState(null)
   const [scheduleData, setScheduleData] = useState({
     branding_day_date: "2025-06-25",
     slots: [],
@@ -103,6 +106,7 @@ const BrandingDay = () => {
   const fetchData = async () => {
     try {
       setLoading(true)
+      setError(null)
       setActionError("")
       const token = localStorage.getItem("token")
 
@@ -141,24 +145,28 @@ const BrandingDay = () => {
 
       if (candidatesData.success) {
         setCandidates(candidatesData.data.result || [])
+      } else {
+        throw new Error(candidatesData.message || "Failed to fetch candidates")
       }
 
       if (scheduleData.success) {
         // Merge speaker data from candidates into schedule
         const scheduleWithSpeakers = scheduleData.data.result.map((slot) => {
-          const candidate = candidatesData.data.result.find((c) => c.company_id === slot.company_id)
+          const candidate = candidatesData.data.result?.find((c) => c.company_id === slot.company_id)
           return {
             ...slot,
             speaker: candidate?.speaker || null,
           }
         })
         setSchedule(scheduleWithSpeakers || [])
+      } else {
+        throw new Error(scheduleData.message || "Failed to fetch schedule")
       }
 
       setLastUpdated(new Date())
-    } catch (error) {
-      console.error("Error fetching data:", error)
-      setActionError("Failed to load data. Please try again.")
+    } catch (err) {
+      console.error("Error fetching data:", err)
+      setError(err.message || "Error loading branding day data")
     } finally {
       setLoading(false)
     }
@@ -247,6 +255,8 @@ const BrandingDay = () => {
         })),
       }
 
+      console.log("Submitting schedule:", payload)
+
       const response = await fetch(`${BASE_URL}/job-fairs/1/branding-day/schedule`, {
         method: "POST",
         headers: {
@@ -257,12 +267,33 @@ const BrandingDay = () => {
       })
 
       const data = await response.json()
+      console.log("Schedule response:", data)
 
       if (data.success) {
         setActionSuccess("Schedule created successfully! 🎉")
         setShowScheduleForm(false)
         setSelectedCompanies([])
-        fetchData() // Refresh data
+
+        // Create new schedule slots with proper structure
+        const newScheduleSlots = scheduleData.slots.map((slot, index) => ({
+          id: `temp_${Date.now()}_${index}`, // Temporary ID
+          company_id: slot.company_id,
+          participation_id: slot.participation_id,
+          company_name: slot.company_name,
+          speaker: slot.speaker,
+          start_time: slot.start_time,
+          end_time: slot.end_time,
+          order: slot.order,
+          branding_day_date: scheduleData.branding_day_date,
+        }))
+
+        // Update schedule state
+        setSchedule((prevSchedule) => [...prevSchedule, ...newScheduleSlots])
+
+        console.log("Updated schedule with new slots:", newScheduleSlots)
+
+        // Don't automatically refresh - let user manually refresh if needed
+        // This prevents the optimistic update from being overwritten
       } else {
         setActionError(data.message || "Failed to create schedule")
       }
@@ -275,6 +306,7 @@ const BrandingDay = () => {
   }
 
   const handleEditSlot = (slot) => {
+    console.log("Edit slot clicked:", slot)
     setEditingSlot({
       ...slot,
       start_time: slot.start_time.substring(0, 5), // Remove seconds
@@ -298,6 +330,8 @@ const BrandingDay = () => {
         end_time: editingSlot.end_time,
       }
 
+      console.log("Updating slot:", editingSlot.id, payload)
+
       const response = await fetch(`${BASE_URL}/job-fairs/1/branding-day/schedule/${editingSlot.id}`, {
         method: "PUT",
         headers: {
@@ -308,12 +342,22 @@ const BrandingDay = () => {
       })
 
       const data = await response.json()
+      console.log("Update response:", data)
 
       if (data.success) {
         setActionSuccess("Schedule updated successfully! ✅")
         setShowEditModal(false)
+
+        // Update local state immediately
+        setSchedule((prevSchedule) =>
+          prevSchedule.map((slot) =>
+            slot.id === editingSlot.id
+              ? { ...slot, start_time: editingSlot.start_time, end_time: editingSlot.end_time }
+              : slot,
+          ),
+        )
+
         setEditingSlot(null)
-        fetchData() // Refresh data
       } else {
         setActionError(data.message || "Failed to update schedule")
       }
@@ -326,6 +370,7 @@ const BrandingDay = () => {
   }
 
   const handleDeleteClick = (slot) => {
+    console.log("Delete slot clicked:", slot)
     setDeletingSlot(slot)
     setShowDeleteModal(true)
   }
@@ -339,6 +384,8 @@ const BrandingDay = () => {
 
     try {
       const token = localStorage.getItem("token")
+      console.log("Deleting slot:", deletingSlot.id)
+
       const response = await fetch(`${BASE_URL}/job-fairs/1/branding-day/schedule/${deletingSlot.id}`, {
         method: "DELETE",
         headers: {
@@ -348,21 +395,61 @@ const BrandingDay = () => {
       })
 
       const data = await response.json()
+      console.log("Delete response:", data)
 
       if (data.success) {
-        setActionSuccess("Schedule slot deleted successfully! 🗑️")
+        // Create candidate object from the deleted slot to add back to available companies
+        const restoredCandidate = {
+          id: deletingSlot.company_id,
+          company_id: deletingSlot.company_id,
+          job_fair_participation_id: deletingSlot.participation_id,
+          company_name: deletingSlot.company_name,
+          speaker: deletingSlot.speaker,
+        }
+
+        console.log("Restoring candidate:", restoredCandidate)
+
+        // Update states immediately and atomically
+        setSchedule((prevSchedule) => {
+          const updatedSchedule = prevSchedule.filter((slot) => slot.id !== deletingSlot.id)
+          console.log("Updated schedule after deletion:", updatedSchedule)
+          return updatedSchedule
+        })
+
+        // Add the company back to candidates
+        setCandidates((prevCandidates) => {
+          const exists = prevCandidates.some((c) => c.company_id === restoredCandidate.company_id)
+          if (!exists) {
+            const updatedCandidates = [...prevCandidates, restoredCandidate]
+            console.log("Updated candidates after restoration:", updatedCandidates)
+            return updatedCandidates
+          }
+          return prevCandidates
+        })
+
+        // Close modal and reset states
         setShowDeleteModal(false)
         setDeletingSlot(null)
-        fetchData() // Refresh data
+        setActionLoading(false)
+
+        // Show success message
+        setActionSuccess("Schedule slot deleted successfully! Company moved back to available list. 🗑️")
+
+        console.log("Delete operation completed successfully")
       } else {
         setActionError(data.message || "Failed to delete schedule slot")
+        setActionLoading(false)
       }
     } catch (error) {
       console.error("Error deleting schedule slot:", error)
       setActionError("Network error occurred while deleting the schedule slot")
-    } finally {
       setActionLoading(false)
     }
+  }
+
+  const handleRefresh = () => {
+    console.log("Manual refresh triggered")
+    fetchData()
   }
 
   const formatTime = (timeString) => {
@@ -370,533 +457,866 @@ const BrandingDay = () => {
     return timeString.substring(0, 5) // Remove seconds
   }
 
-  // Loading skeleton component
-  const LoadingSkeleton = () => (
-    <div className="space-y-6">
-      {/* Header skeleton */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-1/3 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
-        </div>
-      </div>
+  // Enhanced Loading Component
+  if (loading) {
+    return (
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="p-6">
+          <div className="animate-pulse">
+            {/* Header skeleton */}
+            <div className="mb-8">
+              <div className="h-8 bg-gray-300 border border-gray-200 rounded w-1/4 mb-6 shimmer-effect"></div>
+              <div className="h-4 bg-gray-300 border border-gray-200 rounded w-1/2 shimmer-effect"></div>
+            </div>
 
-      {/* Stats skeleton */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="animate-pulse">
-              <div className="h-6 bg-gray-200 rounded w-1/2 mb-2"></div>
-              <div className="h-8 bg-gray-200 rounded w-1/3"></div>
+            {/* Stats skeleton */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="bg-white rounded-lg p-6 space-y-4 shimmer-effect border border-gray-200">
+                  <div className="h-6 bg-gray-300 border border-gray-200 rounded w-3/4"></div>
+                  <div className="h-8 bg-gray-300 border border-gray-200 rounded w-1/2"></div>
+                </div>
+              ))}
+            </div>
+
+            {/* Search skeleton */}
+            <div className="bg-white rounded-lg p-6 mb-8 shimmer-effect border border-gray-200">
+              <div className="h-10 bg-gray-300 border border-gray-200 rounded"></div>
+            </div>
+
+            {/* Cards skeleton */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="bg-white rounded-lg p-6 space-y-4 shimmer-effect border border-gray-200">
+                  <div className="h-4 bg-gray-300 border border-gray-200 rounded w-3/4"></div>
+                  <div className="h-3 bg-gray-300 border border-gray-200 rounded w-1/2"></div>
+                  <div className="h-20 bg-gray-300 border border-gray-200 rounded"></div>
+                </div>
+              ))}
             </div>
           </div>
-        ))}
-      </div>
-
-      {/* Search skeleton */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="animate-pulse">
-          <div className="h-10 bg-gray-200 rounded"></div>
-        </div>
-      </div>
-    </div>
-  )
-
-  // Access denied component
-  if (accessDenied) {
-    return (
-      <div className="min-h-screen bg-[#ebebeb] p-6 flex items-center justify-center">
-        <div className="max-w-md w-full bg-white rounded-2xl p-8 text-center shadow-2xl border border-gray-200/50">
-          <div className="text-red-500 mb-6 animate-bounce">
-            <AlertCircle className="w-16 h-16 mx-auto" />
-          </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-3">Access Denied</h3>
-          <p className="text-gray-600 mb-6">You don't have permission to access this page. Admin access required.</p>
-          <button
-            onClick={() => (window.location.href = "/login")}
-            className="bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
-          >
-            Go to Login
-          </button>
         </div>
       </div>
     )
   }
 
-  if (loading) {
+  // Enhanced Error Component
+  if (error) {
     return (
-      <div className="min-h-screen bg-[#ebebeb] p-6">
-        <LoadingSkeleton />
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="p-6">
+          <div className="min-h-[400px] flex items-center justify-center">
+            <div className="max-w-md w-full bg-white rounded-2xl p-8 text-center shadow-2xl animate-shake border border-gray-200">
+              <div className="text-red-500 mb-6 animate-bounce">
+                <AlertCircle className="w-16 h-16 mx-auto" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">Error Loading Branding Day</h3>
+              <p className="text-gray-600 mb-6">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+              >
+                Try Again
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Enhanced Access Denied Component
+  if (accessDenied) {
+    return (
+      <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+        <div className="p-6">
+          <div className="min-h-[400px] flex items-center justify-center">
+            <div className="max-w-md w-full bg-white rounded-2xl p-8 text-center shadow-2xl border border-gray-200">
+              <div className="text-red-500 mb-6">
+                <AlertCircle className="w-16 h-16 mx-auto" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">Access Denied</h3>
+              <p className="text-gray-600 mb-6">
+                You don't have permission to access this page. Admin access required.
+              </p>
+              <button
+                onClick={() => (window.location.href = "/login")}
+                className="bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+              >
+                Go to Login
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#ebebeb] space-y-6">
-      {/* Success/Error Messages */}
-      {actionSuccess && (
-        <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-slide-in-right">
-          <div className="flex items-center gap-2">
-            <CheckCircle className="w-5 h-5" />
-            <span>{actionSuccess}</span>
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="p-6">
+        {/* Success/Error Messages */}
+        {actionSuccess && (
+          <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-slide-in-right">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-5 h-5" />
+              <span>{actionSuccess}</span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {actionError && (
-        <div className="fixed top-4 right-4 z-50 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg animate-slide-in-right">
-          <div className="flex items-center gap-2">
-            <AlertCircle className="w-5 h-5" />
-            <span>{actionError}</span>
+        {actionError && (
+          <div className="fixed top-4 right-4 z-50 bg-red-500 text-white px-6 py-3 rounded-lg shadow-lg animate-slide-in-right">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-5 h-5" />
+              <span>{actionError}</span>
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Header - Matching Events Monitor exactly */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-2">Branding Day Schedule</h1>
-            <p className="text-gray-600">Schedule branding day slots for approved companies with speakers</p>
-          </div>
-          <button
-            onClick={fetchData}
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-[#901b20] text-white rounded-lg hover:bg-[#7a1619] transition-colors disabled:opacity-50"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
-            Refresh
-          </button>
-        </div>
-      </div>
-
-      {/* Stats Cards - Matching Events Monitor layout */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
+        {/* Enhanced Header */}
+        <div className="mb-8 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-4">
             <div>
-              <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">AVAILABLE COMPANIES</p>
-              <p className="text-3xl font-bold text-[#901b20] mt-2">{unscheduledCandidates.length}</p>
+              <h1 className="text-3xl sm:text-4xl font-black text-primary bg-gradient-to-r from-[#901b20] to-[#901b20] bg-clip-text text-transparent mb-2">
+                Branding Day Schedule
+              </h1>
+              <p className="text-lg text-gray-600 font-medium">
+                Schedule branding day slots for approved companies with speakers
+              </p>
+              <p className="text-sm text-gray-500 mt-1">Last updated: {lastUpdated.toLocaleTimeString()}</p>
             </div>
-            <div className="w-12 h-12 bg-[#901b20] rounded-lg flex items-center justify-center">
-              <Building2 className="w-6 h-6 text-white" />
-            </div>
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className="group relative overflow-hidden bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-2xl font-bold transition-all duration-500 transform hover:scale-110 hover:shadow-2xl disabled:scale-100 disabled:shadow-none"
+            >
+              <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+              <div className="relative flex items-center gap-3">
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
+                )}
+                <span>{loading ? "Loading..." : "Refresh"}</span>
+              </div>
+            </button>
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">SCHEDULED</p>
-              <p className="text-3xl font-bold text-green-600 mt-2">{schedule.length}</p>
-            </div>
-            <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
-              <CheckCircle className="w-6 h-6 text-white" />
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">TOTAL SPEAKERS</p>
-              <p className="text-3xl font-bold text-[#901b20] mt-2">{candidates.length}</p>
-            </div>
-            <div className="w-12 h-12 bg-[#901b20] rounded-lg flex items-center justify-center">
-              <Users className="w-6 h-6 text-white" />
+        {/* Enhanced Stats Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="group relative bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden border border-gray-100">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#901b20]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#901b20] to-[#ad565a] rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-500">
+                  <Building2 className="w-6 h-6 text-white" />
+                </div>
+              </div>
+              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Available Companies</p>
+              <p className="text-3xl font-black text-primary animate-pulse">{unscheduledCandidates.length}</p>
             </div>
           </div>
-        </div>
 
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600 uppercase tracking-wide">COMPLETION</p>
-              <p className="text-3xl font-bold text-gray-700 mt-2">
+          <div className="group relative bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden border border-gray-100">
+            <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-4">
+                <div className="relative">
+                  <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-500">
+                    <CheckCircle className="w-6 h-6 text-white" />
+                  </div>
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-ping"></div>
+                  <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full animate-pulse"></div>
+                </div>
+              </div>
+              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Scheduled</p>
+              <p className="text-3xl font-black text-green-600 animate-pulse">{schedule.length}</p>
+            </div>
+          </div>
+
+          <div className="group relative bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden border border-gray-100">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-500">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+              </div>
+              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Total Speakers</p>
+              <p className="text-3xl font-black text-purple-600">{candidates.length}</p>
+            </div>
+          </div>
+
+          <div className="group relative bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden border border-gray-100">
+            <div className="absolute inset-0 bg-gradient-to-br from-[#901b20]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+            <div className="relative">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#901b20] to-[#ad565a] rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-500">
+                  <TrendingUp className="w-6 h-6 text-white" />
+                </div>
+              </div>
+              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Completion</p>
+              <p className="text-3xl font-black text-[#901b20]">
                 {candidates.length > 0 ? Math.round((schedule.length / candidates.length) * 100) : 0}%
               </p>
             </div>
-            <div className="w-12 h-12 bg-gray-700 rounded-lg flex items-center justify-center">
-              <Calendar className="w-6 h-6 text-white" />
-            </div>
           </div>
         </div>
-      </div>
 
-      {/* Search and Filter - Matching Events Monitor */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1 relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-            <input
-              type="text"
-              placeholder="Search companies by name, speaker, or position..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#901b20] focus:border-transparent"
-            />
-          </div>
-          {selectedCompanies.length > 0 && (
-            <button
-              onClick={handleBulkSchedule}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <Plus className="w-4 h-4" />
-              Schedule Selected ({selectedCompanies.length})
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Available Companies Grid - Matching Events Monitor card style */}
-      {unscheduledCandidates.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {unscheduledCandidates.map((candidate) => (
-            <div
-              key={candidate.id}
-              className="bg-gradient-to-br from-[#901b20] to-[#ad565a] rounded-lg shadow-sm border border-gray-200 p-6 text-white hover:shadow-lg transition-shadow"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="px-2 py-1 bg-white/20 text-white text-xs font-medium rounded">Available</span>
-                </div>
+        {/* Enhanced Filters */}
+        <div className="bg-gradient-to-r from-gray-50 to-white rounded-2xl p-6 mb-8 shadow-lg border border-gray-100">
+          <div className="flex flex-col lg:flex-row gap-6">
+            <div className="flex-1">
+              <div className="relative group">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-[#901b20] transition-colors duration-300" />
                 <input
-                  type="checkbox"
-                  checked={selectedCompanies.some((c) => c.id === candidate.id)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedCompanies([...selectedCompanies, candidate])
-                    } else {
-                      setSelectedCompanies(selectedCompanies.filter((c) => c.id !== candidate.id))
-                    }
-                  }}
-                  className="rounded border-white/30 text-[#901b20] focus:ring-white/50 bg-white/20"
+                  type="text"
+                  placeholder="Search companies by name, speaker, or position..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-12 pr-6 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 text-lg font-medium placeholder-gray-400 bg-white"
                 />
               </div>
-
-              <h3 className="text-lg font-bold mb-4">{candidate.company_name}</h3>
-
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center gap-2 text-sm">
-                  <User className="w-4 h-4" />
-                  <span>{candidate.speaker?.speaker_name}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Building2 className="w-4 h-4" />
-                  <span>{candidate.speaker?.position}</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Phone className="w-4 h-4" />
-                  <span>{candidate.speaker?.mobile}</span>
-                </div>
-              </div>
-
-              <button
-                onClick={() => handleScheduleCompany(candidate)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg transition-colors font-medium"
-              >
-                <Calendar className="w-4 h-4" />
-                Schedule Now
-              </button>
             </div>
-          ))}
-        </div>
-      )}
 
-      {/* No Available Companies Message */}
-      {unscheduledCandidates.length === 0 && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <CheckCircle className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">All companies scheduled!</h3>
-          <p className="text-gray-600">All available companies have been scheduled for branding day</p>
-        </div>
-      )}
-
-      {/* Current Schedule */}
-      {schedule.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-6 border-b border-gray-200">
-            <h2 className="text-xl font-bold text-gray-900">Current Schedule</h2>
-            <p className="text-gray-600 mt-1">Scheduled branding day slots</p>
+            {selectedCompanies.length > 0 && (
+              <button
+                onClick={handleBulkSchedule}
+                className="flex items-center gap-2 px-6 py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-2xl hover:from-blue-700 hover:to-blue-800 transition-all duration-300 transform hover:scale-105 shadow-lg font-bold"
+              >
+                <Plus className="w-5 h-5" />
+                Schedule Selected ({selectedCompanies.length})
+              </button>
+            )}
           </div>
+        </div>
 
-          <div className="p-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {schedule
-                .sort((a, b) => a.order - b.order)
-                .map((slot) => (
-                  <div
-                    key={slot.id}
-                    className="bg-gradient-to-br from-[#901b20] to-[#ad565a] rounded-lg p-6 text-white"
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <span className="px-2 py-1 bg-white/20 text-white text-xs font-medium rounded">
-                          Slot #{slot.order}
-                        </span>
+        {/* Enhanced Available Companies Grid */}
+        {unscheduledCandidates.length > 0 ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-8">
+            {unscheduledCandidates.map((candidate, index) => (
+              <div
+                key={candidate.id}
+                className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 overflow-hidden animate-slide-in-left flex flex-col h-full border border-gray-100"
+                style={{ animationDelay: `${index * 100}ms` }}
+              >
+                {/* Enhanced Company Banner */}
+                <div className="h-48 bg-gradient-to-br from-[#901b20] via-[#ad565a] to-[#cc9598] relative overflow-hidden">
+                  {candidate.speaker?.photo ? (
+                    <img
+                      src={candidate.speaker.photo || "/placeholder.svg"}
+                      alt={candidate.speaker.speaker_name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Building2 className="w-20 h-20 text-white opacity-30 group-hover:opacity-50 transition-opacity duration-500" />
+                    </div>
+                  )}
+
+                  {/* Enhanced Status Badge */}
+                  <div className="absolute top-6 right-6">
+                    <span className="px-4 py-2 rounded-full text-sm font-bold border-2 backdrop-blur-sm bg-green-100 text-green-800 border-green-200 shadow-lg">
+                      Available
+                    </span>
+                  </div>
+
+                  {/* Checkbox */}
+                  <div className="absolute top-6 left-6">
+                    <input
+                      type="checkbox"
+                      checked={selectedCompanies.some((c) => c.id === candidate.id)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedCompanies([...selectedCompanies, candidate])
+                        } else {
+                          setSelectedCompanies(selectedCompanies.filter((c) => c.id !== candidate.id))
+                        }
+                      }}
+                      className="w-5 h-5 rounded border-white/30 text-[#901b20] focus:ring-white/50 bg-white/20"
+                    />
+                  </div>
+
+                  {/* Gradient Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                </div>
+
+                <div className="p-6 flex flex-col flex-1">
+                  <h3 className="text-xl font-black text-[#203947] mb-4 line-clamp-2 group-hover:text-[#901b20] transition-colors duration-300 h-14 flex items-start">
+                    {candidate.company_name}
+                  </h3>
+
+                  <div className="space-y-3 mb-6 flex-1">
+                    <div className="flex items-center text-gray-600 group-hover:text-gray-800 transition-colors duration-300">
+                      <div className="w-10 h-10 bg-[#901b20]/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0">
+                        <User className="w-5 h-5 text-[#901b20]" />
                       </div>
-                      <div className="flex items-center gap-2">
-                        <button
-                          onClick={() => handleEditSlot(slot)}
-                          className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                          title="Edit slot"
-                        >
-                          <Edit3 className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteClick(slot)}
-                          className="p-2 text-white hover:bg-white/20 rounded-lg transition-colors"
-                          title="Delete slot"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <span className="font-medium truncate">{candidate.speaker?.speaker_name}</span>
                     </div>
 
-                    <h3 className="text-lg font-bold mb-4">{slot.company_name}</h3>
+                    <div className="flex items-center text-gray-600 group-hover:text-gray-800 transition-colors duration-300">
+                      <div className="w-10 h-10 bg-[#203947]/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0">
+                        <Building2 className="w-5 h-5 text-[#203947]" />
+                      </div>
+                      <span className="font-medium truncate">{candidate.speaker?.position}</span>
+                    </div>
 
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm">
-                        <User className="w-4 h-4" />
-                        <span>{slot.speaker?.speaker_name || "Speaker TBD"}</span>
+                    <div className="flex items-center text-gray-600 group-hover:text-gray-800 transition-colors duration-300">
+                      <div className="w-10 h-10 bg-[#ad565a]/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0">
+                        <Phone className="w-5 h-5 text-[#ad565a]" />
                       </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Clock className="w-4 h-4" />
-                        <span className="font-mono">
-                          {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 text-sm">
-                        <Calendar className="w-4 h-4" />
-                        <span>{slot.branding_day_date}</span>
-                      </div>
+                      <span className="font-medium">{candidate.speaker?.mobile}</span>
                     </div>
                   </div>
-                ))}
-            </div>
-          </div>
-        </div>
-      )}
 
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && deletingSlot && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="p-6">
-              <div className="flex items-center justify-center w-12 h-12 mx-auto mb-4 bg-red-100 rounded-full">
-                <Trash2 className="w-6 h-6 text-red-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 text-center mb-2">Delete Schedule Slot</h3>
-              <p className="text-gray-600 text-center mb-6">
-                Are you sure you want to delete the schedule slot for{" "}
-                <span className="font-semibold">{deletingSlot.company_name}</span>? This action cannot be undone.
-              </p>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => {
-                    setShowDeleteModal(false)
-                    setDeletingSlot(null)
-                  }}
-                  className="flex-1 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleConfirmDelete}
-                  disabled={actionLoading}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium disabled:opacity-50"
-                >
-                  {actionLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
-                  {actionLoading ? "Deleting..." : "Delete"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+                  <div className="flex items-center justify-between pt-6 border-t border-gray-100 mt-auto">
+                    <div className="text-sm text-gray-500 font-medium">Ready to schedule</div>
 
-      {/* Schedule Form Modal */}
-      {showScheduleForm && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">Schedule Branding Day Slots</h2>
-              <button
-                onClick={() => setShowScheduleForm(false)}
-                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmitSchedule} className="p-6 overflow-y-auto max-h-[calc(90vh-140px)]">
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Branding Day Date</label>
-                  <input
-                    type="date"
-                    value={scheduleData.branding_day_date}
-                    onChange={(e) => setScheduleData({ ...scheduleData, branding_day_date: e.target.value })}
-                    className="px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#901b20] focus:border-transparent w-full"
-                    required
-                  />
+                    <button
+                      onClick={() => handleScheduleCompany(candidate)}
+                      className="group relative overflow-hidden bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
+                    >
+                      <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                      <span className="relative flex items-center gap-2">
+                        <Calendar className="w-4 h-4" />
+                        Schedule Now
+                      </span>
+                    </button>
+                  </div>
                 </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-gradient-to-br from-gray-50 to-white rounded-2xl p-16 text-center shadow-lg animate-fade-in mb-12 border border-gray-100">
+            <div className="text-gray-300 mb-8 animate-float">
+              <CheckCircle className="w-24 h-24 mx-auto" />
+            </div>
+            <h3 className="text-3xl font-bold text-gray-900 mb-4">All companies scheduled!</h3>
+            <p className="text-xl text-gray-600 mb-8">All available companies have been scheduled for branding day</p>
+            <button
+              onClick={handleRefresh}
+              className="bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] text-white px-10 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
+            >
+              Refresh Data
+            </button>
+          </div>
+        )}
 
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Time Slots</h3>
-                  <div className="space-y-4">
-                    {scheduleData.slots.map((slot, index) => (
-                      <div key={index} className="border border-gray-200 rounded-lg p-6">
-                        <div className="flex items-start gap-4">
+        {/* Enhanced Current Schedule */}
+        {schedule.length > 0 && (
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 mb-8">
+            <div className="p-6 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+              <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-[#901b20] to-[#ad565a] rounded-xl flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-white" />
+                </div>
+                Current Schedule
+              </h2>
+              <p className="text-gray-600 mt-1">Scheduled branding day slots</p>
+            </div>
+
+            <div className="p-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {schedule
+                  .sort((a, b) => a.order - b.order)
+                  .map((slot, index) => (
+                    <div
+                      key={slot.id}
+                      className="group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 overflow-hidden animate-slide-in-left flex flex-col h-full border border-gray-100"
+                      style={{ animationDelay: `${index * 100}ms` }}
+                    >
+                      {/* Enhanced Schedule Banner */}
+                      <div className="h-48 bg-gradient-to-br from-[#901b20] via-[#ad565a] to-[#cc9598] relative overflow-hidden">
+                        {slot.speaker?.photo ? (
                           <img
-                            src={slot.speaker?.photo || "/placeholder.svg?height=50&width=50"}
-                            alt={slot.speaker?.speaker_name}
-                            className="w-12 h-12 rounded-lg object-cover"
+                            src={slot.speaker.photo || "/placeholder.svg"}
+                            alt={slot.speaker.speaker_name}
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                           />
-                          <div className="flex-1 space-y-4">
-                            <div>
-                              <h4 className="font-semibold text-gray-900">{slot.company_name}</h4>
-                              <p className="text-sm text-gray-600">
-                                {slot.speaker?.speaker_name} - {slot.speaker?.position}
-                              </p>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                              <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Start Time</label>
-                                <input
-                                  type="time"
-                                  value={slot.start_time}
-                                  onChange={(e) => updateSlotTime(index, "start_time", e.target.value)}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#901b20] focus:border-transparent text-sm"
-                                  required
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">End Time</label>
-                                <input
-                                  type="time"
-                                  value={slot.end_time}
-                                  onChange={(e) => updateSlotTime(index, "end_time", e.target.value)}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#901b20] focus:border-transparent text-sm"
-                                  required
-                                />
-                              </div>
-                              <div>
-                                <label className="block text-xs font-medium text-gray-700 mb-1">Order</label>
-                                <input
-                                  type="number"
-                                  value={slot.order}
-                                  onChange={(e) => updateSlotTime(index, "order", Number.parseInt(e.target.value))}
-                                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#901b20] focus:border-transparent text-sm"
-                                  min="1"
-                                  required
-                                />
-                              </div>
-                            </div>
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Building2 className="w-20 h-20 text-white opacity-30 group-hover:opacity-50 transition-opacity duration-500" />
                           </div>
-                          {scheduleData.slots.length > 1 && (
-                            <button
-                              type="button"
-                              onClick={() => removeSlot(index)}
-                              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          )}
+                        )}
+
+                        {/* Enhanced Slot Badge */}
+                        <div className="absolute top-6 right-6">
+                          <span className="px-4 py-2 rounded-full text-sm font-bold border-2 backdrop-blur-sm bg-blue-100 text-blue-800 border-blue-200 shadow-lg">
+                            Slot #{slot.order}
+                          </span>
+                        </div>
+
+                        {/* Action Buttons - Fixed with proper event handling */}
+                        <div className="absolute top-6 left-6 flex gap-2 z-10">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              console.log("Edit button clicked for slot:", slot)
+                              handleEditSlot(slot)
+                            }}
+                            className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 backdrop-blur-sm border border-white/20 hover:border-white/40"
+                            title="Edit slot"
+                          >
+                            <Edit3 className="w-4 h-4 text-white" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault()
+                              e.stopPropagation()
+                              console.log("Delete button clicked for slot:", slot)
+                              handleDeleteClick(slot)
+                            }}
+                            className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 backdrop-blur-sm border border-white/20 hover:border-white/40"
+                            title="Delete slot"
+                          >
+                            <Trash2 className="w-4 h-4 text-white" />
+                          </button>
+                        </div>
+
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+                      </div>
+
+                      <div className="p-6 flex flex-col flex-1">
+                        <h3 className="text-xl font-black text-[#203947] mb-4 line-clamp-2 group-hover:text-[#901b20] transition-colors duration-300 h-14 flex items-start">
+                          {slot.company_name}
+                        </h3>
+
+                        <div className="space-y-3 mb-6 flex-1">
+                          <div className="flex items-center text-gray-600 group-hover:text-gray-800 transition-colors duration-300">
+                            <div className="w-10 h-10 bg-[#901b20]/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0">
+                              <User className="w-5 h-5 text-[#901b20]" />
+                            </div>
+                            <span className="font-medium truncate">{slot.speaker?.speaker_name || "Speaker TBD"}</span>
+                          </div>
+
+                          <div className="flex items-center text-gray-600 group-hover:text-gray-800 transition-colors duration-300">
+                            <div className="w-10 h-10 bg-[#203947]/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0">
+                              <Clock className="w-5 h-5 text-[#203947]" />
+                            </div>
+                            <span className="font-medium font-mono">
+                              {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                            </span>
+                          </div>
+
+                          <div className="flex items-center text-gray-600 group-hover:text-gray-800 transition-colors duration-300">
+                            <div className="w-10 h-10 bg-[#ad565a]/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0">
+                              <Calendar className="w-5 h-5 text-[#ad565a]" />
+                            </div>
+                            <span className="font-medium">{slot.branding_day_date}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between pt-6 border-t border-gray-100 mt-auto">
+                          <div className="text-sm text-gray-500 font-medium">
+                            {slot.speaker?.position || "Position TBD"}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                            <span className="text-sm font-medium text-green-600">Scheduled</span>
+                          </div>
                         </div>
                       </div>
-                    ))}
+                    </div>
+                  ))}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Confirmation Modal */}
+        {showDeleteModal && deletingSlot && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-lg flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-scale-up">
+              <div className="p-8 text-center">
+                <div className="flex items-center justify-center w-16 h-16 mx-auto mb-6 bg-red-100 rounded-full">
+                  <Trash2 className="w-8 h-8 text-red-600" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">Delete Schedule Slot</h3>
+                <p className="text-gray-600 mb-8 text-lg">
+                  Are you sure you want to delete the schedule slot for{" "}
+                  <span className="font-bold text-[#901b20]">{deletingSlot.company_name}</span>?
+                  <br />
+                  <span className="text-sm text-gray-500 mt-2 block">
+                    The company will be moved back to the available list.
+                  </span>
+                </p>
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={() => {
+                      console.log("Cancel delete clicked")
+                      setShowDeleteModal(false)
+                      setDeletingSlot(null)
+                      setActionError("")
+                      setActionSuccess("")
+                    }}
+                    disabled={actionLoading}
+                    className="flex-1 px-6 py-4 border-2 border-gray-200 text-gray-700 rounded-2xl hover:border-[#901b20] hover:bg-[#901b20] hover:text-white transition-all duration-300 font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={() => {
+                      console.log("Confirm delete clicked")
+                      handleConfirmDelete()
+                    }}
+                    disabled={actionLoading}
+                    className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:from-red-400 disabled:to-red-500 text-white rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:scale-100 disabled:shadow-none font-bold text-lg"
+                  >
+                    {actionLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 className="w-5 h-5" />
+                        Delete & Move Back
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Schedule Form Modal */}
+        {showScheduleForm && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-lg flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-white w-full max-w-6xl max-h-[95vh] rounded-3xl shadow-2xl overflow-hidden animate-scale-up flex flex-col">
+              <div className="flex items-center justify-between p-8 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white flex-shrink-0">
+                <h2 className="text-2xl font-bold text-gray-900">Schedule Branding Day Slots</h2>
+                <button
+                  onClick={() => setShowScheduleForm(false)}
+                  className="w-12 h-12 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+                >
+                  <X className="w-6 h-6 text-gray-500" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSubmitSchedule} className="flex-1 overflow-y-auto custom-scrollbar">
+                <div className="p-8">
+                  <div className="space-y-8">
+                    <div>
+                      <label className="block text-lg font-bold text-gray-700 mb-3">Branding Day Date</label>
+                      <input
+                        type="date"
+                        value={scheduleData.branding_day_date}
+                        onChange={(e) => setScheduleData({ ...scheduleData, branding_day_date: e.target.value })}
+                        className="px-6 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 text-lg font-medium w-full"
+                        required
+                      />
+                    </div>
+
+                    <div>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-6">Time Slots</h3>
+                      <div className="space-y-6">
+                        {scheduleData.slots.map((slot, index) => (
+                          <div
+                            key={index}
+                            className="border-2 border-gray-200 rounded-2xl p-8 bg-gradient-to-br from-gray-50 to-white"
+                          >
+                            <div className="flex items-start gap-6">
+                              <img
+                                src={slot.speaker?.photo || "/placeholder.svg?height=60&width=60"}
+                                alt={slot.speaker?.speaker_name}
+                                className="w-16 h-16 rounded-2xl object-cover shadow-lg"
+                              />
+                              <div className="flex-1 space-y-6">
+                                <div>
+                                  <h4 className="text-xl font-bold text-gray-900">{slot.company_name}</h4>
+                                  <p className="text-lg text-gray-600">
+                                    {slot.speaker?.speaker_name} - {slot.speaker?.position}
+                                  </p>
+                                </div>
+                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                                  <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Start Time</label>
+                                    <input
+                                      type="time"
+                                      value={slot.start_time}
+                                      onChange={(e) => updateSlotTime(index, "start_time", e.target.value)}
+                                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#901b20] focus:border-[#901b20] transition-all duration-300 text-lg font-medium"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">End Time</label>
+                                    <input
+                                      type="time"
+                                      value={slot.end_time}
+                                      onChange={(e) => updateSlotTime(index, "end_time", e.target.value)}
+                                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#901b20] focus:border-[#901b20] transition-all duration-300 text-lg font-medium"
+                                      required
+                                    />
+                                  </div>
+                                  <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Order</label>
+                                    <input
+                                      type="number"
+                                      value={slot.order}
+                                      onChange={(e) => updateSlotTime(index, "order", Number.parseInt(e.target.value))}
+                                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#901b20] focus:border-[#901b20] transition-all duration-300 text-lg font-medium"
+                                      min="1"
+                                      required
+                                    />
+                                  </div>
+                                </div>
+                              </div>
+                              {scheduleData.slots.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => removeSlot(index)}
+                                  className="p-3 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                                >
+                                  <Trash2 className="w-5 h-5" />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex items-center justify-end gap-4 mt-8 pt-6 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => setShowScheduleForm(false)}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="flex items-center gap-2 px-6 py-3 bg-[#901b20] text-white rounded-lg hover:bg-[#7a1619] transition-colors font-medium disabled:opacity-50"
-                >
-                  {actionLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                  {actionLoading ? "Saving..." : "Save Schedule"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Modal */}
-      {showEditModal && editingSlot && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <h2 className="text-xl font-bold text-gray-900">Edit Schedule Slot</h2>
-              <button
-                onClick={() => setShowEditModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-xl transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
+                <div className="border-t-2 border-gray-100 p-8 bg-gradient-to-r from-gray-50 to-white flex-shrink-0">
+                  <div className="flex items-center justify-end gap-6">
+                    <button
+                      type="button"
+                      onClick={() => setShowScheduleForm(false)}
+                      className="px-8 py-4 border-2 border-gray-200 text-gray-700 rounded-2xl hover:border-[#901b20] hover:bg-[#901b20] hover:text-white transition-all duration-300 font-bold text-lg"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={actionLoading}
+                      className="group relative overflow-hidden flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] disabled:from-gray-400 disabled:to-gray-500 text-white rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:scale-100 disabled:shadow-none font-bold text-lg"
+                    >
+                      <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                      <div className="relative flex items-center gap-3">
+                        {actionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                        {actionLoading ? "Saving..." : "Save Schedule"}
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </form>
             </div>
-
-            <form onSubmit={handleUpdateSlot} className="p-6">
-              <div className="space-y-4">
-                <div className="text-center mb-4">
-                  <h3 className="font-semibold text-gray-900">{editingSlot.company_name}</h3>
-                  <p className="text-sm text-gray-600">{editingSlot.branding_day_date}</p>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Start Time</label>
-                  <input
-                    type="time"
-                    value={editingSlot.start_time}
-                    onChange={(e) => setEditingSlot({ ...editingSlot, start_time: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#901b20] focus:border-transparent"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">End Time</label>
-                  <input
-                    type="time"
-                    value={editingSlot.end_time}
-                    onChange={(e) => setEditingSlot({ ...editingSlot, end_time: e.target.value })}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#901b20] focus:border-transparent"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-4 mt-6 pt-6 border-t border-gray-200">
-                <button
-                  type="button"
-                  onClick={() => setShowEditModal(false)}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-medium"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={actionLoading}
-                  className="flex items-center gap-2 px-6 py-3 bg-[#901b20] text-white rounded-lg hover:bg-[#7a1619] transition-colors font-medium disabled:opacity-50"
-                >
-                  {actionLoading ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                  {actionLoading ? "Updating..." : "Update Slot"}
-                </button>
-              </div>
-            </form>
           </div>
-        </div>
-      )}
+        )}
+
+        {/* Edit Modal */}
+        {showEditModal && editingSlot && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-lg flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-scale-up">
+              <div className="flex items-center justify-between p-8 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
+                <h2 className="text-2xl font-bold text-gray-900">Edit Schedule Slot</h2>
+                <button
+                  onClick={() => setShowEditModal(false)}
+                  className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateSlot} className="p-8">
+                <div className="space-y-6">
+                  <div className="text-center mb-6">
+                    <h3 className="text-xl font-bold text-gray-900">{editingSlot.company_name}</h3>
+                    <p className="text-lg text-gray-600">{editingSlot.branding_day_date}</p>
+                  </div>
+
+                  <div>
+                    <label className="block text-lg font-bold text-gray-700 mb-3">Start Time</label>
+                    <input
+                      type="time"
+                      value={editingSlot.start_time}
+                      onChange={(e) => setEditingSlot({ ...editingSlot, start_time: e.target.value })}
+                      className="w-full px-6 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 text-lg font-medium"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-lg font-bold text-gray-700 mb-3">End Time</label>
+                    <input
+                      type="time"
+                      value={editingSlot.end_time}
+                      onChange={(e) => setEditingSlot({ ...editingSlot, end_time: e.target.value })}
+                      className="w-full px-6 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 text-lg font-medium"
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 mt-8 pt-8 border-t border-gray-200">
+                  <button
+                    type="button"
+                    onClick={() => setShowEditModal(false)}
+                    className="flex-1 px-6 py-4 border-2 border-gray-200 text-gray-700 rounded-2xl hover:border-[#901b20] hover:bg-[#901b20] hover:text-white transition-all duration-300 font-bold text-lg"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={actionLoading}
+                    className="flex-1 group relative overflow-hidden flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] disabled:from-gray-400 disabled:to-gray-500 text-white rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:scale-100 disabled:shadow-none font-bold text-lg"
+                  >
+                    <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                    <div className="relative flex items-center gap-3">
+                      {actionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
+                      {actionLoading ? "Updating..." : "Update Slot"}
+                    </div>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Custom CSS for animations */}
+      <style jsx>{`
+        @keyframes shimmer {
+          0% {
+            background-position: -200px 0;
+          }
+          100% {
+            background-position: calc(200px + 100%) 0;
+          }
+        }
+
+        .shimmer-effect {
+          background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+          background-size: 200px 100%;
+          animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        .animate-fade-in {
+          animation: fade-in 0.6s ease-out;
+        }
+
+        @keyframes slide-in-left {
+          from {
+            opacity: 0;
+            transform: translateX(-30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .animate-slide-in-left {
+          animation: slide-in-left 0.6s ease-out;
+        }
+
+        @keyframes slide-in-right {
+          from {
+            opacity: 0;
+            transform: translateX(30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        .animate-slide-in-right {
+          animation: slide-in-right 0.6s ease-out;
+        }
+
+        @keyframes scale-up {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .animate-scale-up {
+          animation: scale-up 0.3s ease-out;
+        }
+
+        @keyframes shake {
+          0%,
+          100% {
+            transform: translateX(0);
+          }
+          10%,
+          30%,
+          50%,
+          70%,
+          90% {
+            transform: translateX(-5px);
+          }
+          20%,
+          40%,
+          60%,
+          80% {
+            transform: translateX(5px);
+          }
+        }
+
+        .animate-shake {
+          animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes float {
+          0%,
+          100% {
+            transform: translateY(0px);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+        }
+
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 8px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background: #901b20;
+          border-radius: 10px;
+        }
+
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background: #7a1619;
+        }
+      `}</style>
     </div>
   )
 }
