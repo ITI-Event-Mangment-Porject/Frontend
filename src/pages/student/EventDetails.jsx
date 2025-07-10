@@ -91,6 +91,7 @@ const EventDetails = () => {
       setIsRegistered(true);
       showMessage('Registration successful!');
     } catch (err) {
+      // Check if it's actually an already registered case that wasn't caught
       try {
         const statusRes = await apiCall(`${API_BASE_URL}/api/events/${id}/registration-status`);
         if (statusRes.ok) {
@@ -101,28 +102,11 @@ const EventDetails = () => {
             return;
           }
         }
-      } catch (statusErr) {}
+      } catch (statusErr) {
+        // Ignore status check error
+      }
       
       showMessage('You already registered for this event');
-    } finally {
-      setRegisterLoading(false);
-    }
-  };
-
-  const handleUnregister = async () => {
-    if (registerLoading || !isRegistered) return;
-
-    setRegisterLoading(true);
-    try {
-      const res = await apiCall(`${API_BASE_URL}/api/events/${id}/unregister`, { method: 'POST' });
-
-      if (!res.ok) throw new Error('Unregistration failed');
-
-      setIsRegistered(false);
-      showMessage('Registration cancelled');
-    } catch (err) {
-      console.error('Unregister error:', err);
-      showMessage('Failed to cancel registration');
     } finally {
       setRegisterLoading(false);
     }
@@ -131,9 +115,11 @@ const EventDetails = () => {
   const handleFeedback = async () => {
     setFeedbackLoading(true);
     try {
+      // First, check if feedback form exists
       const res = await apiCall(`${API_BASE_URL}/api/feedback/events/${id}/forms`);
       
       if (!res.ok) {
+        // If the API returns 404 or other error, show a message
         if (res.status === 404) {
           showMessage('Feedback form not available yet');
         } else {
@@ -141,10 +127,12 @@ const EventDetails = () => {
         }
         return;
       }
-
+      
       const data = await res.json();
-      console.log('Feedback API Response:', data);
+      console.log('Feedback API Response:', data); // Debug log
+      
       navigate(`/student/feedback/${id}`);
+      
     } catch (err) {
       console.error('Feedback error:', err);
       showMessage('Failed to load feedback form');
@@ -206,14 +194,16 @@ const EventDetails = () => {
           )}
 
           <div className="relative rounded-2xl overflow-hidden shadow-lg mb-10">
-            <img
-              src={event.banner_image && event.banner_image.trim() !== '' ? event.banner_image : defaultEvent}
-              alt={event.title}
-              onError={(e) => {
-                if (e.target.src !== defaultEvent) e.target.src = defaultEvent;
-              }}
-              className="w-full h-64 sm:h-96 object-cover"
-            />
+          <img
+            src={event.banner_image && event.banner_image.trim() !== '' ? event.banner_image : defaultEvent}
+            alt={event.title}
+            onError={(e) => {
+              if (e.target.src !== defaultEvent) e.target.src = defaultEvent;
+            }}
+            className="w-full h-64 sm:h-96 object-cover"
+          />
+
+
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-8">
               <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-3">{event.title}</h1>
               <span className="inline-block bg-white/90 text-gray-800 px-4 py-2 rounded-full text-base font-semibold mb-2">
@@ -232,25 +222,18 @@ const EventDetails = () => {
             </div>
 
             <div className="flex justify-end mt-6 gap-4">
-              {event.status !== 'completed' && (
-                isRegistered ? (
-                  <button
-                    className="px-6 py-3 rounded-lg font-semibold text-base shadow bg-yellow-600 hover:bg-yellow-700 text-white"
-                    onClick={handleUnregister}
-                    disabled={registerLoading}
-                  >
-                    {registerLoading ? 'Cancelling...' : 'Cancel Registration'}
-                  </button>
-                ) : (
-                  <button
-                    className="px-6 py-3 rounded-lg font-semibold text-base shadow bg-red-900 hover:bg-red-800 text-white"
-                    onClick={handleRegister}
-                    disabled={registerLoading}
-                  >
-                    {registerLoading ? 'Registering...' : 'Apply'}
-                  </button>
-                )
-              )}
+              <button
+                className={`px-6 py-3 rounded-lg font-semibold text-base shadow transition ${
+                  event.status === 'completed' ? 'bg-gray-500 text-white cursor-not-allowed' :
+                  isRegistered ? 'bg-green-500 text-white cursor-not-allowed' :
+                  registerLoading ? 'bg-gray-500 text-white cursor-not-allowed' :
+                  'bg-red-900 hover:bg-red-800 text-white'
+                }`}
+                onClick={handleRegister}
+                disabled={isRegistered || registerLoading || event.status === 'completed'}
+              >
+                {registerLoading ? 'Registering...' : isRegistered ? 'Applied ✓' : 'Apply'}
+              </button>
               
               {event.status === 'completed' && (
                 <button
@@ -268,22 +251,39 @@ const EventDetails = () => {
               <p className="text-gray-700 whitespace-pre-line">{event.description}</p>
             </div>
 
-            {(event.slido_link || event.slido_embed_url) ? (
+            {/* Slido Section - Link Only */}
+            {(event.slido_link || event.slido_embed_url) && (
               <div className="mt-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
                 <h3 className="text-lg font-semibold text-blue-800 mb-3">💬 Ask Questions Live</h3>
                 <p className="text-blue-700 mb-4">Join the conversation and ask your questions during the event!</p>
+                
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <a
-                    href={event.slido_link || event.slido_embed_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
-                  >
-                    🔗 Open Slido
-                  </a>
+                  {event.slido_link && (
+                    <a
+                      href={event.slido_link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+                    >
+                      🔗 Open Slido
+                    </a>
+                  )}
+                  
+                  {event.slido_embed_url && !event.slido_link && (
+                    <a
+                      href={event.slido_embed_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
+                    >
+                      🔗 Open Slido
+                    </a>
+                  )}
                 </div>
               </div>
-            ) : (
+            )}
+            
+            {!event.slido_link && !event.slido_embed_url && (
               <div className="mt-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
                 <h3 className="text-lg font-semibold text-blue-800 mb-3">💬 Ask Questions Live</h3>
                 <p className="text-blue-700 mb-4">Join the conversation and ask your questions during the event!</p>
