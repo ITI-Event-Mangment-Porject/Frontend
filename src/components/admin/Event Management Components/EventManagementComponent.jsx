@@ -57,6 +57,41 @@ const EventManagementComponent = () => {
   const [imagePreview, setImagePreview] = useState(null);
   const [editImagePreview, setEditImagePreview] = useState(null);
 
+  // New states for tabs
+  const [activeTab, setActiveTab] = useState('active'); // 'active' or 'archived'
+
+  // Handler for publishing events
+  const handlePublishEvent = async event => {
+    try {
+      const response = await eventAPI.publish(event.id);
+      if (response && response.data) {
+        toast.success(`Event "${event.title}" published successfully!`);
+        loadEvents(); // Reload events to reflect changes
+      }
+    } catch (error) {
+      console.error('Error publishing event:', error);
+      toast.error(
+        `Failed to publish event: ${error.message || 'Unknown error'}`
+      );
+    }
+  };
+
+  // Handler for archiving events
+  const handleArchiveEvent = async event => {
+    try {
+      const response = await eventAPI.archive(event.id);
+      if (response && response.data) {
+        toast.success(`Event "${event.title}" archived successfully!`);
+        loadEvents(); // Reload events to reflect changes
+      }
+    } catch (error) {
+      console.error('Error archiving event:', error);
+      toast.error(
+        `Failed to archive event: ${error.message || 'Unknown error'}`
+      );
+    }
+  };
+
   // Event actions
   const handleAddEvent = async (e, eventWithCreatedBy) => {
     e.preventDefault();
@@ -381,7 +416,25 @@ const EventManagementComponent = () => {
     handlePageChange(1);
   };
 
-  const columns = getEventTableColumns(handleEditClick, handleDeleteEvent);
+  // Filter events based on active tab
+  const filteredEvents = React.useMemo(() => {
+    if (!Array.isArray(events)) return [];
+
+    return events.filter(event => {
+      if (activeTab === 'archived') {
+        return event.status?.toLowerCase() === 'archived';
+      } else {
+        return event.status?.toLowerCase() !== 'archived';
+      }
+    });
+  }, [events, activeTab]);
+
+  const columns = getEventTableColumns(
+    handleEditClick,
+    handleDeleteEvent,
+    handlePublishEvent,
+    handleArchiveEvent
+  );
 
   return (
     <div className="p-4 m-1 sm:p-4 md:p-6 w-full min-h-screen bg-white flex flex-col animate-fade-in border border-[var(--gray-200)] rounded-lg shadow-md transition-all duration-300 ease-out">
@@ -464,6 +517,34 @@ const EventManagementComponent = () => {
           </div>
         </div>
       )}
+
+      {/* Tabs for Active/Archived Events */}
+      <div className="mb-6 border-b border-gray-200">
+        <nav className="flex space-x-8">
+          <button
+            onClick={() => setActiveTab('active')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'active'
+                ? 'border-[var(--primary-500)] text-[var(--primary-600)]'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <FaCalendar className="inline w-4 h-4 mr-2" />
+            Active Events
+          </button>
+          <button
+            onClick={() => setActiveTab('archived')}
+            className={`py-2 px-1 border-b-2 font-medium text-sm ${
+              activeTab === 'archived'
+                ? 'border-[var(--primary-500)] text-[var(--primary-600)]'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+            }`}
+          >
+            <FaCalendarAlt className="inline w-4 h-4 mr-2" />
+            Archived Events
+          </button>
+        </nav>
+      </div>
 
       {/* Filters */}
       <div
@@ -561,7 +642,7 @@ const EventManagementComponent = () => {
             Retry
           </button>
         </div>
-      ) : events.length === 0 ? (
+      ) : filteredEvents.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-8 sm:py-12 animate-fade-in px-4">
           <div className="text-gray-500 text-base sm:text-lg mb-2 animate-bounce text-center">
             📅 No Events Found
@@ -588,8 +669,8 @@ const EventManagementComponent = () => {
           {/* Results Summary */}
           <div className="mb-4 flex justify-between items-center text-sm text-gray-600">
             <span>
-              Showing {pagination.from}-{pagination.to} of {pagination.total}{' '}
-              events
+              Showing {filteredEvents.length} of {pagination.total}{' '}
+              {activeTab === 'archived' ? 'archived' : 'active'} events
             </span>
             {(searchTerm || selectedStatus || startDate || endDate) && (
               <span className="text-blue-600 font-medium">
@@ -599,8 +680,8 @@ const EventManagementComponent = () => {
           </div>
           {/* Mobile Card View for small screens */}
           <div className="block md:hidden space-y-4 mb-4">
-            {Array.isArray(events) &&
-              events.map(event => (
+            {Array.isArray(filteredEvents) &&
+              filteredEvents.map(event => (
                 <div
                   key={event.id}
                   className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm"
@@ -686,7 +767,7 @@ const EventManagementComponent = () => {
           <div className="hidden md:block overflow-x-auto transform transition-all duration-300 ease-out hover:shadow-lg rounded-lg">
             <Table
               columns={columns}
-              data={Array.isArray(events) ? events : []}
+              data={Array.isArray(filteredEvents) ? filteredEvents : []}
             />
           </div>
           <div

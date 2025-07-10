@@ -94,13 +94,12 @@ api.interceptors.request.use(
 //   }
 // );
 
-
 // User API endpoints
 export const userAPI = {
   getAll: params => api.get('/users', { params }),
   getById: id => api.get(`/users/${id}`),
   create: userData => api.post('/users', userData),
-  update: (id, userData) => api.put(`/users/${id}`, userData),
+  update: (id, userData) => api.post(`/users/${id}`, userData),
   delete: id => api.delete(`/users/${id}`),
 };
 
@@ -120,6 +119,16 @@ export const eventAPI = {
   create: eventData => api.post('/events', eventData),
   update: (id, eventData) => api.put(`/events/${id}`, eventData),
   delete: id => api.delete(`/events/${id}`),
+  publish: id => {
+    console.log('eventAPI.publish - Token:', localStorage.getItem('token'));
+    console.log('eventAPI.publish - Event ID:', id);
+    return api.get(`/events/${id}/publish`);
+  },
+  archive: id => {
+    console.log('eventAPI.archive - Token:', localStorage.getItem('token'));
+    console.log('eventAPI.archive - Event ID:', id);
+    return api.get(`/events/${id}/archive`);
+  },
 };
 
 // Company API endpoints
@@ -130,8 +139,22 @@ export const companyAPI = {
   update: (id, companyData) => api.put(`/companies/${id}`, companyData),
   delete: id => api.delete(`/companies/${id}`),
   // Custom actions for companies
-  approve: id => api.post(`/companies/${id}/approve`),
-  reject: (id, reason) => api.post(`/companies/${id}/reject`, { reason }),
+  approve: id => {
+    console.log('companyAPI.approve - Token:', localStorage.getItem('token'));
+    console.log('companyAPI.approve - Company ID:', id);
+    return api.post(`/companies/${id}/approve`);
+  },
+  reject: (id, reason) => {
+    console.log('companyAPI.reject - Token:', localStorage.getItem('token'));
+    console.log('companyAPI.reject - Company ID:', id, 'Reason:', reason);
+    const requestData = reason ? { reason } : {};
+    return api.post(`/companies/${id}/reject`, requestData);
+  },
+  pending: id => {
+    console.log('companyAPI.pending - Token:', localStorage.getItem('token'));
+    console.log('companyAPI.pending - Company ID:', id);
+    return api.post(`/companies/${id}/pending`);
+  },
 };
 
 export const messageAPI = {
@@ -417,6 +440,148 @@ export const jobFairAPI = {
         },
       };
     }
+  },
+
+  // Job Fair Setup specific endpoints
+  getParticipationDetails: (jobFairId, participationId) => {
+    if (!jobFairId || !participationId) {
+      console.error(
+        'Missing jobFairId or participationId in getParticipationDetails call'
+      );
+      return Promise.reject(
+        new Error('Job Fair ID and Participation ID are required')
+      );
+    }
+
+    console.log(
+      'jobFairAPI.getParticipationDetails - Token:',
+      localStorage.getItem('token')
+    );
+    console.log(
+      'jobFairAPI.getParticipationDetails - Job Fair ID:',
+      jobFairId,
+      'Participation ID:',
+      participationId
+    );
+
+    return api
+      .get(`/job-fairs/${jobFairId}/participations/${participationId}`)
+      .catch(error => {
+        console.error(
+          'Error fetching participation details:',
+          error.response?.status,
+          error.response?.data
+        );
+        return Promise.reject(error);
+      });
+  },
+
+  updateParticipationStatus: (jobFairId, participationId, status) => {
+    if (!jobFairId || !participationId || !status) {
+      console.error(
+        'Missing required parameters in updateParticipationStatus call'
+      );
+      return Promise.reject(
+        new Error('Job Fair ID, Participation ID, and status are required')
+      );
+    }
+
+    console.log(
+      'jobFairAPI.updateParticipationStatus - Token:',
+      localStorage.getItem('token')
+    );
+    console.log(
+      'jobFairAPI.updateParticipationStatus - Job Fair ID:',
+      jobFairId,
+      'Participation ID:',
+      participationId,
+      'Status:',
+      status
+    );
+
+    return api
+      .put(`/job-fairs/${jobFairId}/participations/${participationId}`, {
+        status,
+      })
+      .catch(error => {
+        console.error(
+          'Error updating participation status:',
+          error.response?.status,
+          error.response?.data
+        );
+        return Promise.reject(error);
+      });
+  },
+
+  createJobFair: jobFairData => {
+    console.log(
+      'jobFairAPI.createJobFair - Token:',
+      localStorage.getItem('token')
+    );
+    console.log('jobFairAPI.createJobFair - Data:', jobFairData);
+
+    return api.post('/job-fairs', jobFairData).catch(error => {
+      console.error(
+        'Error creating job fair:',
+        error.response?.status,
+        error.response?.data
+      );
+      return Promise.reject(error);
+    });
+  },
+};
+
+// Attendance API endpoints
+export const attendanceAPI = {
+  getReports: () => {
+    console.log(
+      'attendanceAPI.getReports - Token:',
+      localStorage.getItem('token')
+    );
+    return api.get('/reports/attendance');
+  },
+
+  getEventAttendance: eventId => {
+    console.log(
+      'attendanceAPI.getEventAttendance - Token:',
+      localStorage.getItem('token')
+    );
+    console.log('attendanceAPI.getEventAttendance - Event ID:', eventId);
+    return api.get(`/reports/attendance/${eventId}`);
+  },
+
+  exportAttendance: (format = 'xlsx', eventId = null) => {
+    console.log(
+      'attendanceAPI.exportAttendance - Token:',
+      localStorage.getItem('token')
+    );
+    console.log(
+      'attendanceAPI.exportAttendance - Format:',
+      format,
+      'Event ID:',
+      eventId
+    );
+
+    const params = { type: format, report: 'attendance' };
+    if (eventId) {
+      params.event_id = eventId;
+    }
+
+    return api.get('/reports/export', {
+      params,
+      responseType: 'blob', // Important for file downloads
+    });
+  },
+
+  getAttendanceStats: () => {
+    console.log(
+      'attendanceAPI.getAttendanceStats - Token:',
+      localStorage.getItem('token')
+    );
+    return api.get('/reports/attendance/stats').catch(() => {
+      // If stats endpoint doesn't exist, return null
+      return null;
+    });
   },
 };
 

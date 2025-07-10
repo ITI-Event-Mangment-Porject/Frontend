@@ -39,7 +39,12 @@ const formatTimeDisplay = timeString => {
   }
 };
 
-export const getEventTableColumns = (handleEditClick, handleDeleteEvent) => [
+export const getEventTableColumns = (
+  handleEditClick,
+  handleDeleteEvent,
+  handlePublishEvent,
+  handleArchiveEvent
+) => [
   {
     header: 'Event',
     accessor: 'title',
@@ -125,17 +130,48 @@ export const getEventTableColumns = (handleEditClick, handleDeleteEvent) => [
     accessor: 'actions',
     render: event => (
       <div className="flex gap-2">
-        <button
-          onClick={e => {
-            e.stopPropagation();
-            handleEditClick(event);
-          }}
-          className="px-3 py-1 text-sm bg-[var(--secondary-400)] text-white rounded-md hover:bg-[var(--secondary-500)] flex items-center"
-          title="Edit Event"
-        >
-          <FaEdit className="w-3 h-3 mr-1" />
-          Edit
-        </button>
+        {/* Publish button - only show for draft events */}
+        {event.status?.toLowerCase() === 'draft' && (
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              handlePublishEvent(event);
+            }}
+            className="px-3 py-1 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 flex items-center"
+            title="Publish Event"
+          >
+            <FaCalendarPlus className="w-3 h-3 mr-1" />
+            Publish
+          </button>
+        )}
+
+        {/* Edit button - changes to Archive for completed events */}
+        {event.status?.toLowerCase() === 'completed' ? (
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              handleArchiveEvent(event);
+            }}
+            className="px-3 py-1 text-sm bg-gray-500 text-white rounded-md hover:bg-gray-600 flex items-center"
+            title="Archive Event"
+          >
+            <FaEdit className="w-3 h-3 mr-1" />
+            Archive
+          </button>
+        ) : (
+          <button
+            onClick={e => {
+              e.stopPropagation();
+              handleEditClick(event);
+            }}
+            className="px-3 py-1 text-sm bg-[var(--secondary-400)] text-white rounded-md hover:bg-[var(--secondary-500)] flex items-center"
+            title="Edit Event"
+          >
+            <FaEdit className="w-3 h-3 mr-1" />
+            Edit
+          </button>
+        )}
+
         <button
           onClick={e => {
             e.stopPropagation();

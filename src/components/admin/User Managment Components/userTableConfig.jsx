@@ -11,12 +11,21 @@ export const getUserTableColumns = (handleEditClick, handleDeleteClick) => {
           <div className="rounded-full bg-gray-200 w-10 h-10 flex items-center justify-center overflow-hidden">
             {user.profile_image ? (
               <img
-                src={user.profile_image}
-                alt={`${user.first_name.charAt(0)} `}
+                src={`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}${user.profile_image}`}
+                alt={`${user.first_name} ${user.last_name}`}
                 className="h-full w-full object-cover"
+                onError={e => {
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
               />
-            ) : (
-              <FaUserAlt className="text-gray-500" />
+            ) : null}
+            {!user.profile_image && <FaUserAlt className="text-gray-500" />}
+            {user.profile_image && (
+              <FaUserAlt
+                className="text-gray-500"
+                style={{ display: 'none' }}
+              />
             )}
           </div>
           <span className="ml-2 text-sm ">
@@ -58,21 +67,6 @@ export const getUserTableColumns = (handleEditClick, handleDeleteClick) => {
         <div className="text-left text-sm text-[#8C8D8BFF]">
           {user.intake_year || 'N/A'}
         </div>
-      ),
-    },
-    {
-      header: 'Status',
-      accessor: 'is_active',
-      render: user => (
-        <span
-          className={`px-2 py-1 rounded-full text-xs ${
-            user.is_active
-              ? 'bg-green-100 text-green-800'
-              : 'bg-[#DE3B40FF] text-white'
-          }`}
-        >
-          {user.is_active ? 'Active' : 'Inactive'}
-        </span>
       ),
     },
     {

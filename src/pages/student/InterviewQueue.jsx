@@ -7,88 +7,66 @@ const JobFairDashboard = () => {
   const [allQueuesData, setAllQueuesData] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Get user ID safely from localStorage
+  const getUserIdFromStorage = () => {
+    const savedUser = localStorage.getItem('user');
+    if (!savedUser) return null;
+
+    try {
+      const parsedUser = JSON.parse(savedUser);
+      return parsedUser.id || parsedUser.user_id || parsedUser.studentId || null;
+    } catch (e) {
+      console.error('Error parsing user from localStorage:', e);
+      return null;
+    }
+  };
+
+  const fetchQueuesData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const userId = getUserIdFromStorage();
+      const token = localStorage.getItem('token');
+
+      console.log('📦 Stored userId:', userId);
+
+      if (!userId || !token) {
+        setError('⚠️ User ID or token not found. Please log in again.');
+        return;
+      }
+
+      const response = await fetch(`http://127.0.0.1:8000/api/job-fairs/1/queues/student/${userId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const queuesArray = data.success && data.data && data.data.queue ? data.data.queue : [];
+
+      setAllQueuesData(queuesArray);
+    } catch (err) {
+      console.error('Error fetching queues data:', err);
+      setError('Failed to load interview data. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const staticResponse = {
-      success: true,
-      data: {
-        queue: [
-          {
-            queue_id: 126,
-            queue_position: 1,
-            order_key: 9,
-            status: "waiting",
-            company: {
-              id: 15,
-              name: "Huel-Jones",
-              logo_path: "https://via.placeholder.com/200x200.png/00aacc?text=Huel-Jones"
-            },
-            slot: {
-              id: 106,
-              date: "2025-08-06T00:00:00.000000Z",
-              start_time: "10:30:00",
-              end_time: "11:00:00"
-            },
-            interview_request_id: 130,
-            notes: null
-          },
-          {
-            queue_id: 127,
-            queue_position: 3,
-            order_key: 12,
-            status: "waiting",
-            company: {
-              id: 16,
-              name: "TechCorp",
-              logo_path: "https://via.placeholder.com/200x200.png/ffaa00?text=TechCorp"
-            },
-            slot: {
-              id: 107,
-              date: "2025-08-06T00:00:00.000000Z",
-              start_time: "11:30:00",
-              end_time: "12:00:00"
-            },
-            interview_request_id: 131,
-            notes: "Bring a printed resume."
-          },
-          {
-            queue_id: 128,
-            queue_position: 2,
-            order_key: 10,
-            status: "waiting",
-            company: {
-              id: 17,
-              name: "InnoSoft",
-              logo_path: "https://via.placeholder.com/200x200.png/55cc99?text=InnoSoft"
-            },
-            slot: {
-              id: 108,
-              date: "2025-08-06T00:00:00.000000Z",
-              start_time: "12:30:00",
-              end_time: "13:00:00"
-            },
-            interview_request_id: 132,
-            notes: "Expect a technical screening."
-          }
-        ]
-      },
-      message: "Student queue retrieved successfully."
-    };
-
-    const queuesArray = staticResponse.success && staticResponse.data && staticResponse.data.queue
-      ? staticResponse.data.queue
-      : [];
-
-    setAllQueuesData(queuesArray);
-    setLoading(false);
+    fetchQueuesData();
   }, []);
 
   const refreshCurrentQueue = () => {
-    // لإعادة تحميل نفس البيانات
-    setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-    }, 500);
+    fetchQueuesData();
   };
 
   const currentQueue = allQueuesData[activeTab];
@@ -112,7 +90,7 @@ const JobFairDashboard = () => {
     <Layout>
       <div className="p-6">
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="bg-gradient-to-r from-orange-500 to-red-500 text-white p-6">
+          <div className="bg-gradient-to-r from-red-900 to-red-500 text-white p-6">
             <h1 className="text-3xl font-bold mb-2">Job Fair Dashboard</h1>
             <p className="text-orange-100">Your interviews for today</p>
           </div>
@@ -121,6 +99,17 @@ const JobFairDashboard = () => {
             <div className="p-8 text-center">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
               <p className="text-gray-600">Loading your interviews...</p>
+            </div>
+          ) : error ? (
+            <div className="p-8 text-center">
+              <div className="text-red-500 text-lg mb-4">{error}</div>
+              <button
+                onClick={refreshCurrentQueue}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors duration-200"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span>Try Again</span>
+              </button>
             </div>
           ) : allQueuesData.length === 0 ? (
             <div className="p-8 text-center">
@@ -234,7 +223,7 @@ const JobFairDashboard = () => {
                         <span>Queue Progress</span>
                         <span>
                           {currentQueue.queue_position > 0 ? 
-                            Math.round(((currentQueue.order_key) / (currentQueue.order_key + currentQueue.queue_position)) * 100) 
+                            Math.round((currentQueue.order_key / (currentQueue.order_key + currentQueue.queue_position)) * 100) 
                             : 0}%
                         </span>
                       </div>
@@ -243,7 +232,7 @@ const JobFairDashboard = () => {
                           className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full transition-all duration-500"
                           style={{
                             width: `${currentQueue.queue_position > 0 ? 
-                              ((currentQueue.order_key) / (currentQueue.order_key + currentQueue.queue_position)) * 100 
+                              (currentQueue.order_key / (currentQueue.order_key + currentQueue.queue_position)) * 100 
                               : 0}%`
                           }}
                         ></div>

@@ -54,7 +54,10 @@ const Topbar = () => {
         const companies = res.data.data?.result || [];
         const company = companies.find(c => String(c.companyId) === String(companyId));
 
-        setCompanyData(company || null);
+        setCompanyData(prev => ({
+          ...prev,
+          ...company
+        }));
         
       } catch (err) {
         console.error('Failed to fetch company status:', err);
@@ -64,35 +67,37 @@ const Topbar = () => {
     fetchCompanyStatus();
     
   }, [jobFairId, companyId]);
+
   useEffect(() => {
-  const fetchCompanyDetails = async () => {
-    try {
-      if (!companyId) return;
+    const fetchCompanyDetails = async () => {
+      try {
+        if (!companyId) return;
 
-      const token = localStorage.getItem('token');
-      const res = await api.get(`/companies/${companyId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+        const token = localStorage.getItem('token');
+        const res = await api.get(`/companies/${companyId}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
 
-      const data = res.data.data || {};
+        const data = res.data.data?.result || {};
 
-      setCompanyData(prev => ({
-        ...prev,
-        logo_path: data.logo_path 
-    ? data.logo_path.startsWith('http')
-      ? data.logo_path
-      : `http://127.0.0.1:8000/storage/${data.logo_path}`
-    : ''
-      }));
-    } catch (err) {
-      console.error('Failed to fetch full company data:', err);
-    }
-  };
+        setCompanyData(prev => ({
+          ...prev,
+          logo_path: data.logo_path 
+            ? data.logo_path.startsWith('http')
+              ? data.logo_path
+              : `http://127.0.0.1:8000/storage/${data.logo_path}`
+            : '',
+          name: data.name || prev?.name,
+          email: data.email || prev?.email,
+        }));
+      } catch (err) {
+        console.error('Failed to fetch full company data:', err);
+      }
+    };
 
-  fetchCompanyDetails();
-  
-}, [companyId]);
-
+    fetchCompanyDetails();
+    
+  }, [companyId]);
 
   const isApproved = companyData?.status === 'approved';
   const isActive = useLocation().pathname.includes(companyId);
@@ -160,19 +165,18 @@ const Topbar = () => {
           
           <div className="relative group">
             <div className="absolute -inset-1 bg-gradient-to-r from-[#901b20]/50 to-[#ad565a]/50 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-<img 
-  src={
-    companyData?.logo_path
-      ? companyData.logo_path
-      : "https://i.pravatar.cc/32"
-  } 
-  alt="Company Logo" 
-  className="relative w-10 h-10 rounded-full border-2 border-white/30 transition-transform duration-300 group-hover:scale-110 cursor-pointer"
-/>
-
-
-
-
+            <img 
+              src={
+                companyData?.logo_path && companyData.logo_path !== ''
+                  ? companyData.logo_path
+                  : "https://i.pravatar.cc/32"
+              } 
+              alt="Company Logo" 
+              className="relative w-10 h-10 rounded-full border-2 border-white/30 transition-transform duration-300 group-hover:scale-110 cursor-pointer object-cover"
+              onError={(e) => {
+                e.target.src = "https://i.pravatar.cc/32";
+              }}
+            />
             <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse" />
           </div>
         </div>

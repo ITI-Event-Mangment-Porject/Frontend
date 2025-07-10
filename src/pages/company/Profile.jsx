@@ -105,49 +105,52 @@ setCompanyData({
     setLoading(false);
   };
 
-  const handleLogoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+const handleLogoUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
 
-    if (!file.type.startsWith('image/')) {
-      setError("Please select a valid image file");
-      return;
-    }
+  if (!file.type.startsWith('image/')) {
+    setError("Please select a valid image file");
+    return;
+  }
 
-    if (file.size > 5 * 1024 * 1024) {
-      setError("File size must be less than 5MB");
-      return;
-    }
+  if (file.size > 5 * 1024 * 1024) {
+    setError("File size must be less than 5MB");
+    return;
+  }
 
-    const formData = new FormData();
-    formData.append('logo', file);
+  const formData = new FormData();
+  formData.append('logo', file);
 
-    try {
-      const response = await axios.post(
-        `http://127.0.0.1:8000/api/companies/${companyId}/logo`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'multipart/form-data'
-          }
+  try {
+    const response = await axios.post(
+      `http://127.0.0.1:8000/api/companies/${companyId}/logo`,
+      formData,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data'
         }
-      );
+      }
+    );
 
-      console.log("Upload response", response.data);
+    console.log("Upload response", response.data);
 
-      const newLogoPath = response.data.logo_path;
+    const newLogoPath = response.data.logo_path;
 
-      setCompanyData(prev => ({
-        ...prev,
-        logo_path: newLogoPath.replace('127.0.0.1', 'localhost')
-      }));
+    setCompanyData(prev => ({
+      ...prev,
+      logo_path: typeof newLogoPath === 'string'
+        ? newLogoPath.replace('127.0.0.1', 'localhost')
+        : ''
+    }));
 
-    } catch (err) {
-      console.log("Upload error:", err.response?.data || err.message);
-      setError("Logo upload failed");
-    }
-  };
+  } catch (err) {
+    console.log("Upload error:", err.response?.data || err.message);
+    setError("Logo upload failed");
+  }
+};
+
 
   const handleCancel = () => {
     setIsEditing(false);

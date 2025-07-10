@@ -33,6 +33,11 @@ export const cleanEventData = eventData => {
     cleanedData.created_by = 1;
   }
 
+  // Ensure status is set to draft for new events
+  if (!cleanedData.id && !cleanedData.status) {
+    cleanedData.status = 'draft';
+  }
+
   // Handle visibility_config formatting
   if (
     cleanedData.visibility_type === 'role_based' &&
