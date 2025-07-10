@@ -5,7 +5,7 @@ import SearchAndFilterBar from './SearchAndFilterBar';
 import DetailModal from './DetailModal';
 import NewJobFairModal from './NewJobFairModal';
 
-const JWT_TOKEN='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDEvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3NTIwOTYyMTAsImV4cCI6MjA1MjA5NjIxMCwibmJmIjoxNzUyMDk2MjEwLCJqdGkiOiJZWURiaVVVUUQxdTVKakhuIiwic3ViIjoiMTY5IiwicHJ2IjoiMTNlOGQwMjhiMzkxZjNiN2I2M2YyMTkzM2RiYWQ0NThmZjIxMDcyZSJ9.z33GIrTduO6-nK5FZ0DROhnghCCcWgfw8nK5decaZF0';
+const JWT_TOKEN=localStorage.getItem('token');
 const JobFairSetUp = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Statuses');
@@ -25,7 +25,7 @@ const JobFairSetUp = () => {
       try {
         setLoading(true);
         const res = await fetch(
-          `http://127.0.0.1:8001/api/job-fairs/${selectedJobFairId}/participations`,
+          `http://127.0.0.1:8000/api/job-fairs/${selectedJobFairId}/participations`,
           {
             headers: {
               Authorization: `Bearer ${JWT_TOKEN}`,
@@ -50,7 +50,7 @@ const JobFairSetUp = () => {
     try {
       // Step 1: Update participation status
       await fetch(
-        `http://127.0.0.1:8001/api/job-fairs/${selectedJobFairId}/participations/${participationId}`,
+        `http://127.0.0.1:8000/api/job-fairs/${selectedJobFairId}/participations/${participationId}`,
         {
           method: 'PUT',
           headers: {
@@ -69,7 +69,7 @@ const JobFairSetUp = () => {
       }
 
       const response = await fetch(
-        `http://localhost:8001/api/companies/${companyId}/${action}`,
+        `http://localhost:8000/api/companies/${companyId}/${action}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -116,7 +116,7 @@ const JobFairSetUp = () => {
 
   const handleViewDetails = async id => {
     const res = await fetch(
-      `http://127.0.0.1:8001/api/job-fairs/${selectedJobFairId}/participations/${id}`,
+      `http://127.0.0.1:8000/api/job-fairs/${selectedJobFairId}/participations/${id}`,
       {
         headers: {
           Authorization: `Bearer ${JWT_TOKEN}`,

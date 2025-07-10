@@ -76,7 +76,7 @@ const CompanyCard = ({
       <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 relative">
         <div className="flex items-center gap-3">
           <img
-            src={company.profile_image}
+            src={company.logo_path}
             alt={`${company.name} logo`}
             className="w-12 h-12 rounded-lg object-cover"
           />

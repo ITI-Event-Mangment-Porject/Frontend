@@ -4,9 +4,8 @@ import { X } from 'lucide-react';
 
 
 const NewJobFairModal = ({ onClose }) => {
-    const JWT_TOKEN =
-  'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDEvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3NTIwODg2MDAsImV4cCI6MTc4MjA4ODYwMCwibmJmIjoxNzUyMDg4NjAwLCJqdGkiOiJ4NmFVanJnWkhYSU80QmtzIiwic3ViIjoiMTY5IiwicHJ2IjoiMTNlOGQwMjhiMzkxZjNiN2I2M2YyMTkzM2RiYWQ0NThmZjIxMDcyZSJ9.K-NvVcElOSANFjKLUmuceSVbhGryfdvjF07ez3Bb6-A';
-  const [form, setForm] = useState({
+    const JWT_TOKEN =localStorage.getItem('token');
+     const [form, setForm] = useState({
     title: '',
     description: '',
     location: '',
@@ -27,7 +26,7 @@ const NewJobFairModal = ({ onClose }) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:8001/job-fairs', {
+      const res = await fetch('http://127.0.0.1:8000/job-fairs', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
