@@ -58,7 +58,7 @@ const AboutUs = () => {
     },
     {
       id: 4,
-      name: 'Monia Yakoub',
+      name: 'Monica Yakoub',
       role: 'Frontend Developer',
       type: 'frontend',
       image: '/public/team/monica.jpg',
