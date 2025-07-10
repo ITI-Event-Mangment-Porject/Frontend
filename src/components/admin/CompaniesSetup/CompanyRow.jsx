@@ -1,108 +1,106 @@
-import { useState } from 'react';
+"use client"
+
+import { useState } from "react"
+import { X } from "lucide-react"
 
 const CompanyRow = ({ company, onView, onApproveReject, actionLoading }) => {
-  const [showRejectModal, setShowRejectModal] = useState(false);
-  const [rejectReason, setRejectReason] = useState('');
+  const [showRejectModal, setShowRejectModal] = useState(false)
+  const [rejectReason, setRejectReason] = useState("")
 
-  const getStatusStyle = status => {
-    if (status === 'approved') return 'bg-green-100 text-green-700';
-    if (status === 'rejected') return 'bg-red-100 text-red-700';
-    return 'bg-yellow-100 text-yellow-700';
-  };
+  const getStatusStyle = (status) => {
+    if (status === "approved") return "bg-green-100 text-green-700 border-green-200"
+    if (status === "rejected") return "bg-red-100 text-red-700 border-red-200"
+    return "bg-yellow-100 text-yellow-700 border-yellow-200"
+  }
 
-  const getStatusLabel = status => {
-    if (status === 'approved') return 'Approved';
-    if (status === 'rejected') return 'Rejected';
-    return 'Pending';
-  };
+  const getStatusLabel = (status) => {
+    if (status === "approved") return "Approved"
+    if (status === "rejected") return "Rejected"
+    return "Pending"
+  }
 
-  // Correctly determine the status
-  const status =
-    company.status === 'approved'
-      ? 'approved'
-      : company.status === 'pending'
-        ? 'pending'
-        : 'rejected';
+  const status = company.status === "approved" ? "approved" : company.status === "pending" ? "pending" : "rejected"
 
   const handleRejectClick = () => {
-    setShowRejectModal(true);
-  };
+    setShowRejectModal(true)
+  }
 
   const handleRejectConfirm = () => {
     if (rejectReason.trim()) {
-      onApproveReject(company.id, 'reject', rejectReason);
-      setShowRejectModal(false);
-      setRejectReason('');
+      onApproveReject(company.id, "reject", rejectReason)
+      setShowRejectModal(false)
+      setRejectReason("")
     }
-  };
+  }
 
   const handleRejectCancel = () => {
-    setShowRejectModal(false);
-    setRejectReason('');
-  };
+    setShowRejectModal(false)
+    setRejectReason("")
+  }
 
   return (
     <>
-      <tr className="hover:bg-gray-50">
+      <tr className="hover:bg-gray-50 transition-colors duration-200">
         <td className="px-6 py-4 whitespace-nowrap">
           <div className="flex items-center">
             {company.logo_path ? (
               <img
-                className="h-10 w-10 rounded-full"
-                src={company.logo_path}
+                className="h-12 w-12 rounded-xl object-cover shadow-lg"
+                src={company.logo_path || "/placeholder.svg"}
                 alt={company.name}
               />
             ) : (
-              <div className="h-10 w-10 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-sm">
+              <div className="h-12 w-12 bg-gradient-to-br from-[#901b20] to-[#ad565a] rounded-xl flex items-center justify-center text-white text-lg font-bold shadow-lg">
                 {company.name.charAt(0)}
               </div>
             )}
             <div className="ml-4">
-              <div className="font-medium text-gray-900">{company.name}</div>
-              <div className="text-sm text-gray-500">{company.location}</div>
+              <div className="font-bold text-gray-900 text-lg">{company.name}</div>
+              <div className="text-sm text-gray-600 font-medium">{company.location}</div>
             </div>
           </div>
         </td>
         <td className="px-6 py-4">
-          <div className="text-sm text-gray-900">{company.contact_email}</div>
-          <div className="text-sm text-gray-500">{company.contact_phone}</div>
+          <div className="text-sm font-semibold text-gray-900">{company.contact_email}</div>
+          <div className="text-sm text-gray-600 font-medium">{company.contact_phone}</div>
         </td>
-        <td className="px-6 py-4 text-sm text-gray-500">{company.industry}</td>
-
         <td className="px-6 py-4">
-          <span
-            className={`px-2 py-1 inline-flex text-xs font-semibold rounded-full ${getStatusStyle(status)}`}
-          >
+          <span className="px-3 py-1 bg-[#203947]/10 text-[#203947] rounded-full text-sm font-semibold">
+            {company.industry}
+          </span>
+        </td>
+        <td className="px-6 py-4">
+          <span className={`px-3 py-2 inline-flex text-sm font-bold rounded-full border-2 ${getStatusStyle(status)}`}>
             {getStatusLabel(status)}
           </span>
         </td>
         <td className="px-6 py-4">
-          <div className="flex items-center space-x-2">
-            {status === 'approved' || status === 'rejected' ? (
+          <div className="flex items-center space-x-3">
+            {status === "approved" || status === "rejected" ? (
               <button
                 onClick={() => onView(company)}
-                className="cursor-pointer text-center text-(--primary-600) "
+                className="bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105"
                 title="View Details"
               >
-                View
+                View Details
               </button>
             ) : (
-              <div className="flex space-x-2">
+              <div className="flex space-x-3">
                 <button
-                  onClick={() => onApproveReject(company.id, 'approve')}
+                  onClick={() => onApproveReject(company.id, "approve")}
                   disabled={actionLoading === `${company.id}-approve`}
-                  className="text-green-600 hover:text-green-800 disabled:opacity-50"
+                  className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 disabled:scale-100"
                   title="Approve"
                 >
-                  {actionLoading === `${company.id}-approve` ? '⏳' : 'Approve'}
+                  {actionLoading === `${company.id}-approve` ? "⏳" : "Approve"}
                 </button>
                 <button
                   onClick={handleRejectClick}
                   disabled={actionLoading === `${company.id}-reject`}
-                  className="text-red-600 hover:text-red-800 disabled:opacity-50"
+                  className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-4 py-2 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 disabled:scale-100"
                   title="Reject"
                 >
-                  {actionLoading === `${company.id}-reject` ? '⏳' : 'Reject'}
+                  {actionLoading === `${company.id}-reject` ? "⏳" : "Reject"}
                 </button>
               </div>
             )}
@@ -110,91 +108,73 @@ const CompanyRow = ({ company, onView, onApproveReject, actionLoading }) => {
         </td>
       </tr>
 
-      {/* Rejection Reason Modal */}
+      {/* Enhanced Rejection Reason Modal */}
       {showRejectModal && (
-        <div className="fixed inset-0 bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              <h3 className="text-lg font-medium text-gray-900">
-                Reject Company: {company.name}
-              </h3>
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-lg flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-scale-up">
+            <div className="relative bg-gradient-to-br from-[#901b20] via-[#ad565a] to-[#cc9598] p-6 text-white rounded-t-2xl">
               <button
                 onClick={handleRejectCancel}
-                className="text-gray-400 hover:text-gray-600"
+                className="absolute top-4 right-4 w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 backdrop-blur-sm"
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <X className="w-4 h-4" />
               </button>
+              <h3 className="text-xl font-bold mb-2">Reject Company</h3>
+              <p className="text-white/90">Provide a reason for rejection</p>
             </div>
 
-            <div className="px-6 py-4">
-              <div className="flex items-center mb-4">
+            <div className="p-6">
+              <div className="flex items-center mb-6">
                 {company.logo_path ? (
                   <img
-                    className="h-12 w-12 rounded-full"
-                    src={company.logo_path}
+                    className="h-12 w-12 rounded-xl object-cover shadow-lg"
+                    src={company.logo_path || "/placeholder.svg"}
                     alt={company.name}
                   />
                 ) : (
-                  <div className="h-12 w-12 bg-gray-200 rounded-full flex items-center justify-center">
-                    <span className="text-gray-500 text-lg">
-                      {company.name.charAt(0)}
-                    </span>
+                  <div className="h-12 w-12 bg-gradient-to-br from-[#901b20] to-[#ad565a] rounded-xl flex items-center justify-center text-white font-bold">
+                    {company.name.charAt(0)}
                   </div>
                 )}
-                <div className="ml-3">
-                  <h4 className="text-lg font-semibold text-gray-900">
-                    {company.name}
-                  </h4>
-                  <p className="text-sm text-gray-600">{company.location}</p>
+                <div className="ml-4">
+                  <h4 className="text-lg font-bold text-gray-900">{company.name}</h4>
+                  <p className="text-sm text-gray-600 font-medium">{company.location}</p>
                 </div>
               </div>
 
-              <p className="text-sm text-gray-600 mb-4">
-                Please provide a reason for rejecting this company:
-              </p>
+              <div className="mb-6">
+                <label className="block text-sm font-semibold text-gray-700 mb-3">Rejection Reason *</label>
+                <textarea
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="Enter detailed reason for rejecting this company..."
+                  className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 resize-none text-sm"
+                  rows="4"
+                  required
+                />
+              </div>
 
-              <textarea
-                value={rejectReason}
-                onChange={e => setRejectReason(e.target.value)}
-                placeholder="Enter rejection reason..."
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2  resize-none"
-                rows="4"
-                required
-              />
-            </div>
-
-            <div className="px-6 py-4 border-t border-gray-200 flex justify-end space-x-3">
-              <button
-                onClick={handleRejectCancel}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleRejectConfirm}
-                disabled={!rejectReason.trim()}
-                className="cursor-pointer bg-(--primary-600) text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Reject Company
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleRejectCancel}
+                  className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-3 rounded-xl font-semibold transition-all duration-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleRejectConfirm}
+                  disabled={!rejectReason.trim()}
+                  className="flex-1 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-4 py-3 rounded-xl font-semibold transition-all duration-300 disabled:cursor-not-allowed"
+                >
+                  Reject Company
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
     </>
-  );
-};
+  )
+}
 
-export default CompanyRow;
+export default CompanyRow
