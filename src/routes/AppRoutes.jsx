@@ -22,6 +22,7 @@ import Layout from '../pages/company/common/Layout';
 
 // Home Page
 import HomePage from '../pages/homePage/HomePage';
+import AllEvents from '../pages/Events/AllEvents';
 
 // Admin Pages
 import AdminDashboard from '../pages/admin/Dashboard';
@@ -39,12 +40,13 @@ import NotFoundPage from '../pages/System/NotFoundPage';
 import AboutUs from '../pages/System/AboutUs';
 import ContactUs from '../pages/System/ContactUs';
 
-
 const AppRoutes = () => {
   return (
     <Routes>
       {/* Home route */}
       <Route path="/" element={<HomePage />} />
+      {/* Events route */}
+      <Route path="/events" element={<AllEvents />} />
       {/* Admin routes - using absolute paths */}
       <Route path="/admin/dashboard" element={<AdminDashboard />} />
       <Route path="/admin/users" element={<UserManagement />} />
@@ -58,7 +60,10 @@ const AppRoutes = () => {
       <Route path="/admin/liveevents" element={<LiveMonitor />} />
       <Route path="/admin/FeedbackAnalytics" element={<AlFeedbackAnalyics />} />
       <Route path="/admin/LiveQueue" element={<LiveQueue />} />
-      <Route path="/admin/createFeedbackForm" element={<FeedbackFormsCreaton />} />
+      <Route
+        path="/admin/createFeedbackForm"
+        element={<FeedbackFormsCreaton />}
+      />
       <Route
         path="/admin"
         element={<Navigate to="/admin/dashboard" replace />}
@@ -81,7 +86,10 @@ const AppRoutes = () => {
         <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="job-fairs/:jobFairId/setup" element={<SetupForm />} />
-        <Route path="job-fairs/:jobFairId/requests" element={<ManageRequests />} />
+        <Route
+          path="job-fairs/:jobFairId/requests"
+          element={<ManageRequests />}
+        />
         <Route path="tracking" element={<InterviewTracking />} />
         <Route path="profile" element={<CompanyProfile />} />
       </Route>
