@@ -702,7 +702,7 @@ const AllEvents = () => {
                 {/* Action Button */}
                 <div className="mt-8 flex justify-end">
                   <Link
-                    to={`/event-details/${selectedEvent.id}`}
+                    to={`/student/event-details/${selectedEvent.id}`}
                     className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-[var(--primary-500)] to-[var(--primary-600)] text-white font-medium rounded-md shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[var(--primary-300)] focus:ring-offset-2 group"
                   >
                     <span className="mr-2">Register for Event</span>
