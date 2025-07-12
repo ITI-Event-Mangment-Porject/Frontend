@@ -4,10 +4,8 @@ import { X } from 'lucide-react';
 
 
 const NewJobFairModal = ({ onClose }) => {
-    const JWT_TOKEN =
-  'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDEvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3NTE5Mjg5MzEsImV4cCI6MTc4MTkyODkzMSwibmJmIjoxNzUxOTI4OTMxLCJqdGkiOiJUNE5LS3FvRkpuU1pKQXN0Iiwic3ViIjoiMTYyIiwicHJ2IjoiMTNlOGQwMjhiMzkxZjNiN2I2M2YyMTkzM2RiYWQ0NThmZjIxMDcyZSJ9.HQa7FjeiYPCBuyWVBzuOCeWJaoJeYriqF4_wMBDvyoI';
-
-  const [form, setForm] = useState({
+    const JWT_TOKEN =localStorage.getItem('token');
+     const [form, setForm] = useState({
     title: '',
     description: '',
     location: '',
@@ -28,25 +26,31 @@ const NewJobFairModal = ({ onClose }) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('http://127.0.0.1:8001/job-fairs', {
+      const formData = new FormData();
+      Object.entries(form).forEach(([key, value]) => {
+        formData.append(key, value);
+      });
+  
+      const res = await fetch('http://127.0.0.1:8000/job-fairs', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${JWT_TOKEN}`, 
+          Authorization: `Bearer ${JWT_TOKEN}`, // Do NOT set Content-Type manually when using FormData
         },
-        body: JSON.stringify(form),
+        body: formData,
       });
-
+  
       const data = await res.json();
+      console.log(data);
       alert('Job Fair Created: ' + data?.data?.result?.title);
       onClose();
     } catch (err) {
-      console.error(err);
+      console.error('Error is', err);
       alert('Failed to create job fair');
     } finally {
       setLoading(false);
     }
   };
+  
 
   return (
     <div className="fixed inset-0 bg-opacity-20 backdrop-blur-sm flex items-center justify-center z-50">
@@ -73,6 +77,7 @@ const NewJobFairModal = ({ onClose }) => {
           <button
             type="submit"
             disabled={loading}
+           
             className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
           >
             {loading ? 'Creating...' : 'Create Job Fair'}

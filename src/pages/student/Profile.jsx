@@ -153,7 +153,6 @@ const Profile = () => {
       const data = await response.json();
 
       if (data.success) {
-        // تحديث الـ profile بناءً على البيانات المرجعة من الـ API
         const updatedUser = data.data.user;
         const updatedProfile = {
           name: `${updatedUser.first_name} ${updatedUser.last_name}`,
@@ -193,55 +192,69 @@ const Profile = () => {
   };
 
   const handleFileUpload = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
+  const file = event.target.files[0];
+  if (!file) return;
 
-    setUploading(true);
-    setError(null);
-    
-    try {
-      const token = localStorage.getItem('token');
-      const formData = new FormData();
-      formData.append('cv', file);
+  const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+  if (!allowedTypes.includes(file.type)) {
+    setError('Please upload a PDF, DOC, or DOCX file only');
+    return;
+  }
 
-      const response = await fetch(`${API_BASE_URL}/api/users/${currentUserId}`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        body: formData,
-      });
+  if (file.size > 5 * 1024 * 1024) {
+    setError('File size must be less than 5MB');
+    return;
+  }
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to upload CV');
-      }
+  setUploading(true);
+  setError(null);
 
-      const data = await response.json();
-      
-      if (data.success) {
-        // تحديث المسار في الـ profile
-        setProfile(prev => ({ ...prev, cv_path: data.data.cv_path }));
-        
-        const newDocument = {
-          id: Date.now(),
-          name: file.name,
-          date: new Date().toISOString().slice(0, 10),
-          size: `${Math.round(file.size / 1024)} KB`,
-          type: file.type,
-          path: data.data.cv_path,
-        };
-        
-        setDocuments(docs => [...docs, newDocument]);
-        setSuccess('CV uploaded successfully!');
-        setTimeout(() => setSuccess(null), 3000);
-      }
-    } catch (err) {
-      setError('Failed to upload CV: ' + err.message);
-    } finally {
-      setUploading(false);
+  try {
+    const token = localStorage.getItem('token');
+    const formData = new FormData();
+
+    formData.append('cv_path', file);
+
+    const response = await fetch(`${API_BASE_URL}/api/users/${currentUserId}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
     }
-  };
+
+    if (data.success) {
+      setProfile(prev => ({ ...prev, cv_path: data.data.cv_path }));
+
+      const newDocument = {
+        id: Date.now(),
+        name: file.name,
+        date: new Date().toISOString().slice(0, 10),
+        size: `${Math.round(file.size / 1024)} KB`,
+        type: file.type,
+        path: data.data.cv_path,
+      };
+
+      setDocuments(docs => [...docs, newDocument]);
+      setSuccess(data.message || 'CV uploaded successfully!');
+      setTimeout(() => setSuccess(null), 3000);
+    } else {
+      throw new Error(data.message || 'Failed to upload CV');
+    }
+  } catch (err) {
+    console.error('Upload error:', err);
+    setError('Failed to upload CV: ' + err.message);
+  } finally {
+    setUploading(false);
+  }
+};
+
 
   const handleDeleteDocument = async (docId) => {
     try {

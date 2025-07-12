@@ -1,136 +1,176 @@
-import React, { useState, useEffect } from 'react';
-import { FaBell, FaUserCircle, FaCog, FaSignOutAlt } from 'react-icons/fa';
-import { useNavigate } from 'react-router-dom';
+"use client"
 
-const Navbar = () => {
-  const navigate = useNavigate();
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
-  const [user, setUser] = useState(null);
+import { useState, useEffect } from "react"
+import { Bell, User, Settings, LogOut, Menu, X } from "lucide-react"
+import { useNavigate } from "react-router-dom"
+
+const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
+  const navigate = useNavigate()
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false)
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false)
+  const [user, setUser] = useState(null)
 
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem('user'));
-    console.log(storedUser);
-    setUser(storedUser || null);
-  }, []);
+    const storedUser = JSON.parse(localStorage.getItem("user"))
+    setUser(storedUser || null)
+  }, [])
 
   const handleSignOut = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    localStorage.removeItem('role');
-    localStorage.removeItem('refresh_token');
-    setUser(null);
-    navigate('/');
-  };
+    localStorage.removeItem("token")
+    localStorage.removeItem("user")
+    localStorage.removeItem("role")
+    localStorage.removeItem("refresh_token")
+    setUser(null)
+    navigate("/")
+  }
 
   const notifications = [
     {
       id: 1,
-      message: 'New user registration',
-      time: '5 minutes ago',
+      message: "New user registration",
+      time: "5 minutes ago",
       isRead: false,
     },
     {
       id: 2,
-      message: 'Event schedule updated',
-      time: '1 hour ago',
+      message: "Event schedule updated",
+      time: "1 hour ago",
       isRead: true,
     },
     {
       id: 3,
-      message: 'System maintenance scheduled',
-      time: '2 hours ago',
+      message: "System maintenance scheduled",
+      time: "2 hours ago",
       isRead: true,
     },
-  ];
+  ]
+
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
-      <div className="w-full px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          {/* Logo */}
-          <div
-            className="flex-shrink-0 flex hover:cursor-pointer justify-content-center align-content-center "
-            onClick={() => navigate('/')}
-          >
-            <img src="/logo.png" alt="" className="h-20 w-auto ms-4 mb-4" />
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-lg shadow-xl border-b border-gray-200/80">
+      <div className="w-full px-3 sm:px-4 lg:px-6 xl:px-8">
+        <div className="flex justify-between items-center h-16 sm:h-18 lg:h-20">
+          {/* Left Section */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Mobile Menu Button */}
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="lg:hidden p-2 sm:p-3 rounded-xl hover:bg-gray-100 transition-all duration-200 group"
+            >
+              {sidebarOpen ? (
+                <X className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600 group-hover:text-[#901b20]" />
+              ) : (
+                <Menu className="w-5 h-5 sm:w-6 sm:h-6 text-gray-600 group-hover:text-[#901b20]" />
+              )}
+            </button>
+
+            {/* Logo Section */}
+            <div className="flex items-center gap-2 sm:gap-4 cursor-pointer group" onClick={() => navigate("/")}>
+              <div className="relative">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 bg-white rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+                  <img src="/logo.png" alt="Logo" className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 object-contain" />
+                </div>
+                <div className="absolute -inset-1 bg-[#eca8ac] rounded-xl blur opacity-20 group-hover:opacity-40 transition-opacity duration-300"></div>
+              </div>
+
+              <div className="hidden sm:block">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold bg-gradient-to-r from-[#901b20] to-[#ad565a] bg-clip-text text-transparent">
+                  CommunITI
+                </h1>
+              </div>
+            </div>
           </div>
 
-          {/* Right side buttons */}
-          <div className="flex items-center">
+          {/* Right Section */}
+          <div className="flex items-center gap-2 sm:gap-3">
             {/* Notifications */}
             <div className="relative">
               <button
-                className="p-2 text-gray-400 hover:text-gray-500 focus:outline-none"
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                className="relative p-2 sm:p-3 text-gray-600 hover:text-[#901b20] hover:bg-gray-100 rounded-xl transition-all duration-200 group"
               >
-                <FaBell className="h-6 w-6" />
-                <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-600 ring-2 ring-white" />
+                <Bell className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 lg:w-6 lg:h-6 bg-gradient-to-r from-red-500 to-red-600 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-lg animate-pulse">
+                  {notifications.filter((n) => !n.isRead).length}
+                </span>
               </button>
 
-              {/* Notifications dropdown */}
               {isNotificationsOpen && (
-                <div className="origin-top-right absolute right-0 mt-2 w-80 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                  <div className="py-1" role="menu">
-                    <div className="px-4 py-2 border-b border-gray-100">
-                      <h3 className="text-sm font-medium text-gray-900">
-                        Notifications
-                      </h3>
-                    </div>
-                    {notifications.map(notification => (
+                <div className="absolute right-0 mt-2 sm:mt-3 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-scale-up z-50">
+                  <div className="p-4 sm:p-6 border-b border-gray-100 bg-gradient-to-r from-[#901b20]/5 to-[#ad565a]/5">
+                    <h3 className="font-bold text-gray-900 flex items-center gap-2 sm:gap-3 text-base sm:text-lg">
+                      <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-[#901b20]" />
+                      Notifications
+                    </h3>
+                  </div>
+                  <div className="max-h-60 sm:max-h-80 overflow-y-auto">
+                    {notifications.map((notification) => (
                       <div
                         key={notification.id}
-                        className={`px-4 py-3 hover:bg-gray-50 ${
-                          !notification.isRead ? 'bg-red-50' : ''
+                        className={`p-3 sm:p-4 hover:bg-gray-50 transition-colors duration-200 border-l-4 cursor-pointer ${
+                          !notification.isRead ? "border-[#901b20] bg-red-50/30" : "border-transparent"
                         }`}
                       >
-                        <p className="text-sm text-gray-900">
-                          {notification.message}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {notification.time}
-                        </p>
+                        <p className="text-sm font-medium text-gray-900">{notification.message}</p>
+                        <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
                       </div>
                     ))}
-                    <div className="border-t border-gray-100">
-                      <a
-                        href="#"
-                        className="block px-4 py-2 text-sm text-center text-gray-500 hover:text-gray-700"
-                      >
-                        View all notifications
-                      </a>
-                    </div>
+                  </div>
+                  <div className="p-3 sm:p-4 border-t border-gray-100 bg-gray-50">
+                    <button className="w-full text-sm text-[#901b20] hover:text-[#7a1619] font-medium transition-colors duration-200 py-2">
+                      View all notifications
+                    </button>
                   </div>
                 </div>
               )}
             </div>
 
-            {/* Profile dropdown */}
-            <div className="relative ml-3">
+            {/* Profile Menu */}
+            <div className="relative">
               <button
-                className="flex items-center max-w-xs p-2 text-sm rounded-full text-gray-400 hover:text-gray-500 focus:outline-none"
                 onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                className="flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 hover:bg-gray-100 rounded-xl transition-all duration-200 group"
               >
-                <FaUserCircle className="h-8 w-8" />
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-xl flex items-center justify-center shadow-lg">
+                    <User className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                  </div>
+                  <div className="hidden sm:block text-left">
+                    <p className="text-sm font-semibold text-gray-900 truncate max-w-32 lg:max-w-none">
+                      {user?.first_name} {user?.last_name}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate max-w-32 lg:max-w-none">{user?.email}</p>
+                  </div>
+                </div>
+                <svg
+                  className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 group-hover:text-gray-600 transition-colors duration-200 hidden sm:block"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
               </button>
 
               {isProfileMenuOpen && (
-                <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
-                  <div className="py-1" role="menu">
-                    <div className="px-4 py-2 text-sm text-gray-900 border-b border-gray-100">
-                      <p className="font-medium">
-                        {user.first_name} {user.last_name}
-                      </p>
-                      <p className="text-sm text-gray-500">{user.email}</p>
-                    </div>
-                    <a
-                      href="#"
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
-                      role="menuitem"
+                <div className="absolute right-0 mt-2 sm:mt-3 w-56 sm:w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-scale-up z-50">
+                  <div className="p-3 sm:p-4 border-b border-gray-100 bg-gradient-to-r from-[#901b20]/5 to-[#ad565a]/5">
+                    <p className="font-semibold text-gray-900 text-sm sm:text-base">
+                      {user?.first_name} {user?.last_name}
+                    </p>
+                    <p className="text-xs sm:text-sm text-gray-500 truncate">{user?.email}</p>
+                  </div>
+                  <div className="p-2">
+                    <button className="w-full flex items-center gap-3 p-3 text-gray-700 hover:bg-gray-50 hover:text-[#901b20] rounded-xl transition-all duration-200">
+                      <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="font-medium text-sm sm:text-base">Settings</span>
+                    </button>
+                    <button
                       onClick={handleSignOut}
+                      className="w-full flex items-center gap-3 p-3 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl transition-all duration-200"
                     >
-                      <FaSignOutAlt className="mr-3 h-4 w-4 text-gray-400" />
-                      Sign out
-                    </a>
+                      <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <span className="font-medium text-sm sm:text-base">Sign out</span>
+                    </button>
                   </div>
                 </div>
               )}
@@ -139,7 +179,7 @@ const Navbar = () => {
         </div>
       </div>
     </nav>
-  );
-};
+  )
+}
 
-export default Navbar;
+export default Navbar
