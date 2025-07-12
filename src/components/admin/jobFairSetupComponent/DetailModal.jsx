@@ -1,5 +1,4 @@
-// DetailModal.jsx
-import React from 'react';
+'use client';
 import {
   X,
   Mail,
@@ -71,7 +70,7 @@ const DetailModal = ({
           {/* Profile */}
           <div className="flex items-center gap-4 mb-6">
             <img
-              src={details.company.profile_image}
+              src={details.company.profile_image || '/placeholder.svg'}
               alt={`${details.company.name} logo`}
               className="w-16 h-16 rounded-lg object-cover"
             />
@@ -200,8 +199,6 @@ const DetailModal = ({
                 <Check size={16} />
                 {processingIds.has(details.id) ? 'Rejected...' : 'Reject'}
               </button>
-
-              
             </div>
           )}
         </div>

@@ -22,6 +22,7 @@ import Layout from '../pages/company/common/Layout';
 
 // Home Page
 import HomePage from '../pages/homePage/HomePage';
+import AllEvents from '../pages/Events/AllEvents';
 
 // Admin Pages
 import AdminDashboard from '../pages/admin/Dashboard';
@@ -34,57 +35,207 @@ import BrandingDaySetup from '../pages/admin/BrandingDaySetup';
 import LiveMonitor from '../pages/admin/LiveMonitor';
 import AlFeedbackAnalyics from '../pages/admin/FeedbackAnalytics';
 
-// Not Found Page
+// System Pages
 import NotFoundPage from '../pages/System/NotFoundPage';
 import AboutUs from '../pages/System/AboutUs';
 import ContactUs from '../pages/System/ContactUs';
+import Unauthorized from '../pages/System/Unauthorized';
+import SignUpRedirect from '../pages/System/SignUpRedirect';
 
+// Protected Route Component
+import ProtectedRoute from '../components/ProtectedRoute';
 
 const AppRoutes = () => {
   return (
     <Routes>
-      {/* Home route */}
+      {/* Public Routes */}
       <Route path="/" element={<HomePage />} />
-      {/* Admin routes - using absolute paths */}
-      <Route path="/admin/dashboard" element={<AdminDashboard />} />
-      <Route path="/admin/users" element={<UserManagement />} />
-      <Route path="/admin/companies" element={<CompaniesSetup />} />
-      <Route path="/admin/attendance" element={<AttendanceReports />} />
-      <Route path="/admin/jobfair" element={<JobFairSetup />} />
-      <Route path="/admin/brandingDay" element={<BrandingDaySetup />} />
-      {/* Default redirect to admin dashboard */}
-      <Route path="/admin/events" element={<ManageEvents />} />
-      <Route path="/admin/notifications" element={<Notifications />} />
-      <Route path="/admin/liveevents" element={<LiveMonitor />} />
-      <Route path="/admin/FeedbackAnalytics" element={<AlFeedbackAnalyics />} />
-      <Route path="/admin/LiveQueue" element={<LiveQueue />} />
-      <Route path="/admin/createFeedbackForm" element={<FeedbackFormsCreaton />} />
-      <Route
-        path="/admin"
-        element={<Navigate to="/admin/dashboard" replace />}
-      />
-      {/* Catch all route - 404 Not Found Page */}
-      <Route path="/support" element={<Help />} />
+      <Route path="/events" element={<AllEvents />} />
       <Route path="/about-us" element={<AboutUs />} />
       <Route path="/contect-us" element={<ContactUs />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/student/feedback/:id" element={<FeedbackForm />} />
-      <Route path="/student/event-details/:id" element={<EventDetails />} />
-      <Route path="/student/show-events" element={<ShowEvents />} />{' '}
-      <Route path="/student/CompanyDirectory" element={<CompanyDirectory />} />
-      <Route path="/student/interview-queue" element={<InterviewQueue />} />
-      <Route path="/student/profile" element={<Profile />} />
-      {/* <Route path="/" element={<HomePage />} /> */}
-      <Route path="*" element={<NotFoundPage />} />
-      {/* Company routes - using relative paths */}
-      <Route path="/company/:companyId" element={<Layout />}>
+      <Route path="/register" element={<SignUpRedirect />} />
+      <Route path="/support" element={<Help />} />
+      <Route path="/unauthorized" element={<Unauthorized />} />
+
+      {/* Admin Routes - Protected */}
+      <Route
+        path="/admin/dashboard"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/users"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <UserManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/companies"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <CompaniesSetup />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/attendance"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AttendanceReports />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/jobfair"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <JobFairSetup />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/brandingDay"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <BrandingDaySetup />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/events"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <ManageEvents />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/notifications"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <Notifications />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/liveevents"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <LiveMonitor />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/FeedbackAnalytics"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AlFeedbackAnalyics />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/LiveQueue"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <LiveQueue />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/createFeedbackForm"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <FeedbackFormsCreaton />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <Navigate to="/admin/dashboard" replace />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Student Routes - Protected */}
+      <Route
+        path="/student/feedback/:id"
+        element={
+          <ProtectedRoute requiredRole="student">
+            <FeedbackForm />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/event-details/:id"
+        element={
+          <ProtectedRoute requiredRole="student">
+            <EventDetails />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/show-events"
+        element={
+          <ProtectedRoute requiredRole="student">
+            <ShowEvents />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/CompanyDirectory"
+        element={
+          <ProtectedRoute requiredRole="student">
+            <CompanyDirectory />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/interview-queue"
+        element={
+          <ProtectedRoute requiredRole="student">
+            <InterviewQueue />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/student/profile"
+        element={
+          <ProtectedRoute requiredRole="student">
+            <Profile />
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Company Routes - Protected */}
+      <Route
+        path="/company/:companyId"
+        element={
+          <ProtectedRoute requiredRole="company_representative">
+            <Layout />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<Dashboard />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="job-fairs/:jobFairId/setup" element={<SetupForm />} />
-        <Route path="job-fairs/:jobFairId/requests" element={<ManageRequests />} />
+        <Route
+          path="job-fairs/:jobFairId/requests"
+          element={<ManageRequests />}
+        />
         <Route path="tracking" element={<InterviewTracking />} />
         <Route path="profile" element={<CompanyProfile />} />
       </Route>
+
+      {/* Catch all route - 404 Not Found Page */}
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };
