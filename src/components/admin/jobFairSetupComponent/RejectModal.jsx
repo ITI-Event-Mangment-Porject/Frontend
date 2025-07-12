@@ -1,6 +1,12 @@
-import React from 'react';
+'use client';
 
-const RejectReasonModal = ({ isOpen, onClose, onSubmit, reason, setReason }) => {
+const RejectReasonModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  reason,
+  setReason,
+}) => {
   if (!isOpen) return null;
 
   return (
@@ -12,7 +18,7 @@ const RejectReasonModal = ({ isOpen, onClose, onSubmit, reason, setReason }) => 
           rows={4}
           placeholder="Enter the reason for rejection..."
           value={reason}
-          onChange={(e) => setReason(e.target.value)}
+          onChange={e => setReason(e.target.value)}
         />
         <div className="flex justify-end gap-2">
           <button
