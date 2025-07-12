@@ -531,11 +531,13 @@ const submitParticipation = async () => {
       return { success: true };
     }
   } catch (error) {
-    if (error.response?.status === 409) {
-      setSuccessMsg("You already added a speaker. Proceeding to the next step.");
-      setCompletedSteps(prev => new Set([...prev, 3]));
-      return { success: true };
-    }
+if (error.response?.status === 409) {
+  setSuccessMsg("You already added a speaker. Proceeding to the next step.");
+  setCompletedSteps(prev => new Set([...prev, 3, 4]));
+  setCurrentStep(4);
+  return { success: true };
+}
+
 
     const message = error.response?.data?.message || 'An error occurred while adding the speaker.';
     setErrorMsg(message);
@@ -1275,7 +1277,7 @@ const renderStepContent = () => {
 
 <div className="flex flex-col space-y-4">
   {/* Break Slot */}
-  <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+  {/* <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
     <label className="flex items-center space-x-3 cursor-pointer group">
       <input
         type="checkbox"
@@ -1294,10 +1296,10 @@ const renderStepContent = () => {
         Break Slot
       </span>
     </label>
-  </div>
+  </div> */}
 
   {/* Interview Slot */}
-  <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
+  {/* <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-4 border border-gray-200">
     <label className="flex items-center space-x-3 cursor-pointer group">
       <input
         type="checkbox"
@@ -1306,7 +1308,7 @@ const renderStepContent = () => {
           setInterviewSlot({
             ...interviewSlot,
             is_available: e.target.checked,
-            is_break: e.target.checked ? false : interviewSlot.is_break, // إذا اختار available نلغي break
+            is_break: e.target.checked ? false : interviewSlot.is_break,
             break_reason: e.target.checked ? null : interviewSlot.break_reason,
           })
         }
@@ -1316,7 +1318,7 @@ const renderStepContent = () => {
         Interview Slot
       </span>
     </label>
-  </div>
+  </div> */}
 </div>
 
             
@@ -1343,8 +1345,9 @@ const renderStepContent = () => {
               type="submit" 
               disabled={
   isLoading ||
-  !isCurrentStepValid() ||
-  (!interviewSlot.is_break && !interviewSlot.is_available)
+  !isCurrentStepValid() 
+  // ||
+  // (!interviewSlot.is_break && !interviewSlot.is_available)
 }
 
               className="px-8 py-3 bg-gradient-to-r from-[#203947]/60 to-[#203947]/70 text-white rounded-xl font-semibold hover:from-[#203947]/70 hover:to-[#203947]/80 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center space-x-2"
@@ -1509,6 +1512,7 @@ const renderStepContent = () => {
         <div className="flex gap-4 mt-8">
           <button 
             type="submit" 
+            onClick={submitParticipation}
             disabled={isLoadingSpeaker}
             className="px-8 py-3 bg-gradient-to-r from-[#901b20] to-[#901b20]/90 text-white rounded-xl font-semibold hover:from-[#901b20]/90 hover:to-[#901b20] transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >

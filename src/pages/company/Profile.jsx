@@ -88,6 +88,7 @@ setCompanyData({
 
       if (response.data.success === 'true' || response.data.success === true) {
         setIsEditing(false);
+        window.location.reload(); 
       } else {
         setError("Update failed: " + (response.data.message || "Unknown error"));
       }

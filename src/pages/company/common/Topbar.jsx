@@ -1,14 +1,17 @@
-import { Bell, Settings } from 'lucide-react';
-import { NavLink, useParams } from 'react-router-dom';
+import { Bell, User, LogOut } from 'lucide-react';
+import { NavLink, useParams, useNavigate } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 import api from '../../../api/axios';
 import { useLocation } from 'react-router-dom';
 
 const Topbar = () => {
   const { companyId } = useParams();
+  const navigate = useNavigate();
   const [jobFairId, setJobFairId] = useState(localStorage.getItem('jobFairId'));
   const [companyData, setCompanyData] = useState(null);
+  const [isCompanyMenuOpen, setIsCompanyMenuOpen] = useState(false);
 
+  
   useEffect(() => {
     const fetchLatestPublishedJobFair = async () => {
       try {
@@ -110,7 +113,7 @@ const Topbar = () => {
   ].filter(item => item.show);
 
   return (
-    <header className="fixed w-full bg-white/10 backdrop-blur-3xl border-b border-white/20 px-8 py-4 z-50 overflow-hidden">
+<header className="fixed w-full bg-white/10 backdrop-blur-3xl border-b border-white/20 px-8 py-4 z-50 overflow-visible">
       {/* Decorative gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-r from-white/5 via-transparent to-white/5 pointer-events-none" />
       
@@ -126,6 +129,7 @@ const Topbar = () => {
             <img 
               src="/logo.png" 
               alt="Company Logo" 
+              onClick={() => navigate("/")}
               className="relative h-40 transition-transform duration-300 group-hover:scale-110" 
             />
           </div>
@@ -163,26 +167,67 @@ const Topbar = () => {
             <div className="absolute -top-1 -right-1 w-2 h-2 bg-gradient-to-r from-[#901b20] to-[#ad565a] rounded-full animate-pulse" />
           </button>
           
-          <div className="relative group">
-            <div className="absolute -inset-1 bg-gradient-to-r from-[#901b20]/50 to-[#ad565a]/50 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <img 
-              src={
-                companyData?.logo_path && companyData.logo_path !== ''
-                  ? companyData.logo_path
-                  : "https://i.pravatar.cc/32"
-              } 
-              alt="Company Logo" 
-              className="relative w-10 h-10 rounded-full border-2 border-white/30 transition-transform duration-300 group-hover:scale-110 cursor-pointer object-cover"
-              onError={(e) => {
-                e.target.src = "https://i.pravatar.cc/32";
-              }}
-            />
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse" />
-          </div>
-        </div>
+<div className="relative">
+  <button
+    onClick={() => setIsCompanyMenuOpen(!isCompanyMenuOpen)}
+    className="flex items-center focus:outline-none group"
+  >
+    <div className="absolute -inset-1 bg-gradient-to-r from-[#901b20]/50 to-[#ad565a]/50 rounded-full blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+    <img 
+      src={
+        companyData?.logo_path && companyData.logo_path !== ''
+          ? companyData.logo_path
+          : "https://i.pravatar.cc/32"
+      } 
+      alt="Company Logo" 
+      className="relative w-10 h-10 rounded-full border-2 border-white/30 transition-transform duration-300 group-hover:scale-110 cursor-pointer object-cover"
+      onError={(e) => {
+        e.target.src = "https://i.pravatar.cc/32";
+      }}
+    />
+    <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white animate-pulse" />
+  </button>
+
+  {isCompanyMenuOpen && (
+    <div className="absolute right-0 mt-2 w-56 sm:w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden animate-scale-up z-50">
+      <div className="p-3 sm:p-4 border-b border-gray-100 bg-gradient-to-r from-[#901b20]/5 to-[#ad565a]/5">
+        <p className="font-semibold text-gray-900 text-sm sm:text-base">
+          {companyData?.name || 'Company Name'}
+        </p>
+        <p className="text-xs sm:text-sm text-gray-500 truncate">
+          {companyData?.email || 'company@email.com'}
+        </p>
       </div>
+      <div className="p-2">
+        <button
+  onClick={() => navigate(`/company/${companyId}/profile`)}
+  className="w-full flex items-center gap-3 p-3 text-gray-700 hover:bg-gray-50 hover:text-[#901b20] rounded-xl transition-all duration-200"
+>
+  <User className="w-4 h-4 sm:w-5 sm:h-5" />
+  <span className="font-medium text-sm sm:text-base">Profile</span>
+</button>
+
+        <button
+          onClick={() => {
+            localStorage.clear();
+            navigate('/login');
+          }}
+          className="w-full flex items-center gap-3 p-3 text-red-600 hover:bg-red-50 hover:text-red-700 rounded-xl transition-all duration-200"
+        >
+          <LogOut className="w-4 h-4 sm:w-5 sm:h-5" />
+          <span className="font-medium text-sm sm:text-base">Sign out</span>
+        </button>
+      </div>
+    </div>
+  )}
+</div>
+        </div>
+      </div>  
+
     </header>
+
   );
 };
+
 
 export default Topbar;
