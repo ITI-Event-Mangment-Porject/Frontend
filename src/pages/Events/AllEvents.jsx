@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 // eslint-disable-next-line no-unused-vars
 import { motion } from 'framer-motion';
 import { Calendar, MapPin, Clock, Users } from 'lucide-react';
 import { eventAPI } from '../../services/api';
 import CardSkeleton from '../../components/common/CardSkeleton';
-import Modal from '../../components/common/Modal';
 import HomeNavbar from '../../components/homePage/HomeNavbar';
 import HomeFooter from '../../components/homePage/HomeFooter';
 import useScrollToTop from '../../hooks/useScrollToTop';
 
 const AllEvents = () => {
   useScrollToTop();
+  const navigate = useNavigate();
 
   // State management
   const [events, setEvents] = useState([]);
@@ -20,21 +20,6 @@ const AllEvents = () => {
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const eventsPerPage = 8;
-
-  // Modal states
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);
-
-  // Modal functions
-  const openEventModal = event => {
-    setSelectedEvent(event);
-    setIsModalOpen(true);
-  };
-
-  const closeEventModal = () => {
-    setIsModalOpen(false);
-    setSelectedEvent(null);
-  };
 
   // Fetch events
   useEffect(() => {
@@ -165,17 +150,6 @@ const AllEvents = () => {
   const getEventTypes = () => {
     const types = events.map(event => event.type).filter(Boolean);
     return [...new Set(types)];
-  };
-
-  // Get status badge color
-  const getStatusColor = status => {
-    if (!status) return 'bg-gray-500';
-    switch (status.toLowerCase()) {
-      case 'published':
-        return 'bg-[var(--success-500)]';
-      default:
-        return 'bg-[var(--gray-500)]';
-    }
   };
 
   // Empty state component
@@ -420,7 +394,9 @@ const AllEvents = () => {
 
                       <div className="mt-auto">
                         <button
-                          onClick={() => openEventModal(event)}
+                          onClick={() =>
+                            navigate(`/student/event-details/${event.id}`)
+                          }
                           className="w-full bg-[var(--primary-500)] text-white py-3 px-4 rounded-lg hover:bg-[var(--primary-600)] transition-all duration-300 font-medium group-hover:shadow-lg"
                         >
                           View Details
@@ -497,234 +473,6 @@ const AllEvents = () => {
           )}
         </div>
       </section>
-
-      {/* Modal for event details */}
-      {isModalOpen && selectedEvent && (
-        <Modal
-          isOpen={isModalOpen}
-          onClose={closeEventModal}
-          title={selectedEvent?.title || 'Event Details'}
-          size="lg"
-          showFooter={false}
-        >
-          {selectedEvent && (
-            <motion.div
-              className="event-details-modal relative overflow-hidden rounded-lg"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            >
-              <div className="relative z-10 p-2">
-                {/* Event Image */}
-                <motion.div
-                  className="mb-6 overflow-hidden rounded-lg shadow-lg relative"
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.7, delay: 0.1 }}
-                >
-                  <div
-                    className="w-full h-64 relative overflow-hidden rounded-lg"
-                    style={{ background: getEventGradient(0) }}
-                  >
-                    {/* Decorative elements */}
-                    <div className="absolute inset-0 opacity-10">
-                      <div className="absolute -top-12 -left-12 w-32 h-32 bg-white rounded-full"></div>
-                      <div className="absolute -bottom-16 -right-16 w-40 h-40 bg-white rounded-full"></div>
-                      <div className="absolute top-12 right-12 w-20 h-20 bg-white rounded-full"></div>
-                      <div className="absolute bottom-12 left-12 w-16 h-16 bg-white rounded-full"></div>
-                    </div>
-
-                    {/* Pattern overlay */}
-                    <div className="absolute inset-0 opacity-5">
-                      <div
-                        className="w-full h-full"
-                        style={{
-                          backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
-                        }}
-                      ></div>
-                    </div>
-
-                    {/* Main content */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center px-6">
-                      {/* Event icon with backdrop - centered */}
-                      <div className="relative inline-block mb-6">
-                        <div className="absolute inset-0 bg-white/20 rounded-full blur-sm"></div>
-                        <div className="relative bg-white/15 rounded-full p-6 backdrop-blur-sm border border-white/20">
-                          <Calendar className="w-20 h-20 text-white" />
-                        </div>
-                      </div>
-
-                      {/* Event title in rounded container */}
-                      <div className="bg-white/15 backdrop-blur-sm rounded-xl px-6 py-4 max-w-xs w-full text-center border border-white/20">
-                        <p className="text-white text-base font-semibold leading-tight">
-                          {selectedEvent.title}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* Event badges */}
-                <div className="mb-4 flex flex-wrap gap-2">
-                  {selectedEvent.status && (
-                    <span
-                      className={`inline-block ${getStatusColor(selectedEvent.status)} text-white text-sm px-4 py-1.5 rounded-full shadow-md`}
-                    >
-                      {selectedEvent.status}
-                    </span>
-                  )}
-                  {selectedEvent.type && (
-                    <span className="inline-block bg-[var(--primary-500)] text-white text-sm px-4 py-1.5 rounded-full shadow-md">
-                      {selectedEvent.type}
-                    </span>
-                  )}
-                </div>
-
-                {/* Event Title */}
-                <div className="mb-6">
-                  <h3 className="text-2xl md:text-3xl font-bold mb-2 text-[var(--secondary-600)]">
-                    {selectedEvent.title}
-                  </h3>
-                  <div className="h-1 w-20 bg-gradient-to-r from-[var(--primary-400)] to-[var(--secondary-400)] rounded-full"></div>
-                </div>
-
-                {/* Event Meta Information */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 bg-white/80 backdrop-blur-sm p-5 rounded-lg shadow-md border border-gray-100">
-                  <div className="flex items-center text-gray-700">
-                    <div className="p-3 rounded-full bg-[var(--primary-100)] mr-4 text-[var(--primary-500)]">
-                      <Calendar className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-[var(--secondary-500)]">
-                        Date
-                      </div>
-                      <div className="text-gray-600">
-                        {formatDate(selectedEvent.start_date)}
-                        {selectedEvent.end_date &&
-                        selectedEvent.end_date !== selectedEvent.start_date
-                          ? ` - ${formatDate(selectedEvent.end_date)}`
-                          : ''}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center text-gray-700">
-                    <div className="p-3 rounded-full bg-[var(--primary-100)] mr-4 text-[var(--primary-500)]">
-                      <Clock className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-[var(--secondary-500)]">
-                        Time
-                      </div>
-                      <div className="text-gray-600">
-                        {selectedEvent.start_time
-                          ? selectedEvent.start_time.substring(0, 5)
-                          : 'TBD'}
-                        {selectedEvent.end_time
-                          ? ` - ${selectedEvent.end_time.substring(0, 5)}`
-                          : ''}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center text-gray-700">
-                    <div className="p-3 rounded-full bg-[var(--primary-100)] mr-4 text-[var(--primary-500)]">
-                      <MapPin className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <div className="font-semibold text-[var(--secondary-500)]">
-                        Location
-                      </div>
-                      <div className="text-gray-600">
-                        {selectedEvent.location || 'TBD'}
-                      </div>
-                    </div>
-                  </div>
-
-                  {selectedEvent.registration_deadline && (
-                    <div className="flex items-center text-gray-700">
-                      <div className="p-3 rounded-full bg-[var(--primary-100)] mr-4 text-[var(--primary-500)]">
-                        <Users className="h-6 w-6" />
-                      </div>
-                      <div>
-                        <div className="font-semibold text-[var(--secondary-500)]">
-                          Registration Deadline
-                        </div>
-                        <div className="text-gray-600">
-                          {formatDate(selectedEvent.registration_deadline)}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {/* Event Description */}
-                <div className="mb-8 bg-white/80 backdrop-blur-sm p-6 rounded-lg shadow-md border border-gray-100">
-                  <h4 className="text-xl font-semibold mb-4 text-[var(--secondary-500)] flex items-center">
-                    <svg
-                      className="h-5 w-5 mr-2"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
-                    </svg>
-                    Description
-                  </h4>
-                  <div className="text-gray-700 whitespace-pre-line leading-relaxed">
-                    {selectedEvent.description}
-                  </div>
-                </div>
-
-                {/* Event Creator */}
-                {selectedEvent.creator && (
-                  <div className="mb-8 bg-white/80 backdrop-blur-sm p-6 rounded-lg shadow-md border border-gray-100 flex items-center">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-[var(--primary-300)] to-[var(--primary-500)] flex items-center justify-center text-white mr-4 shadow-md">
-                      <Users className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-semibold text-[var(--secondary-500)]">
-                        Organized by
-                      </h4>
-                      <div className="text-gray-700">
-                        {selectedEvent.creator.first_name}{' '}
-                        {selectedEvent.creator.last_name}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Action Button */}
-                <div className="mt-8 flex justify-end">
-                  <Link
-                    to={`/student/event-details/${selectedEvent.id}`}
-                    className="inline-flex items-center px-8 py-3 bg-gradient-to-r from-[var(--primary-500)] to-[var(--primary-600)] text-white font-medium rounded-md shadow-md transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[var(--primary-300)] focus:ring-offset-2 group"
-                  >
-                    <span className="mr-2">Register for Event</span>
-                    <svg
-                      className="h-5 w-5 transform transition-transform duration-300 group-hover:translate-x-1"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </Modal>
-      )}
-
       <HomeFooter />
     </div>
   );
