@@ -142,7 +142,7 @@ const HomeCTA = () => {
               transition={{ duration: 0.2 }}
             >
               <Link
-                to="/show-events"
+                to="/events"
                 className="w-full block px-8 py-3 bg-transparent border-2 border-white text-white font-bold rounded-lg hover:bg-white hover:text-black transition duration-300 text-center"
               >
                 Browse Events
