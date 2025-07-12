@@ -103,7 +103,11 @@ const HomeNavbar = () => {
       <div className="container mx-auto px-4 flex items-center justify-between">
         {/* Logo */}
         <CustomLink to="/" className="flex items-center gap-2">
-          <img src="/logo.png" alt="ITIvent" className="h-20 w-30" />
+          {isScrolled ? (
+            <img src="/logo.png" alt="CommunITI" className="h-25 w-30" />
+          ) : (
+            <img src="/logo-white.png" alt="CommunITI" className="h-25 w-30" />
+          )}
         </CustomLink>
 
         {/* Desktop Navigation */}
@@ -117,6 +121,16 @@ const HomeNavbar = () => {
             }`}
           >
             Home
+          </CustomLink>
+          <CustomLink
+            to="/events"
+            className={`hover:text-[var(--gray-300)] font-medium transition-colors ${
+              isScrolled
+                ? 'text-gray-700 hover:text-[var(--primary-500)]'
+                : 'text-white'
+            }`}
+          >
+            Events
           </CustomLink>
           <CustomLink
             to="/about-us"
@@ -251,10 +265,10 @@ const HomeNavbar = () => {
               Home
             </CustomLink>
             <CustomLink
-              to="/#how-it-works"
+              to="/events"
               className="block py-2 text-gray-700 hover:text-[var(--primary-500)]"
             >
-              How It Works
+              Events
             </CustomLink>
             <CustomLink
               to="/about"
