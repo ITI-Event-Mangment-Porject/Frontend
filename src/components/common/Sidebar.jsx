@@ -144,7 +144,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, setIsCollapsed }) => {
     <>
       {/* Sidebar with proper spacing from navbar and aligned with content - Fixed z-index */}
       <div
-        className={`fixed left-0 bg-white/95 backdrop-blur-lg border-r border-gray-200/80 transition-all duration-300 z-50 shadow-2xl ${
+        className={`fixed left-0 flex flex-col bg-white/95 backdrop-blur-lg border-r border-gray-200/80 transition-all duration-300 z-50 shadow-2xl ${
           isCollapsed ? 'w-16 sm:w-20' : 'w-64 sm:w-72'
         } ${
           isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
