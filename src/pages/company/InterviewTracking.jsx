@@ -52,6 +52,20 @@ const InterviewTracking = () => {
 
     fetchQueue();
   }, [jobFairId, companyId]);
+  const fetchQueue = async () => {
+  try {
+    const res = await api.get(`/job-fairs/${jobFairId}/queues/company/${companyId}`);
+    const approvedOnly = res.data.data.queue.filter(
+      (entry) => entry.interview_request_id && entry.status !== 'cancelled'
+    );
+    setQueueData(approvedOnly);
+  } catch (err) {
+    console.error('Error fetching interview queue:', err);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   useEffect(() => {
     const fetchExtraUserInfo = async () => {
@@ -88,91 +102,83 @@ const InterviewTracking = () => {
     };
   };
 
- const handleInterviewAction = async (action) => {
+const handleInterviewAction = async (action) => {
   if (!selectedStudent) return;
-
-  const queueId = selectedStudent.queue_id;
-  const slotId = selectedStudent.slot?.id;
-  if (action === 'start' && !slotId) {
-    alert("Cannot start interview: Missing slot information.");
-    return;
-  }
 
   setProcessingInterview(true);
   try {
     let endpoint = '';
-    let method = 'PUT';
+    let method = 'put'; 
+    let data = {};
     let newStatus = selectedStudent.status;
-    let payload = {};
 
     switch (action) {
       case 'start':
-        endpoint = `/job-fairs/${jobFairId}/queues/slot/${slotId}/next`;
-        method = 'POST';
+        endpoint = `/job-fairs/${jobFairId}/queues/slot/${selectedStudent.slot.id}/next`;
+        method = 'post';
         newStatus = 'in_interview';
         break;
+
       case 'end':
-        endpoint = `/job-fairs/${jobFairId}/queues/${queueId}/end-interview`;
-        method = 'POST';
+        endpoint = `/job-fairs/${jobFairId}/queues/${selectedStudent.queue_id}/end-interview`;
+        method = 'post';
         newStatus = 'completed';
-        payload = { notes: selectedStudent.notes };
         break;
+
       case 'skip':
       case 'pending':
-        endpoint = `/job-fairs/${jobFairId}/queues/${queueId}/pending`;
-        newStatus = 'pending';
-        break;
-      case 'resume':
-        endpoint = `/job-fairs/${jobFairId}/queues/${queueId}/resume`;
+        endpoint = `/job-fairs/${jobFairId}/queues/${selectedStudent.queue_id}/pending`;
+        method = 'put';
+        data = { status: 'pending' };
         newStatus = 'waiting';
         break;
+
+      case 'resume':
+        endpoint = `/job-fairs/${jobFairId}/queues/${selectedStudent.queue_id}/resume`;
+        method = 'put';
+        data = { status: 'resume' };
+        newStatus = 'start interview';
+        break;
+
       default:
-        console.warn('Unknown action:', action);
         return;
     }
 
-    let response;
-    if (method === 'DELETE') {
-      response = await api.delete(endpoint);
-    } else if (method === 'POST') {
-      response = await api.post(endpoint, payload);
-    } else {
-      response = await api.put(endpoint);
+    console.log(`Calling ${method} ${endpoint} with data:`, data);
+
+    const headers = {
+      Authorization: `Bearer ${localStorage.getItem('token')}`,
+    };
+
+    let res;
+    if (method === 'post') {
+      res = await api.post(endpoint, { headers });
+    } else if (method === 'put') {
+      res = await api.put(endpoint, data, { headers });
+    } else if (method === 'delete') {
+      res = await api.delete(endpoint, { headers });
     }
 
-    if (action === 'start' && response?.data?.data?.now_interviewing) {
-      const updatedStudent = response.data.data.now_interviewing;
-      setQueueData(prev =>
-        prev.map(entry =>
-          entry.queue_id === updatedStudent.id
-            ? { ...entry, status: updatedStudent.status }
-            : entry
-        )
-      );
-      setSelectedStudent(prev =>
-        prev && prev.queue_id === updatedStudent.id
-          ? { ...prev, status: updatedStudent.status }
-          : prev
-      );
-    } else {
-      
-      setQueueData(prev =>
-        prev.map(entry =>
-          entry.queue_id === queueId
-            ? { ...entry, status: newStatus }
-            : entry
-        )
-      );
-      setSelectedStudent(prev => ({ ...prev, status: newStatus }));
-    }
 
+
+    setQueueData((prev) =>
+      prev.map((entry) =>
+        entry.queue_id === selectedStudent.queue_id
+          ? { ...entry, status: newStatus }
+          : entry
+      )
+    );
+    setSelectedStudent((prev) => ({ ...prev, status: newStatus }));
   } catch (error) {
-    console.error(`Error performing ${action}:`, error);
-    alert(`Failed to ${action} interview.`);
+    console.error(`❌ Error performing action [${action}]:`, error.response?.data || error.message);
+    alert(error.response?.data?.message || 'Something went wrong');
   } finally {
+    await fetchQueue();
+
     setProcessingInterview(false);
   }
 };
+
 
 
   const openStudentModal = (entry) => {
@@ -360,7 +366,7 @@ const InterviewTracking = () => {
                       <div className="mt-6 md:mt-0 flex flex-col items-end space-y-3">
                         <button
                           onClick={() => openStudentModal(entry)}
-                          className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
+                          className="flex items-center px-6 py-3 bg-gradient-to-r from-[#203947]/50 to-[#203947]/60 text-white rounded-xl hover:from-[#203947]/70 hover:to-[#203947]/70 transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
                         >
                           <Eye className="h-5 w-5 mr-2" />
                           View Profile
@@ -578,7 +584,7 @@ const InterviewTracking = () => {
                             <button
                               onClick={() => handleInterviewAction('pending')}
                               disabled={processingInterview}
-                              className="w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
+                              className="w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-[#901b20]/50 to-[#901b20]/80 text-white rounded-xl hover:from-[#901b20]/90 hover:to-[#901b20]/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
                             >
                               <Clock className="h-5 w-5 mr-2" />
                               {processingInterview ? 'Processing...' : 'Mark as Pending'}
@@ -586,10 +592,11 @@ const InterviewTracking = () => {
                           </>
                         )}
 
-                        {(selectedStudent.status === 'completed' || selectedStudent.status === 'skipped') && (
+                        {/* COMPLETED: Reset to Pending */}
+                        {selectedStudent.status === 'completed' && (
                           <div className="text-center py-4">
                             <p className="text-gray-600 font-medium">
-                              {selectedStudent.status === 'completed' ? 'Interview completed successfully' : 'Interview was skipped'}
+                              Interview completed successfully
                             </p>
                             <button
                               onClick={() => handleInterviewAction('pending')}
@@ -601,17 +608,43 @@ const InterviewTracking = () => {
                             </button>
                           </div>
                         )}
-                        {['skipped', 'pending'].includes(selectedStudent.status) && (
-  <button
-    onClick={() => handleInterviewAction('resume')}
-    disabled={processingInterview}
-    className="w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl hover:from-indigo-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
-  >
-    <PlayCircle className="h-5 w-5 mr-2" />
-    {processingInterview ? 'Processing...' : 'Resume Interview'}
-  </button>
-)}
 
+                        {/* SKIPPED: Resume or Reset to Pending */}
+                        {selectedStudent.status === 'skipped' && (
+                          <div className="text-center py-4 space-y-3">
+                            <p className="text-gray-600 font-medium">
+                              Interview was skipped
+                            </p>
+                            <button
+                              onClick={() => handleInterviewAction('resume')}
+                              disabled={processingInterview}
+                              className="w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl hover:from-indigo-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
+                            >
+                              <PlayCircle className="h-5 w-5 mr-2" />
+                              {processingInterview ? 'Processing...' : 'Resume Interview'}
+                            </button>
+                            <button
+                              onClick={() => handleInterviewAction('pending')}
+                              disabled={processingInterview}
+                              className="w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
+                            >
+                              <Clock className="h-5 w-5 mr-2" />
+                              {processingInterview ? 'Processing...' : 'Reset to Pending'}
+                            </button>
+                          </div>
+                        )}
+
+                        {/* PENDING: Resume (if you have such a status) */}
+                        {selectedStudent.status === 'pending' && (
+                          <button
+                            onClick={() => handleInterviewAction('resume')}
+                            disabled={processingInterview}
+                            className="w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl hover:from-indigo-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
+                          >
+                            <PlayCircle className="h-5 w-5 mr-2" />
+                            {processingInterview ? 'Processing...' : 'Resume Interview'}
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
