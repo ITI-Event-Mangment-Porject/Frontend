@@ -31,6 +31,7 @@ const Filters = ({ searchTerm, setSearchTerm, statusFilter, setStatusFilter, onS
             <option value="all">All Statuses</option>
             <option value="approved">Approved</option>
             <option value="rejected">Rejected</option>
+            <option value="pending">Pending</option>
           </select>
         </div>
 
