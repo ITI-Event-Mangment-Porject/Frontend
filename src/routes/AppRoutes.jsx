@@ -40,6 +40,7 @@ import NotFoundPage from '../pages/System/NotFoundPage';
 import AboutUs from '../pages/System/AboutUs';
 import ContactUs from '../pages/System/ContactUs';
 import Unauthorized from '../pages/System/Unauthorized';
+import SignUpRedirect from '../pages/System/SignUpRedirect';
 
 // Protected Route Component
 import ProtectedRoute from '../components/ProtectedRoute';
@@ -53,6 +54,7 @@ const AppRoutes = () => {
       <Route path="/about-us" element={<AboutUs />} />
       <Route path="/contect-us" element={<ContactUs />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<SignUpRedirect />} />
       <Route path="/support" element={<Help />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
 
