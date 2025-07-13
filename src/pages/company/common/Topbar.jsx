@@ -89,6 +89,7 @@ const Topbar = () => {
           name: data.name || prev?.name,
           email: data.email || prev?.email,
         }));
+        
       } catch (err) {
         console.error('Failed to fetch full company data:', err);
       }

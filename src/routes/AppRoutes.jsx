@@ -114,16 +114,16 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute requiredRole="admin">
             <ManageEvents />
-          </ProtectedRoute>
+           </ProtectedRoute> 
         }
       />
       {/* New Admin Event Details Route */}
       <Route
         path="/admin/events/:id"
         element={
-          <ProtectedRoute requiredRole="admin">
+          // <ProtectedRoute requiredRole="admin">
             <EventDetailsPage />
-          </ProtectedRoute>
+          // </ProtectedRoute>
         }
       />
       <Route

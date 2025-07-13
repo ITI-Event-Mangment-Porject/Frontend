@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Shield, Building, Mail, Phone, Globe, MapPin, Users, Briefcase, Linkedin } from 'lucide-react';
+import { Shield, Building, Mail, Phone, Globe, MapPin, Users, Briefcase, Linkedin, Upload, X, Camera } from 'lucide-react';
 
 const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
   const [form, setForm] = useState({
@@ -11,9 +11,13 @@ const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
     location: '',
     contact_email: '',
     contact_phone: '',
-    linkedin_url: ''
+    linkedin_url: '',
+    logo_path: null,
+    
   });
 
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
@@ -24,6 +28,42 @@ const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
     if (errorMsg) setErrorMsg('');
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      if (!allowedTypes.includes(file.type)) {
+        setErrorMsg('Please select a valid image file (JPEG, PNG, or GIF)');
+        return;
+      }
+
+      const maxSize = 5 * 1024 * 1024; 
+      if (file.size > maxSize) {
+        setErrorMsg('Image size must be less than 5MB');
+        return;
+      }
+
+      setSelectedImage(file);
+      
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setImagePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+      
+      if (errorMsg) setErrorMsg('');
+    }
+  };
+
+  const removeImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    const fileInput = document.getElementById('logo_path');
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
   const handleSubmit = async () => {
     setIsLoading(true);
     setErrorMsg('');
@@ -32,18 +72,29 @@ const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
     try {
       const token = localStorage.getItem('token');
       const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
-      const response = await fetch(`${API_BASE_URL}/api/companies`, {
+      
+      const formData = new FormData();
+      
+      Object.keys(form).forEach(key => {
+        if (form[key]) {
+          formData.append(key, form[key]);
+        }
+      });
+      
+      if (selectedImage) {
+        formData.append('logo_path', selectedImage);
+      }
 
+      const response = await fetch(`${API_BASE_URL}/api/companies`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
           'Accept': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify(form)
+        body: formData
       });
-      console.log('Response:', response);
 
+      console.log('Response:', response);
       const data = await response.json();
 
       if (response.ok) {
@@ -69,9 +120,9 @@ const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
 
   if (!show) return null;
 
-   return (
+  return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      {/* 🎨 Animated Light Background Layer (fixed) */}
+      {/* 🎨 Animated Light Background Layer */}
       <div className="fixed inset-0 z-0 bg-gradient-to-br from-slate-100 via-[#c7d4d9] to-[#f2b5b8] pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-r from-white/40 via-transparent to-white/20" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.1),transparent_60%)]" />
@@ -85,17 +136,14 @@ const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
         <div className="space-y-8 p-8">
           {/* Header */}
           <div className="relative h-64 mb-8 rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 via-[#203947] to-[#901b20] shadow-2xl">
-            {/* Decorative gradients */}
             <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/20"></div>
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.1),transparent_50%)]"></div>
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(144,27,32,0.3),transparent_50%)]"></div>
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_40%,rgba(255,255,255,0.05),transparent)] animate-pulse"></div>
             
-            {/* Floating shapes */}
             <div className="absolute top-6 right-6 w-16 h-16 bg-white/10 rounded-full blur-md animate-pulse"></div>
             <div className="absolute bottom-6 left-6 w-24 h-24 bg-[#901b20]/20 rounded-full blur-2xl animate-pulse delay-1000"></div>
 
-            {/* Content */}
             <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
               <div className="bg-white/10 p-4 rounded-2xl mb-4 backdrop-blur-sm border border-white/20">
                 <Building className="w-14 h-14 text-white" />
@@ -108,6 +156,59 @@ const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
           {/* Form */}
           <div>
             <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300 hover:border-[#203947]/20 mb-8">
+              
+              {/* Company Logo Upload Section */}
+              <div className="mb-8">
+                <label className="block text-base font-semibold text-gray-900 mb-3 flex items-center space-x-2">
+                  <Camera className="w-4 h-4 text-[#203947]" />
+                  <span>Company Logo</span>
+                </label>
+                
+                <div className="flex items-start space-x-6">
+                  {/* Upload Area */}
+                  <div className="flex-1">
+                    <div className="relative">
+                      <input
+                        type="file"
+                        id="logo-upload"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                      />
+                      <div className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-[#203947]/50 transition-colors duration-300 hover:bg-gray-50">
+                        <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                        <p className="text-gray-600 text-sm">
+                          Click to upload company logo
+                        </p>
+                        <p className="text-gray-400 text-xs mt-1">
+                          PNG, JPG, GIF up to 5MB
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Image Preview */}
+                  {imagePreview && (
+                    <div className="relative">
+                      <div className="w-32 h-32 rounded-xl overflow-hidden border-2 border-gray-200 shadow-md">
+                        <img
+                          src={imagePreview}
+                          alt="Company Logo Preview"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={removeImage}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600 transition-colors duration-200"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Company Name */}
                 <div>

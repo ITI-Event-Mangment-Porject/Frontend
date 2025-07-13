@@ -3,6 +3,7 @@ import { CheckCircle, Mail, Phone, Shield, ArrowRight, ArrowLeft, Building, Spea
 import { useParams } from 'react-router-dom';
 import api from '../../api/axios';
 import axios from 'axios';
+import { set } from 'react-hook-form';
 
 
 const MultiStepVerificationWithSetup = () => {
@@ -213,39 +214,70 @@ const addInterviewSlot = async () => {
 };
 
 const addSpeaker = async () => {
+  setIsLoadingSpeaker(true);
+  setSpeakerSuccessMsg('');
+  setSpeakerErrorMsg('');
+
   if (!speakerForm.speaker_name || !speakerForm.position || !speakerForm.mobile) {
-    setSpeakerErrorMsg('Please fill in all required fields');
-    setTimeout(() => setSpeakerErrorMsg(''), 3000);
-    return;
+    setSpeakerErrorMsg('Please fill in all required fields.');
+    setIsLoadingSpeaker(false);
+    return { success: false };
   }
 
-  setIsLoadingSpeaker(true);
-  setSpeakerErrorMsg('');
-  setSpeakerSuccessMsg('');
+  if (!participationId) {
+    setSpeakerErrorMsg("Participation ID is missing. Please complete previous steps.");
+    setIsLoadingSpeaker(false);
+    return { success: false };
+  }
 
   try {
-    await api.post(
-      `/job-fairs/${jobFairId}/participations/${participationId}/speakers`,
-      speakerForm
-    );
+    const formData = new FormData();
+    formData.append('speaker_name', speakerForm.speaker_name);
+    formData.append('position', speakerForm.position);
+    formData.append('mobile', speakerForm.mobile);
 
-    setSpeakers([...speakers, speakerForm]);
-    setSpeakerForm({
-      speaker_name: '',
-      position: '',
-      mobile: '',
-      photo: ''
+    if (speakerForm.photo && speakerForm.photo instanceof File) {
+      formData.append('photo', speakerForm.photo);
+    }
+
+    const response = await fetch(`http://127.0.0.1:8000/api/job-fairs/${jobFairId}/participations/${participationId}/speakers`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
     });
-    setSpeakerSuccessMsg('Speaker added successfully!');
-    setTimeout(() => setSpeakerSuccessMsg(''), 3000);
+
+    if (response.ok) {
+      const data = await response.json();
+      setSpeakerSuccessMsg('Speaker added successfully!');
+      setSpeakers([...speakers, data.data.result]);
+      setSpeakerForm({
+        speaker_name: '',
+        position: '',
+        mobile: '',
+        photo: null,
+      });
+      return { success: true };
+    } else if (response.status === 409) {
+      setSpeakerSuccessMsg("You already added a speaker. Proceeding to the next step.");
+      return { success: true };
+    } else {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to add speaker.');
+    }
   } catch (error) {
-    const message = error.response?.data?.message || 'An error occurred while adding the speaker';
-    setSpeakerErrorMsg(message);
-    setTimeout(() => setSpeakerErrorMsg(''), 3000);
+    console.error('Add Speaker Error:', error);
+    setSpeakerErrorMsg(error.message || 'An error occurred while adding the speaker.');
+    return { success: false };
   } finally {
     setIsLoadingSpeaker(false);
   }
 };
+
+
+
+
 
 const removeSpeaker = (index) => {
   setSpeakers(speakers.filter((_, i) => i !== index));
@@ -723,13 +755,16 @@ const handleNext = async () => {
       setSuccessMsg('');
     }
   } else if (currentStep === 3) {
-    const result = await submitParticipation();
+    const result = await addSpeaker();
 
-    if (result.success) {
-      setErrorMsg('');
-      setSuccessMsg('');
+  if (result.success) {
+    setSpeakerSuccessMsg('Speaker added successfully!');
+    
+    setTimeout(() => {
       setCurrentStep(4);
       setCompletedSteps(prev => new Set([...prev, 3]));
+      setSpeakerSuccessMsg('');
+    }, 5000); 
 
     }
   } else if (currentStep === 4) {
@@ -1429,127 +1464,268 @@ const renderStepContent = () => {
       )}
     </div>
   );
-  case 3:
+ case 3:
   
   return (
     <div className="space-y-8">
-{/* Branding Section - Rearranged for better structure and readability */}
+       {/* Success Message - Make it more prominent */}
+{speakerSuccessMsg && (
+                <div className="text-[#203947] font-semibold text-sm bg-gradient-to-r from-[#203947]/70 to-[#203947]/30 p-4 rounded-xl border-2 border-[#203947]/60 animate-slide-in">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-5 h-5 bg-[#203947]/50 rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <span>{speakerSuccessMsg}</span>
+                  </div>
+                </div>
+              )}
+              {speakerErrorMsg && (
+                <div className="text-[#901b20] font-semibold text-sm bg-gradient-to-r from-red-50 to-red-100 p-4 rounded-xl border-2 border-[#901b20]/40 animate-slide-in">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-5 h-5 bg-[#901b20] rounded-full flex items-center justify-center">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </div>
+                    <span>{speakerErrorMsg}</span>
+                  </div>
+                </div>
+              )}
+
+{/* Branding Section - Enhanced Design */}
 {formData.needBranding && (
   <div className="mb-8">
-    {/* Hero Header Section */}
-<div className="relative h-50 mb-12 rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 via-[#203947] to-[#901b20] shadow-2xl">
-  {/* Decorative gradients */}     
-  <div className="absolute inset-0 bg-gradient-to-r from-black/30 via-transparent to-black/20"></div>
-  <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_80%,rgba(255,255,255,0.1),transparent_50%)]"></div>
-  <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(144,27,32,0.3),transparent_50%)]"></div>
-  <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_40%,rgba(255,255,255,0.05),transparent)] animate-pulse"></div>
+    {/* Hero Header Section - Enhanced */}
+<div className="relative h-64 mb-12 rounded-3xl overflow-hidden bg-gradient-to-br from-slate-900 via-[#203947] to-[#901b20] shadow-2xl">
+  {/* Enhanced Decorative gradients */}     
+  <div className="absolute inset-0 bg-gradient-to-r from-black/40 via-transparent to-black/30"></div>
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_80%,rgba(255,255,255,0.15),transparent_60%)]"></div>
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(144,27,32,0.4),transparent_60%)]"></div>
+  <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_40%,rgba(255,255,255,0.08),transparent)] animate-pulse"></div>
+  
+  {/* Animated Background Pattern */}
+  <div className="absolute inset-0 opacity-10">
+    <div className="absolute top-1/4 left-1/4 w-32 h-32 bg-white rounded-full blur-3xl animate-pulse"></div>
+    <div className="absolute bottom-1/4 right-1/4 w-24 h-24 bg-[#901b20] rounded-full blur-2xl animate-pulse delay-1000"></div>
+  </div>
       
-      {/* Floating Elements */}
-      <div className="absolute top-6 right-6 w-12 h-12 bg-white/10 rounded-full blur-md animate-pulse"></div>
-      <div className="absolute bottom-6 left-6 w-20 h-20 bg-[#901b20]-600/20 rounded-full blur-2xl animate-pulse delay-1000"></div>
+      {/* Enhanced Floating Elements */}
+      <div className="absolute top-8 right-8 w-16 h-16 bg-white/10 rounded-full blur-md animate-pulse border border-white/20"></div>
+      <div className="absolute bottom-8 left-8 w-24 h-24 bg-[#901b20]/20 rounded-full blur-2xl animate-pulse delay-1000"></div>
+      <div className="absolute top-1/2 left-1/3 w-6 h-6 bg-white/20 rounded-full animate-ping"></div>
+      <div className="absolute top-1/3 right-1/3 w-4 h-4 bg-[#901b20]/30 rounded-full animate-ping delay-500"></div>
 
-      {/* Content */}
-      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-6">
-        <div className="bg-white/10 p-3 rounded-2xl mb-4 backdrop-blur-sm border border-white/20">
-          <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+      {/* Content - Enhanced */}
+      <div className="relative z-10 h-full flex flex-col items-center justify-center text-center px-8">
+        <div className="bg-white/15 p-4 rounded-3xl mb-6 backdrop-blur-md border border-white/30 shadow-lg hover:bg-white/20 transition-all duration-300">
+          <svg className="w-16 h-16 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
           </svg>
         </div>
-        <h3 className="text-white text-2xl font-bold mb-2">Branding Day Speaker</h3>
-        <p className="text-white/80 text-base">Add your company representative for the branding day</p>
+        <h3 className="text-white text-3xl font-bold mb-3 drop-shadow-lg">Branding Day Speaker</h3>
+        <p className="text-white/90 text-lg max-w-md leading-relaxed">Add your company representative for the branding day</p>
+        
+        {/* Decorative Line */}
+        <div className="mt-6 w-24 h-1 bg-gradient-to-r from-transparent via-white/50 to-transparent rounded-full"></div>
       </div>
     </div>
 
-    {/* Add Speaker Form */}
-    <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300 hover:border-[#901b20]-200 mb-8">
-      <h4 className="text-lg font-bold text-gray-900 mb-6">Add Speaker Information</h4>
+    {/* Add Speaker Form - Enhanced */}
+    <div className="bg-white rounded-3xl p-10 shadow-xl border border-gray-100 hover:shadow-2xl transition-all duration-500 hover:border-[#901b20]/20 mb-8 backdrop-blur-sm">
+      {/* Form Header */}
+      <div className="flex items-center mb-8">
+        <div className="w-12 h-12 bg-gradient-to-r from-[#901b20] to-[#901b20]/80 rounded-2xl flex items-center justify-center mr-4">
+          <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+          </svg>
+        </div>
+        <div>
+          <h4 className="text-2xl font-bold text-gray-900 mb-1">Add Speaker Information</h4>
+          <p className="text-gray-600">Please provide the speaker's details below</p>
+        </div>
+      </div>
       
       <form onSubmit={async (e) => {
         e.preventDefault();
         await addSpeaker();
       }}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Speaker Name */}
-          <div>
-            <label className="block text-base font-semibold text-gray-900 mb-3">
+          <div className="group">
+            <label className="block text-base font-semibold text-gray-900 mb-3 flex items-center">
+              <svg className="w-5 h-5 text-[#901b20] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
               Speaker Name *
             </label>
             <input
               type="text"
               value={speakerForm.speaker_name}
               onChange={(e) => setSpeakerForm({...speakerForm, speaker_name: e.target.value})}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#901b20]-500 focus:border-[#901b20]-500 transition-all duration-300 hover:border-gray-300 text-base"
+              className="w-full px-5 py-4 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 hover:border-gray-300 text-base group-hover:shadow-sm bg-gray-50/50 hover:bg-white"
               placeholder="Enter speaker's full name"
               required
             />
           </div>
 
           {/* Position */}
-          <div>
-            <label className="block text-base font-semibold text-gray-900 mb-3">
+          <div className="group">
+            <label className="block text-base font-semibold text-gray-900 mb-3 flex items-center">
+              <svg className="w-5 h-5 text-[#901b20] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2-2v2m8 0H8m8 0v2a2 2 0 01-2 2H10a2 2 0 01-2-2V6" />
+              </svg>
               Position *
             </label>
             <input
               type="text"
               value={speakerForm.position}
               onChange={(e) => setSpeakerForm({...speakerForm, position: e.target.value})}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#901b20]-500 focus:border-[#901b20]-500 transition-all duration-300 hover:border-gray-300 text-base"
+              className="w-full px-5 py-4 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 hover:border-gray-300 text-base group-hover:shadow-sm bg-gray-50/50 hover:bg-white"
               placeholder="e.g., Marketing Director"
               required
             />
           </div>
 
           {/* Mobile Number */}
-          <div>
-            <label className="block text-base font-semibold text-gray-900 mb-3">
+          <div className="group">
+            <label className="block text-base font-semibold text-gray-900 mb-3 flex items-center">
+              <svg className="w-5 h-5 text-[#901b20] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+              </svg>
               Mobile Number *
             </label>
             <input
               type="tel"
               value={speakerForm.mobile}
               onChange={(e) => setSpeakerForm({...speakerForm, mobile: e.target.value})}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#901b20]-500 focus:border-[#901b20]-500 transition-all duration-300 hover:border-gray-300 text-base"
+              className="w-full px-5 py-4 border-2 border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 hover:border-gray-300 text-base group-hover:shadow-sm bg-gray-50/50 hover:bg-white"
               placeholder="+1234567890"
               required
             />
           </div>
 
-          {/* Photo URL */}
+          {/* Photo Upload - Enhanced */}
+          <div className="group">
+<div className="relative">
+  <label className="block text-base font-semibold text-gray-900 mb-3 flex items-center">
+    <svg className="w-5 h-5 text-[#901b20] mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+    Photo Upload
+  </label>
+  <div className="relative group">
+    <input
+      type="file"
+      accept="image/*"
+      onChange={(e) => {
+        const file = e.target.files[0];
+        if (file) {
+          // Validate file size (5MB limit)
+          if (file.size > 5 * 1024 * 1024) {
+            alert('File size must be less than 5MB');
+            e.target.value = '';
+            return;
+          }
+          
+          // Validate file type
+          const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+          if (!allowedTypes.includes(file.type)) {
+            alert('Please select a valid image file (JPEG, PNG, GIF, or WebP)');
+            e.target.value = '';
+            return;
+          }
+          
+          setSpeakerForm({...speakerForm, photo: file});
+        }
+      }}
+      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+      id="photo-upload"
+    />
+    <div className="w-full px-5 py-4 border-2 border-gray-200 rounded-2xl focus-within:ring-2 focus-within:ring-[#901b20]/20 focus-within:border-[#901b20] transition-all duration-300 hover:border-gray-300 text-base bg-gray-50/50 hover:bg-white cursor-pointer group-hover:shadow-sm border-dashed hover:border-solid">
+      <div className="flex items-center justify-between">
+        <span className={`flex items-center ${speakerForm.photo ? 'text-gray-900' : 'text-gray-500'}`}>
+          <svg className="w-6 h-6 mr-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+          </svg>
+          {speakerForm.photo ? speakerForm.photo.name : 'Choose photo or drag & drop'}
+        </span>
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-[#901b20] font-medium px-3 py-1 bg-[#901b20]/10 rounded-full">Browse</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  {/* File info and preview - Enhanced */}
+  {speakerForm.photo && (
+    <div className="mt-4 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl border border-green-200">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <div className="w-12 h-12 bg-gradient-to-r from-green-400 to-emerald-500 rounded-2xl flex items-center justify-center shadow-lg">
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
           <div>
-            <label className="block text-base font-semibold text-gray-900 mb-3">
-              Photo URL
-            </label>
-            <input
-              type="url"
-              value={speakerForm.photo}
-              onChange={(e) => setSpeakerForm({...speakerForm, photo: e.target.value})}
-              className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#901b20]-500 focus:border-[#901b20]-500 transition-all duration-300 hover:border-gray-300 text-base"
-              placeholder="https://example.com/photo.jpg"
-            />
+            <p className="text-sm font-semibold text-gray-900">{speakerForm.photo.name}</p>
+            <p className="text-xs text-gray-600">
+              {(speakerForm.photo.size / 1024 / 1024).toFixed(2)} MB • Image file
+            </p>
           </div>
         </div>
+        <button
+          type="button"
+          onClick={() => setSpeakerForm({...speakerForm, photo: null})}
+          className="text-red-500 hover:text-red-700 transition-colors p-2 hover:bg-red-50 rounded-xl"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  )}
+  
+  {/* Helper text - Enhanced */}
+  <div className="mt-3 p-3 bg-blue-50 rounded-xl border border-blue-200">
+    <p className="text-sm text-blue-700 flex items-center">
+      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      Supported formats: JPEG, PNG, GIF, WebP. Max size: 5MB
+    </p>
+  </div>
+</div>
+</div>
+        </div>
+        
 
-        {/* Submit Button */}
-        <div className="flex gap-4 mt-8">
+        {/* Submit Button - Enhanced */}
+        <div className="flex gap-4 mt-10 pt-6 border-t border-gray-100">
           <button 
-            type="submit" 
-            onClick={submitParticipation}
+            type="submit"
+            onClick={handleNext}
             disabled={isLoadingSpeaker}
-            className="px-8 py-3 bg-gradient-to-r from-[#901b20] to-[#901b20]/90 text-white rounded-xl font-semibold hover:from-[#901b20]/90 hover:to-[#901b20] transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-10 py-4 bg-gradient-to-r from-[#901b20] to-[#901b20]/90 text-white rounded-2xl font-bold hover:from-[#901b20]/90 hover:to-[#901b20] transition-all duration-300 hover:scale-105 hover:shadow-2xl flex items-center space-x-3 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg relative overflow-hidden group"
           >
+            {/* Button Background Animation */}
+            <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+            
             {isLoadingSpeaker ? (
               <>
-                <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a7.646 7.646 0 100 15.292 7.646 7.646 0 000-15.292zm0 0V1m0 3.354a7.646 7.646 0 100 15.292 7.646 7.646 0 000-15.292z" />
                 </svg>
-                <span>Adding Speaker...</span>
+                <span className="relative">Adding Speaker...</span>
               </>
             ) : (
               <>
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 relative" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                <span>Add Speaker</span>
+                <span className="relative">Add Speaker</span>
               </>
             )}
           </button>
@@ -1560,7 +1736,6 @@ const renderStepContent = () => {
 )}
     </div>
   );
-
 
 
 case 4:
