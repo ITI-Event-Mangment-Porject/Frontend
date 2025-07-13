@@ -39,16 +39,8 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, setIsCollapsed }) => {
           },
           { path: '/admin/users', icon: Users, label: 'User Management' },
           { path: '/admin/events', icon: Calendar, label: 'Manage Events' },
-          {
-            path: '/admin/attendance',
-            icon: FileText,
-            label: 'Attendance Reports',
-          },
-          {
-            path: '/admin/jobfair',
-            icon: Building2,
-            label: 'Job Fair Management',
-          },
+          
+         
           {
             path: '/admin/FeedbackAnalytics',
             icon: BarChart3,

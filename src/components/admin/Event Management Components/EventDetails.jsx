@@ -21,8 +21,8 @@ import {
 import { toast } from 'react-toastify';
 import { eventAPI, attendanceAPI } from '../../../services/api';
 import { ClipLoader } from 'react-spinners';
-import Attendance_Reports from '../Attendance_ReportsComponent/Attendance_Reports';
-import AttendanceReports from '@/pages/admin/AttendanceReports';
+// import Attendance_Reports from '../Attendance_ReportsComponent/Attendance_Reports';
+// import AttendanceReports from '@/pages/admin/AttendanceReports';
 import AttendanceTable from './AttendanceTable';
 import ParticipatingCompaniesTab from './ParticipationCompaniesTab';
 
