@@ -4,6 +4,7 @@ import HomeNavbar from '@/components/homePage/HomeNavbar';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import CompanyRegistrationModal from '@/pages/company/CompanyRegisterationModal';
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
@@ -15,6 +16,8 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
+  const [showCompanyModal, setShowCompanyModal] = useState(false);  
+  const [newUserData, setNewUserData] = useState(null);
 
   const handleLogin = async e => {
     e.preventDefault();
@@ -24,7 +27,10 @@ const LoginPage = () => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json',
+          'accept': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}` 
+         },
         body: JSON.stringify({ email, password }),
       });
 
@@ -37,14 +43,35 @@ const LoginPage = () => {
       }
 
       if (data.success && data.data) {
+        const { user, role } = data.data;
+        const newCompanyId = user.company_id ;
+
+
         // Store user data and tokens
         localStorage.setItem('user', JSON.stringify(data.data.user));
         localStorage.setItem('token', data.data.access_token);
         localStorage.setItem('refresh_token', data.data.refresh_token);
         localStorage.setItem('role', data.data.role);
 
+        if (newCompanyId) {
+          localStorage.setItem('companyId', newCompanyId);
+        }
         // Show success message
         toast.success(`Welcome back, ${data.data.user.first_name}!`);
+
+
+        if (role === 'company_representative') {
+
+          if (!newCompanyId) {
+            setNewUserData(user);
+            setShowCompanyModal(true);
+            setLoading(false);
+            return;
+          }
+          navigate(`/company/${newCompanyId}/dashboard`);
+        }
+          
+
 
         // Route based on user role
         switch (data.data.role) {
@@ -55,7 +82,7 @@ const LoginPage = () => {
             navigate('/events');
             break;
           case 'company_representative':
-            navigate('/company/:companyId/dashboard'); // Replace with actual company ID if available
+            navigate(`/company/${newCompanyId}/dashboard`); // Replace with actual company ID if available
             break;
           default:
             navigate('/');
@@ -235,6 +262,19 @@ const LoginPage = () => {
               )}
             </button>
           </form>
+          {/* Company Registration Modal */}
+          <CompanyRegistrationModal
+            show={showCompanyModal}
+            user={newUserData}
+            onClose={() => setShowCompanyModal(false)}
+            onSuccess={newCompanyId => {
+              localStorage.setItem('companyId', newCompanyId);
+              console.log('Saved to localStorage:', localStorage.getItem('companyId'));
+              setShowCompanyModal(false);
+              toast.success('Company registered successfully!');
+              navigate(`/company/${newCompanyId}/profile`);
+            }}
+          />
 
           {/* Additional Links */}
           <div className="mt-6 text-center">

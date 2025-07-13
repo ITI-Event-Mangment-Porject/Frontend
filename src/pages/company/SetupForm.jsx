@@ -371,6 +371,10 @@ useEffect(() => {
 }, [participationId, initialStepLoaded, jobFairId]);
 
 const handleSubmit = async (e) => {
+  setTimeout(() => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}, 100);
+
   if (e) e.preventDefault();
 
   setCandidateError('');
@@ -548,7 +552,10 @@ if (error.response?.status === 409) {
 };
 
 const handleJobProfileSubmit = async () => {
+  setTimeout(() => {
   window.scrollTo({ top: 0, behavior: 'smooth' });
+}, 100);
+
   setIsSubmitting(true);
   setErrorMsg('');
   setSuccessMsg('');
@@ -592,7 +599,10 @@ const handleJobProfileSubmit = async () => {
     if (response.status === 200 || response.status === 201) {
       setSuccessMsg("Job profile submitted successfully!");
       setCompletedSteps((prev) => new Set([...prev, 4]));
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}, 100);
+
 
       setFormData({
         title: '',
@@ -608,7 +618,10 @@ const handleJobProfileSubmit = async () => {
       return true;
     } else {
       setErrorMsg("Failed to submit job profile. Please try again.");
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}, 100);
+
       return false;
     }
   } catch (error) {
@@ -621,6 +634,10 @@ const handleJobProfileSubmit = async () => {
 };
 
 const handleNext = async () => {
+  setTimeout(() => {
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}, 100);
+
   if (currentStep === 1) {
     if (!hasParticipated) {
       setIsLoading(true);
@@ -1057,7 +1074,7 @@ const renderStepContent = () => {
                 </div>
 
              
-                {successMsg && (
+                {/* {successMsg && (
                   <div className="bg-gradient-to-r from-[#203947]-100 to-[#203947]/50 border-2 border-[#203947]/30 text-[#203947]/10 px-6 py-4 rounded-xl shadow-lg animate-fade-in">
                     <div className="flex items-center space-x-2">
                       <svg className="w-5 h-5 text-[#203947]/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1076,7 +1093,7 @@ const renderStepContent = () => {
                       <span className="font-medium">{errorMsg}</span>
                     </div>
                   </div>
-                )}
+                )} */}
               </div>
             </div>
           </form>
@@ -1370,16 +1387,20 @@ const renderStepContent = () => {
             </button>
             
             {interviewSlots.length > 0 && (
-              <button
-                type="button"
-                onClick={() => setCurrentStep(formData.needBranding ? 3 : 4)}
-                className="px-8 py-3 bg-gradient-to-r from-[#901b20] to-[#901b20]/90 text-white rounded-xl font-semibold hover:from-[#901b20]/90 hover:to-[#901b20] transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center space-x-2"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-                </svg>
-                <span>Continue</span>
-              </button>
+<button
+  type="button"
+  onClick={() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' }); // 🧲 scroll to top
+    setCurrentStep(formData.needBranding ? 3 : 4);   // ↪️ move to next step
+  }}
+  className="px-8 py-3 bg-gradient-to-r from-[#901b20] to-[#901b20]/90 text-white rounded-xl font-semibold hover:from-[#901b20]/90 hover:to-[#901b20] transition-all duration-300 hover:scale-105 hover:shadow-lg flex items-center space-x-2"
+>
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+  </svg>
+  <span>Continue</span>
+</button>
+
             )}
 
           </div>
@@ -1872,7 +1893,7 @@ case 4:
               <button
                 onClick={handleNext}
                 disabled={(!isCurrentStepValid() && !forceStepUnlock) || isSubmitting || isLoading}
-                className="flex items-center px-6 py-2 bg-[#901b20]/60 text-white rounded-lg hover:bg-[#901b20]/70 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center px-6 py-2 bg-[#901b20]/90 text-white rounded-lg hover:bg-[#901b20] disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting || isLoading ? (
                   <>

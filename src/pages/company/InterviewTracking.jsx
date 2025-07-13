@@ -366,7 +366,7 @@ const handleInterviewAction = async (action) => {
                       <div className="mt-6 md:mt-0 flex flex-col items-end space-y-3">
                         <button
                           onClick={() => openStudentModal(entry)}
-                          className="flex items-center px-6 py-3 bg-gradient-to-r from-[#203947]/50 to-[#203947]/60 text-white rounded-xl hover:from-[#203947]/70 hover:to-[#203947]/70 transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
+                          className="flex items-center px-6 py-3 bg-gradient-to-r from-slate-500 to-[#203947]/60 text-white rounded-xl hover:from-slate-500 hover:to-[#203947]/70 transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
                         >
                           <Eye className="h-5 w-5 mr-2" />
                           View Profile
