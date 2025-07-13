@@ -17,9 +17,28 @@ import {
   FaFileAlt,
   FaSearch,
 } from "react-icons/fa"
+import {
+  MessageSquare,
+  Plus,
+  Brain,
+  Star,
+  User,
+  Calendar,
+  X,
+  Loader2,
+  AlertCircle,
+  CheckCircle,
+  Zap,
+  BarChart3,
+  UsersIcon,
+  Lightbulb,
+  Trash2,
+  ChevronDown,
+} from "lucide-react"
 import { toast } from "react-toastify"
 import { eventAPI, attendanceAPI } from "../../../services/api"
 import { ClipLoader } from "react-spinners"
+import EventForm from "./EventForm.jsx"
 
 const EventDetails = () => {
   const { id } = useParams()
@@ -42,6 +61,31 @@ const EventDetails = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const attendeesPerPage = 10
 
+  // Feedback State
+  const [feedbackData, setFeedbackData] = useState(null)
+  const [feedbackLoading, setFeedbackLoading] = useState(false)
+  const [showCreateFeedbackModal, setShowCreateFeedbackModal] = useState(false)
+  const [showAIAnalyticsModal, setShowAIAnalyticsModal] = useState(false)
+  const [aiAnalytics, setAiAnalytics] = useState(null)
+  const [creatingFeedbackForm, setCreatingFeedbackForm] = useState(false)
+  const [generatingAnalytics, setGeneratingAnalytics] = useState(false)
+  const [feedbackPagination, setFeedbackPagination] = useState({
+    current_page: 1,
+    last_page: 1,
+    per_page: 10,
+    total: 0,
+  })
+  const [feedbackCurrentPage, setFeedbackCurrentPage] = useState(1)
+
+  // Edit Modal State
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [editEvent, setEditEvent] = useState(null)
+  const [editImagePreview, setEditImagePreview] = useState(null)
+  const [editError, setEditError] = useState("")
+  const [editLoading, setEditLoading] = useState(false)
+
+  const ADMIN_TOKEN = localStorage.getItem("token")
+
   useEffect(() => {
     fetchEventDetails()
   }, [id])
@@ -49,8 +93,10 @@ const EventDetails = () => {
   useEffect(() => {
     if (activeTab === "attendance") {
       fetchAttendanceData()
+    } else if (activeTab === "feedbacks") {
+      fetchFeedbackData(feedbackCurrentPage)
     }
-  }, [activeTab, id])
+  }, [activeTab, id, feedbackCurrentPage])
 
   const fetchEventDetails = async () => {
     try {
@@ -87,6 +133,136 @@ const EventDetails = () => {
       setAttendanceData([])
     } finally {
       setAttendanceLoading(false)
+    }
+  }
+
+  const fetchFeedbackData = async (page = 1) => {
+    try {
+      setFeedbackLoading(true)
+      const response = await fetch(`http://localhost:8000/api/feedback/events/${id}/responses?page=${page}`, {
+        headers: {
+          Authorization: `Bearer ${ADMIN_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setFeedbackData(data.data)
+          // Handle pagination data
+          if (data.data.responses) {
+            setFeedbackPagination({
+              current_page: data.data.responses.current_page || 1,
+              last_page: data.data.responses.last_page || 1,
+              per_page: data.data.responses.per_page || 10,
+              total: data.data.responses.total || 0,
+              from: data.data.responses.from || 0,
+              to: data.data.responses.to || 0,
+            })
+          }
+        } else {
+          setFeedbackData(null)
+        }
+      } else if (response.status === 404) {
+        setFeedbackData(null)
+      } else {
+        throw new Error("Failed to fetch feedback data")
+      }
+    } catch (error) {
+      console.error("Error fetching feedback data:", error)
+      setFeedbackData(null)
+    } finally {
+      setFeedbackLoading(false)
+    }
+  }
+
+  const handleFeedbackPageChange = (page) => {
+    setFeedbackCurrentPage(page)
+    fetchFeedbackData(page)
+  }
+
+  const fetchAIAnalytics = async () => {
+    try {
+      const response = await fetch(`http://localhost:8000/api/ai-insights/events/${id}/detailed`, {
+        headers: {
+          Authorization: `Bearer ${ADMIN_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          setAiAnalytics(data.data)
+          return true
+        }
+      }
+      return false
+    } catch (error) {
+      console.error("Error fetching AI analytics:", error)
+      return false
+    }
+  }
+
+  const createFeedbackForm = async (formData) => {
+    try {
+      setCreatingFeedbackForm(true)
+      const response = await fetch(`http://localhost:8000/api/feedback/events/${id}/forms`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${ADMIN_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          toast.success("Feedback form created successfully!")
+          setShowCreateFeedbackModal(false)
+          fetchFeedbackData(feedbackCurrentPage) // Refresh feedback data
+          return true
+        }
+      }
+      throw new Error("Failed to create feedback form")
+    } catch (error) {
+      console.error("Error creating feedback form:", error)
+      toast.error("Failed to create feedback form")
+      return false
+    } finally {
+      setCreatingFeedbackForm(false)
+    }
+  }
+
+  const generateAIAnalytics = async () => {
+    try {
+      setGeneratingAnalytics(true)
+      const response = await fetch(`http://localhost:8000/api/ai-insights/events/${id}/generate`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${ADMIN_TOKEN}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ regenerate: true }),
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        if (data.success) {
+          toast.success("AI analytics generated successfully!")
+          await fetchAIAnalytics()
+          return true
+        }
+      }
+      throw new Error("Failed to generate AI analytics")
+    } catch (error) {
+      console.error("Error generating AI analytics:", error)
+      toast.error("Failed to generate AI analytics")
+      return false
+    } finally {
+      setGeneratingAnalytics(false)
     }
   }
 
@@ -156,8 +332,75 @@ const EventDetails = () => {
     }
   }
 
+  const handleEditEvent = async (e, eventData) => {
+    e.preventDefault()
+    setEditError("")
+    try {
+      setEditLoading(true)
+
+      let updateData
+      if (eventData.image instanceof File) {
+        updateData = new FormData()
+        Object.keys(eventData).forEach((key) => {
+          if (key === "image" && eventData[key] instanceof File) {
+            updateData.append("event_image", eventData[key])
+          } else if (eventData[key] !== null && eventData[key] !== "") {
+            updateData.append(key, eventData[key])
+          }
+        })
+      } else {
+        updateData = { ...eventData }
+        delete updateData.image // Remove image if it's not a file
+      }
+
+      const response = await eventAPI.update(event.id, updateData)
+
+      if (response.data.success) {
+        toast.success(`Event "${eventData.title}" updated successfully!`)
+        setShowEditModal(false)
+        setEditEvent(null)
+        setEditImagePreview(null)
+        fetchEventDetails() // Refresh event details
+        return true
+      } else {
+        throw new Error(response.data.message || "Failed to update event")
+      }
+    } catch (error) {
+      console.error("Error updating event:", error)
+      if (error.response?.data?.errors) {
+        const errorMessages = Object.entries(error.response.data.errors)
+          .map(([field, messages]) => `${field}: ${Array.isArray(messages) ? messages.join(", ") : messages}`)
+          .join("\n")
+        setEditError(errorMessages)
+      } else {
+        setEditError(error.response?.data?.message || error.message || "Failed to update event")
+      }
+      return false
+    } finally {
+      setEditLoading(false)
+    }
+  }
+
+  const handleEditClick = () => {
+    setEditEvent({
+      title: event.title || "",
+      description: event.description || "",
+      start_date: event.start_date || "",
+      end_date: event.end_date || "",
+      start_time: event.start_time || "",
+      end_time: event.end_time || "",
+      location: event.location || "",
+      capacity: event.capacity || "",
+      type: event.type || "Job Fair",
+      visibility_type: event.visibility_type || "role_based",
+      visibility_config: event.visibility_config || null,
+    })
+    setEditImagePreview(event.banner_image || null)
+    setShowEditModal(true)
+  }
+
   const handleEdit = () => {
-    navigate("/admin/events", { state: { editEventId: event.id } })
+    handleEditClick()
   }
 
   const handleDelete = async () => {
@@ -389,6 +632,24 @@ const EventDetails = () => {
                   </span>
                 )}
               </button>
+              {(event.status?.toLowerCase() === "completed" || event.status?.toLowerCase() === "draft") && (
+                <button
+                  onClick={() => handleTabChange("feedbacks")}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                    activeTab === "feedbacks"
+                      ? "border-blue-500 text-blue-600"
+                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  }`}
+                >
+                  <MessageSquare className="inline w-4 h-4 mr-2" />
+                  Feedbacks
+                  {feedbackData?.responses?.length > 0 && (
+                    <span className="ml-1 bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs">
+                      {feedbackData.responses.length}
+                    </span>
+                  )}
+                </button>
+              )}
             </nav>
           </div>
         </div>
@@ -403,7 +664,7 @@ const EventDetails = () => {
             formatTime={formatTime}
             getStatusColor={getStatusColor}
           />
-        ) : (
+        ) : activeTab === "attendance" ? (
           <AttendanceTab
             event={event}
             attendanceData={attendanceData}
@@ -418,8 +679,68 @@ const EventDetails = () => {
             attendeesPerPage={attendeesPerPage}
             formatDate={formatDate}
           />
+        ) : (
+          <FeedbacksTab
+            event={event}
+            feedbackData={feedbackData}
+            feedbackLoading={feedbackLoading}
+            feedbackPagination={feedbackPagination}
+            feedbackCurrentPage={feedbackCurrentPage}
+            handleFeedbackPageChange={handleFeedbackPageChange}
+            showCreateFeedbackModal={showCreateFeedbackModal}
+            setShowCreateFeedbackModal={setShowCreateFeedbackModal}
+            showAIAnalyticsModal={showAIAnalyticsModal}
+            setShowAIAnalyticsModal={setShowAIAnalyticsModal}
+            aiAnalytics={aiAnalytics}
+            createFeedbackForm={createFeedbackForm}
+            generateAIAnalytics={generateAIAnalytics}
+            fetchAIAnalytics={fetchAIAnalytics}
+            creatingFeedbackForm={creatingFeedbackForm}
+            generatingAnalytics={generatingAnalytics}
+            formatDate={formatDate}
+          />
         )}
       </div>
+
+      {/* Edit Event Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+            <div className="p-6 border-b bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold">Edit Event</h2>
+                  <p className="text-blue-100">{event.title}</p>
+                </div>
+                <button
+                  onClick={() => {
+                    setShowEditModal(false)
+                    setEditEvent(null)
+                    setEditImagePreview(null)
+                    setEditError("")
+                  }}
+                  className="text-white/80 hover:text-white transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6">
+              <EventForm
+                event={editEvent}
+                setEvent={setEditEvent}
+                onSubmit={handleEditEvent}
+                submitLoading={editLoading}
+                error={editError}
+                imagePreview={editImagePreview}
+                setImagePreview={setEditImagePreview}
+                isEdit={true}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -823,6 +1144,726 @@ const AttendanceTab = ({
             )}
           </>
         )}
+      </div>
+    </div>
+  )
+}
+
+// Feedbacks Tab Component
+const FeedbacksTab = ({
+  event,
+  feedbackData,
+  feedbackLoading,
+  feedbackPagination,
+  feedbackCurrentPage,
+  handleFeedbackPageChange,
+  showCreateFeedbackModal,
+  setShowCreateFeedbackModal,
+  showAIAnalyticsModal,
+  setShowAIAnalyticsModal,
+  aiAnalytics,
+  createFeedbackForm,
+  generateAIAnalytics,
+  fetchAIAnalytics,
+  creatingFeedbackForm,
+  generatingAnalytics,
+  formatDate,
+}) => {
+  const [hasAIAnalytics, setHasAIAnalytics] = useState(false)
+
+  useEffect(() => {
+    if (feedbackData?.responses?.length > 0) {
+      checkAIAnalytics()
+    }
+  }, [feedbackData])
+
+  const checkAIAnalytics = async () => {
+    const hasAnalytics = await fetchAIAnalytics()
+    setHasAIAnalytics(hasAnalytics)
+  }
+
+  const handleShowAIAnalytics = async () => {
+    await fetchAIAnalytics()
+    setShowAIAnalyticsModal(true)
+  }
+
+  const handleGenerateAIAnalytics = async () => {
+    const success = await generateAIAnalytics()
+    if (success) {
+      setHasAIAnalytics(true)
+    }
+  }
+
+  if (feedbackLoading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center">
+          <ClipLoader size={40} color="#3B82F6" />
+          <p className="mt-4 text-gray-600">Loading feedback data...</p>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Event Summary */}
+      <div className="bg-white p-6 rounded-xl shadow-sm border">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Feedback Summary</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="flex items-center">
+              <MessageSquare className="w-8 h-8 text-blue-500 mr-3" />
+              <div>
+                <p className="text-sm font-medium text-blue-600">Total Responses</p>
+                <p className="text-lg font-bold text-blue-900">{feedbackData?.total_responses || 0}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-green-50 p-4 rounded-lg">
+            <div className="flex items-center">
+              <Star className="w-8 h-8 text-green-500 mr-3" />
+              <div>
+                <p className="text-sm font-medium text-green-600">Average Rating</p>
+                <p className="text-lg font-bold text-green-900">
+                  {feedbackData?.average_rating ? Number(feedbackData.average_rating).toFixed(1) : "N/A"}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-purple-50 p-4 rounded-lg">
+            <div className="flex items-center">
+              <Calendar className="w-8 h-8 text-purple-500 mr-3" />
+              <div>
+                <p className="text-sm font-medium text-purple-600">Event Date</p>
+                <p className="text-lg font-bold text-purple-900">{formatDate(event.start_date)}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-orange-50 p-4 rounded-lg">
+            <div className="flex items-center">
+              <Brain className="w-8 h-8 text-orange-500 mr-3" />
+              <div>
+                <p className="text-sm font-medium text-orange-600">AI Analytics</p>
+                <p className="text-lg font-bold text-orange-900">{hasAIAnalytics ? "Available" : "Not Generated"}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* No Feedback Form */}
+      {!feedbackData && (
+        <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+          <div className="text-center py-16">
+            <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Feedback Form Available</h3>
+            <p className="text-gray-600 mb-6">
+              Create a feedback form to collect participant responses for this event.
+            </p>
+            <button
+              onClick={() => setShowCreateFeedbackModal(true)}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 mx-auto"
+            >
+              <Plus className="w-5 h-5" />
+              Create Feedback Form
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Feedback Responses */}
+      {feedbackData && (
+        <>
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-4 justify-end">
+            {feedbackData.responses?.length > 0 && (
+              <>
+                {hasAIAnalytics ? (
+                  <button
+                    onClick={handleShowAIAnalytics}
+                    className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                  >
+                    <BarChart3 className="w-5 h-5" />
+                    Show AI Analytics
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleGenerateAIAnalytics}
+                    disabled={generatingAnalytics}
+                    className="bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                  >
+                    {generatingAnalytics ? <Loader2 className="w-5 h-5 animate-spin" /> : <Brain className="w-5 h-5" />}
+                    {generatingAnalytics ? "Generating..." : "AI Analysis"}
+                  </button>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Feedback Form Info */}
+          <div className="bg-white rounded-xl shadow-sm border p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">{feedbackData.form?.title}</h3>
+            {feedbackData.form?.description && <p className="text-gray-600 mb-4">{feedbackData.form.description}</p>}
+            <div className="text-sm text-gray-500">
+              Form created: {new Date(feedbackData.form?.created_at).toLocaleDateString()}
+            </div>
+          </div>
+
+          {/* Responses List */}
+          <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+            <div className="px-6 py-4 border-b bg-gray-50">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Feedback Responses ({feedbackData.responses?.data?.length || 0} of {feedbackPagination.total})
+              </h2>
+            </div>
+
+            {!feedbackData.responses?.data?.length ? (
+              <div className="text-center py-12">
+                <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">No Responses Yet</h3>
+                <p className="text-gray-600">Participants haven't submitted feedback responses yet.</p>
+              </div>
+            ) : (
+              <>
+                <div className="divide-y divide-gray-200">
+                  {feedbackData.responses.data.map((response, index) => {
+                    const responses = JSON.parse(response.responses)
+                    return (
+                      <div key={response.id} className="p-6 hover:bg-gray-50">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                              <User className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <h4 className="font-medium text-gray-900">
+                                {response.user?.first_name} {response.user?.last_name}
+                              </h4>
+                              <p className="text-sm text-gray-600">{response.user?.email}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className="flex items-center gap-1 mb-1">
+                              <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                              <span className="text-sm font-medium">{response.overall_rating}/5</span>
+                            </div>
+                            <p className="text-xs text-gray-500">
+                              {new Date(response.submitted_at).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {Object.entries(responses).map(([key, value]) => (
+                            <div key={key} className="bg-gray-50 rounded-lg p-3">
+                              <p className="text-sm font-medium text-gray-700 mb-1 capitalize">
+                                {key.replace(/_/g, " ")}
+                              </p>
+                              <p className="text-sm text-gray-900">
+                                {typeof value === "number" && key.includes("rating") ? `${value}/5` : value}
+                              </p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Pagination */}
+                {feedbackPagination.last_page > 1 && (
+                  <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-t bg-gray-50 gap-4">
+                    <div className="text-sm text-gray-600">
+                      Showing {feedbackPagination.from} to {feedbackPagination.to} of {feedbackPagination.total}{" "}
+                      responses
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handleFeedbackPageChange(feedbackCurrentPage - 1)}
+                        disabled={feedbackCurrentPage === 1}
+                        className={`px-3 py-1 rounded border text-sm ${
+                          feedbackCurrentPage === 1
+                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : "bg-white text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        Previous
+                      </button>
+
+                      <div className="flex space-x-1">
+                        {Array.from({ length: Math.min(5, feedbackPagination.last_page) }, (_, i) => {
+                          let pageNum
+                          if (feedbackPagination.last_page <= 5) {
+                            pageNum = i + 1
+                          } else if (feedbackCurrentPage <= 3) {
+                            pageNum = i + 1
+                          } else if (feedbackCurrentPage >= feedbackPagination.last_page - 2) {
+                            pageNum = feedbackPagination.last_page - 4 + i
+                          } else {
+                            pageNum = feedbackCurrentPage - 2 + i
+                          }
+
+                          return (
+                            <button
+                              key={pageNum}
+                              onClick={() => handleFeedbackPageChange(pageNum)}
+                              className={`px-3 py-1 rounded border text-sm ${
+                                feedbackCurrentPage === pageNum
+                                  ? "bg-blue-500 text-white"
+                                  : "bg-white text-gray-700 hover:bg-gray-100"
+                              }`}
+                            >
+                              {pageNum}
+                            </button>
+                          )
+                        })}
+                      </div>
+
+                      <button
+                        onClick={() => handleFeedbackPageChange(feedbackCurrentPage + 1)}
+                        disabled={feedbackCurrentPage === feedbackPagination.last_page}
+                        className={`px-3 py-1 rounded border text-sm ${
+                          feedbackCurrentPage === feedbackPagination.last_page
+                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                            : "bg-white text-gray-700 hover:bg-gray-100"
+                        }`}
+                      >
+                        Next
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Create Feedback Form Modal */}
+      {showCreateFeedbackModal && (
+        <CreateFeedbackFormModal
+          event={event}
+          onClose={() => setShowCreateFeedbackModal(false)}
+          onSubmit={createFeedbackForm}
+          isSubmitting={creatingFeedbackForm}
+        />
+      )}
+
+      {/* AI Analytics Modal */}
+      {showAIAnalyticsModal && aiAnalytics && (
+        <AIAnalyticsModal event={event} analytics={aiAnalytics} onClose={() => setShowAIAnalyticsModal(false)} />
+      )}
+    </div>
+  )
+}
+
+// Create Feedback Form Modal Component
+const CreateFeedbackFormModal = ({ event, onClose, onSubmit, isSubmitting }) => {
+  const [formData, setFormData] = useState({
+    title: `${event.title} - Feedback Form`,
+    description: "We'd love your thoughts to help improve future events.",
+    form_config: [
+      {
+        question: "How would you rate the event content?",
+        type: "rating",
+      },
+      {
+        question: "How would you rate the event organization?",
+        type: "rating",
+      },
+      {
+        question: "What did you like most about the event?",
+        type: "text",
+      },
+      {
+        question: "What could be improved for future events?",
+        type: "text",
+      },
+    ],
+  })
+
+  const questionTypes = [
+    { value: "text", label: "Text Answer" },
+    { value: "rating", label: "Rating (1-5)" },
+  ]
+
+  const handleAddQuestion = () => {
+    setFormData((prev) => ({
+      ...prev,
+      form_config: [
+        ...prev.form_config,
+        {
+          question: "",
+          type: "text",
+        },
+      ],
+    }))
+  }
+
+  const handleRemoveQuestion = (index) => {
+    if (index < 4) return // Can't remove static questions
+    setFormData((prev) => ({
+      ...prev,
+      form_config: prev.form_config.filter((_, i) => i !== index),
+    }))
+  }
+
+  const handleQuestionChange = (index, field, value) => {
+    setFormData((prev) => ({
+      ...prev,
+      form_config: prev.form_config.map((q, i) => (i === index ? { ...q, [field]: value } : q)),
+    }))
+  }
+
+  const validateForm = () => {
+    if (!formData.title.trim()) {
+      return "Form title is required"
+    }
+    if (!formData.description.trim()) {
+      return "Form description is required"
+    }
+
+    // Validate all questions have content
+    for (let i = 0; i < formData.form_config.length; i++) {
+      if (!formData.form_config[i].question.trim()) {
+        return `Question ${i + 1} cannot be empty`
+      }
+    }
+
+    return null
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    const validationError = validateForm()
+    if (validationError) {
+      toast.error(validationError)
+      return
+    }
+
+    const success = await onSubmit(formData)
+    if (success) {
+      onClose()
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="p-6 border-b bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Create Feedback Form</h2>
+              <p className="text-blue-100">for {event.title}</p>
+            </div>
+            <button onClick={onClose} className="text-white/80 hover:text-white transition-colors">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* Form Details */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Form Title *</label>
+              <input
+                type="text"
+                value={formData.title}
+                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
+                placeholder="Enter form title"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Form Description *</label>
+              <textarea
+                value={formData.description}
+                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                rows={3}
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 resize-none"
+                placeholder="Enter form description"
+                required
+              />
+            </div>
+          </div>
+
+          {/* Questions Section */}
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-bold text-gray-900">Questions</h3>
+              <button
+                type="button"
+                onClick={handleAddQuestion}
+                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 transform hover:scale-105"
+              >
+                <Plus className="w-5 h-5" />
+                Add Question
+              </button>
+            </div>
+
+            <div className="space-y-6">
+              {formData.form_config.map((question, index) => (
+                <div
+                  key={index}
+                  className="border-2 border-gray-200 rounded-xl p-6 hover:border-blue-500/30 transition-colors duration-300"
+                >
+                  <div className="flex items-start gap-4">
+                    <div className="flex-1 space-y-4">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-gray-500">
+                          Question {index + 1}
+                          {index < 4 && <span className="text-blue-500"> (Required)</span>}
+                        </span>
+                      </div>
+
+                      <input
+                        type="text"
+                        value={question.question}
+                        onChange={(e) => handleQuestionChange(index, "question", e.target.value)}
+                        disabled={index < 4} // Static questions can't be edited
+                        className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 ${
+                          index < 4 ? "bg-gray-50 cursor-not-allowed" : ""
+                        }`}
+                        placeholder="Enter question"
+                        required
+                      />
+
+                      <div className="relative">
+                        <select
+                          value={question.type}
+                          onChange={(e) => handleQuestionChange(index, "type", e.target.value)}
+                          disabled={index < 4} // Static question types can't be changed
+                          className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 appearance-none ${
+                            index < 4 ? "bg-gray-50 cursor-not-allowed" : ""
+                          }`}
+                        >
+                          {questionTypes.map((type) => (
+                            <option key={type.value} value={type.value}>
+                              {type.label}
+                            </option>
+                          ))}
+                        </select>
+                        <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                      </div>
+                    </div>
+
+                    {index >= 4 && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveQuestion(index)}
+                        className="text-red-500 hover:text-red-700 p-3 hover:bg-red-50 rounded-xl transition-all duration-300"
+                      >
+                        <Trash2 className="w-5 h-5" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-4 pt-6 border-t">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                <>
+                  <CheckCircle className="w-5 h-5" />
+                  Create Form
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  )
+}
+
+// AI Analytics Modal Component
+const AIAnalyticsModal = ({ event, analytics, onClose }) => {
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+        <div className="p-6 border-b bg-gradient-to-r from-blue-500 to-purple-600 text-white">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">{event.title}</h2>
+              <p className="text-blue-100">AI Analytics Report</p>
+            </div>
+            <button onClick={onClose} className="text-white/80 hover:text-white transition-colors">
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+
+        <div className="p-6 space-y-8">
+          {/* Summary */}
+          <div className="bg-gray-50 rounded-xl p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+              <Brain className="w-6 h-6 text-blue-500" />
+              Executive Summary
+            </h3>
+            <p className="text-gray-700 leading-relaxed">
+              {analytics.insights?.analysis?.summary || "No summary available"}
+            </p>
+          </div>
+
+          {/* Key Strengths */}
+          {analytics.insights?.analysis?.key_strengths && (
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <CheckCircle className="w-6 h-6 text-green-500" />
+                Key Strengths
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {analytics.insights.analysis.key_strengths.map((strength, index) => (
+                  <div key={index} className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
+                      <p className="text-green-800 font-medium">{strength}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Areas for Improvement */}
+          {analytics.insights?.analysis?.areas_for_improvement && (
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <AlertCircle className="w-6 h-6 text-yellow-500" />
+                Areas for Improvement
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {analytics.insights.analysis.areas_for_improvement.map((area, index) => (
+                  <div key={index} className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-yellow-500 mt-0.5 flex-shrink-0" />
+                      <p className="text-yellow-800 font-medium">{area}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Recommendations */}
+          {analytics.insights?.analysis?.recommendations && (
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <Lightbulb className="w-6 h-6 text-purple-500" />
+                AI Recommendations
+              </h3>
+              <div className="space-y-4">
+                {analytics.insights.analysis.recommendations.map((rec, index) => (
+                  <div
+                    key={index}
+                    className={`border-2 rounded-lg p-4 ${
+                      rec.priority === "high"
+                        ? "bg-red-50 border-red-200"
+                        : rec.priority === "medium"
+                          ? "bg-blue-50 border-blue-200"
+                          : "bg-gray-50 border-gray-200"
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
+                          rec.priority === "high"
+                            ? "bg-red-500 text-white"
+                            : rec.priority === "medium"
+                              ? "bg-blue-500 text-white"
+                              : "bg-gray-500 text-white"
+                        }`}
+                      >
+                        {rec.priority}
+                      </span>
+                      <div className="flex-1">
+                        <h4 className="font-bold text-gray-900 mb-1">{rec.action}</h4>
+                        <p className="text-gray-600">{rec.impact}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Common Themes */}
+          {analytics.insights?.analysis?.common_themes && (
+            <div>
+              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <MessageSquare className="w-6 h-6 text-indigo-500" />
+                Common Themes
+              </h3>
+              <div className="grid grid-cols-1 gap-4">
+                {analytics.insights.analysis.common_themes.map((theme, index) => (
+                  <div key={index} className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <MessageSquare className="w-5 h-5 text-indigo-500 mt-0.5 flex-shrink-0" />
+                      <p className="text-indigo-800 font-medium">{theme}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Additional Insights */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Attendance Insights */}
+            {analytics.insights?.analysis?.attendance_insights && (
+              <div className="bg-white border border-gray-200 rounded-xl p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <UsersIcon className="w-5 h-5 text-green-500" />
+                  Attendance Insights
+                </h3>
+                <p className="text-gray-700">{analytics.insights.analysis.attendance_insights}</p>
+              </div>
+            )}
+
+            {/* Technical Feedback */}
+            {analytics.insights?.analysis?.technical_feedback && (
+              <div className="bg-white border border-gray-200 rounded-xl p-6">
+                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-orange-500" />
+                  Technical Feedback
+                </h3>
+                <p className="text-gray-700">{analytics.insights.analysis.technical_feedback}</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="p-6 border-t bg-gray-50">
+          <button
+            onClick={onClose}
+            className="w-full bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+          >
+            Close Analytics
+          </button>
+        </div>
       </div>
     </div>
   )
