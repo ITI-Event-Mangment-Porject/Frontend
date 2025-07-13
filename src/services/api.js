@@ -8,7 +8,6 @@ const api = axios.create({
 
   headers: {
     'Content-Type': 'application/json',
-    
   },
 });
 
@@ -24,7 +23,7 @@ const PROTECTED_ROUTES = [
   '/auth/refresh',
   '/auth/me',
   '/notifications',
-  '/message/bulk-messages', // Add this line for bulk message endpoints
+  '/message/bulk-message', // Add this line for bulk message endpoints
   '/dashboard',
   '/analytics',
   '/reports',
@@ -515,27 +514,28 @@ export const jobFairAPI = {
   },
 
   createJobFair: jobFairData => {
-    const token = 'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDEvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3NTIzMTc0OTksImV4cCI6MjA1MjMxNzQ5OSwibmJmIjoxNzUyMzE3NDk5LCJqdGkiOiJFME9QVzNUN1RMMlpkeGJxIiwic3ViIjoiMTY5IiwicHJ2IjoiMTNlOGQwMjhiMzkxZjNiN2I2M2YyMTkzM2RiYWQ0NThmZjIxMDcyZSJ9.Qs2-kgMNYPEiCdnVnnEEQwSPdXhnQu1ilHPD_b5js0Y';
+    const token =
+      'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDEvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3NTIzMTc0OTksImV4cCI6MjA1MjMxNzQ5OSwibmJmIjoxNzUyMzE3NDk5LCJqdGkiOiJFME9QVzNUN1RMMlpkeGJxIiwic3ViIjoiMTY5IiwicHJ2IjoiMTNlOGQwMjhiMzkxZjNiN2I2M2YyMTkzM2RiYWQ0NThmZjIxMDcyZSJ9.Qs2-kgMNYPEiCdnVnnEEQwSPdXhnQu1ilHPD_b5js0Y';
     if (!token) {
       console.error('No token found in localStorage');
       return Promise.reject(new Error('Authentication token missing'));
     }
-  
-    return api.post('/job-fairs', jobFairData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        
-      },
-    }).catch(error => {
-      console.error(
-        'Error creating job fair:',
-        error.response?.status,
-        error.response?.data
-      );
-      return Promise.reject(error);
-    });
+
+    return api
+      .post('/job-fairs', jobFairData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .catch(error => {
+        console.error(
+          'Error creating job fair:',
+          error.response?.status,
+          error.response?.data
+        );
+        return Promise.reject(error);
+      });
   },
-  
 };
 
 // Attendance API endpoints
