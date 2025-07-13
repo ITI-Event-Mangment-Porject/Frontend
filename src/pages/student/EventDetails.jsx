@@ -1,10 +1,27 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import Layout from '../../components/student/Layout';
+// eslint-disable-next-line no-unused-vars
+import { motion } from 'framer-motion';
 import Footer from '../../components/student/Footer';
 import defaultEvent from '../../assets/images/Business-Event1.jpg';
+import HomeNavbar from '../../components/homePage/HomeNavbar';
+import CardSkeleton from '../../components/common/CardSkeleton';
+import {
+  Calendar,
+  Clock,
+  MapPin,
+  Users,
+  CheckCircle,
+  XCircle,
+  MessageCircle,
+  Star,
+  ArrowRight,
+  Coffee,
+  Mic,
+} from 'lucide-react';
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 const EventDetails = () => {
   const { id } = useParams();
@@ -236,47 +253,251 @@ const EventDetails = () => {
     if (id) fetchData();
   }, [id]);
 
+  // Custom skeleton components
+  const EventDetailsSkeleton = () => (
+    <div className="max-w-6xl mx-auto px-4 pb-20">
+      {/* Hero Skeleton */}
+      <div className="relative rounded-3xl overflow-hidden shadow-2xl mb-12 h-96 md:h-[500px] bg-gray-200 animate-pulse">
+        <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
+          <div className="w-24 h-6 bg-gray-300 rounded-full mb-4 animate-pulse"></div>
+          <div className="w-3/4 h-12 bg-gray-300 rounded-lg mb-4 animate-pulse"></div>
+          <div className="flex gap-6">
+            <div className="w-32 h-6 bg-gray-300 rounded animate-pulse"></div>
+            <div className="w-32 h-6 bg-gray-300 rounded animate-pulse"></div>
+            <div className="w-32 h-6 bg-gray-300 rounded animate-pulse"></div>
+          </div>
+        </div>
+      </div>
+
+      {/* Event Details Card Skeleton */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200 p-8 md:p-10 mb-8">
+        <div className="grid md:grid-cols-2 gap-8 mb-8">
+          {/* Left Column */}
+          <div>
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-7 h-7 bg-gray-200 rounded animate-pulse"></div>
+              <div className="w-48 h-8 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+            <div className="space-y-4">
+              {[1, 2, 3].map(item => (
+                <div
+                  key={item}
+                  className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl"
+                >
+                  <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse"></div>
+                  <div className="flex-1">
+                    <div className="w-16 h-4 bg-gray-200 rounded mb-2 animate-pulse"></div>
+                    <div className="w-32 h-6 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div>
+            <div className="w-48 h-8 bg-gray-200 rounded mb-6 animate-pulse"></div>
+            <div className="p-6 rounded-2xl border-2 border-gray-200">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 bg-gray-200 rounded-full animate-pulse"></div>
+                <div className="flex-1">
+                  <div className="w-32 h-6 bg-gray-200 rounded mb-2 animate-pulse"></div>
+                  <div className="w-48 h-4 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              </div>
+              <div className="w-full h-12 bg-gray-200 rounded-xl animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Description Skeleton */}
+        <div>
+          <div className="w-48 h-8 bg-gray-200 rounded mb-4 animate-pulse"></div>
+          <div className="bg-gray-50 rounded-xl p-6">
+            <div className="space-y-3">
+              <div className="w-full h-4 bg-gray-200 rounded animate-pulse"></div>
+              <div className="w-5/6 h-4 bg-gray-200 rounded animate-pulse"></div>
+              <div className="w-4/5 h-4 bg-gray-200 rounded animate-pulse"></div>
+              <div className="w-3/4 h-4 bg-gray-200 rounded animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Slido Section Skeleton */}
+      <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-3xl p-8 mb-8">
+        <div className="flex items-center gap-4 mb-6">
+          <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse"></div>
+          <div className="flex-1">
+            <div className="w-48 h-6 bg-gray-200 rounded mb-2 animate-pulse"></div>
+            <div className="w-64 h-4 bg-gray-200 rounded animate-pulse"></div>
+          </div>
+        </div>
+        <div className="w-32 h-12 bg-gray-200 rounded-xl animate-pulse"></div>
+      </div>
+
+      {/* Agenda Section Skeleton */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200 p-8 md:p-10">
+        <div className="text-center mb-8">
+          <div className="w-48 h-9 bg-gray-200 rounded mx-auto mb-2 animate-pulse"></div>
+          <div className="w-24 h-1 bg-gray-200 rounded-full mx-auto animate-pulse"></div>
+        </div>
+
+        <div className="space-y-6">
+          {[1, 2, 3].map(item => (
+            <div
+              key={item}
+              className="rounded-2xl border-2 border-gray-200 p-6"
+            >
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-gray-200 rounded-full animate-pulse"></div>
+                <div className="flex-1">
+                  <div className="w-64 h-6 bg-gray-200 rounded mb-2 animate-pulse"></div>
+                  <div className="flex gap-4 mb-3">
+                    <div className="w-32 h-4 bg-gray-200 rounded animate-pulse"></div>
+                    <div className="w-32 h-4 bg-gray-200 rounded animate-pulse"></div>
+                  </div>
+                  <div className="w-48 h-4 bg-gray-200 rounded animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+
+  const AgendaSkeleton = () => (
+    <div className="text-center py-8">
+      <div className="w-8 h-8 bg-gray-200 rounded-full mx-auto mb-4 animate-pulse"></div>
+      <div className="w-32 h-4 bg-gray-200 rounded mx-auto animate-pulse"></div>
+    </div>
+  );
+
   const formatTime = time => (time ? time.slice(0, 5) : 'N/A');
+  const formatDate = date =>
+    new Date(date).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+
   const sortedSessions = [...sessions].sort((a, b) =>
     a.start_time.localeCompare(b.start_time)
   );
 
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: 'easeOut',
+      },
+    },
+  };
+
+  const slideInVariants = {
+    hidden: { opacity: 0, x: -50 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      transition: {
+        duration: 0.6,
+        ease: 'easeOut',
+      },
+    },
+  };
+
   return (
-    <Layout>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+      {/* Enhanced Navbar with backdrop */}
+      <div className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md shadow-lg border-b border-gray-200">
+        <HomeNavbar />
+      </div>
+
+      {/* Enhanced Popup Messages */}
       {showPopup && (
-        <div className="fixed top-8 left-1/2 transform -translate-x-1/2 z-50">
+        <motion.div
+          initial={{ opacity: 0, y: -50, scale: 0.8 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: -50, scale: 0.8 }}
+          className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50"
+        >
           <div
-            className={`px-6 py-4 rounded-xl shadow-lg text-lg font-semibold border ${
+            className={`px-8 py-4 rounded-2xl shadow-2xl text-lg font-semibold border-2 backdrop-blur-sm ${
               popupMessage.includes('successful')
-                ? 'bg-green-600 text-white'
+                ? 'bg-green-500/90 text-white border-green-300'
                 : popupMessage.includes('Already')
-                  ? 'bg-blue-600 text-white'
+                  ? 'bg-blue-500/90 text-white border-blue-300'
                   : popupMessage.includes('cancelled')
-                    ? 'bg-orange-600 text-white'
-                    : 'bg-red-600 text-white'
+                    ? 'bg-orange-500/90 text-white border-orange-300'
+                    : 'bg-red-500/90 text-white border-red-300'
             }`}
           >
-            {popupMessage}
+            <div className="flex items-center gap-3">
+              {popupMessage.includes('successful') && (
+                <CheckCircle className="w-6 h-6" />
+              )}
+              {popupMessage.includes('Already') && <Star className="w-6 h-6" />}
+              {popupMessage.includes('cancelled') && (
+                <XCircle className="w-6 h-6" />
+              )}
+              {popupMessage}
+            </div>
           </div>
-        </div>
+        </motion.div>
       )}
 
-      {/* Cancellation Modal */}
+      {/* Enhanced Cancellation Modal */}
       {showCancelModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-xl">
-            <h3 className="text-xl font-bold text-gray-800 mb-4">
-              Cancel Registration
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Please tell us why you're cancelling your registration:
-            </p>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 50 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 50 }}
+            className="bg-white rounded-3xl max-w-lg w-full p-8 shadow-2xl border border-gray-200"
+          >
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <XCircle className="w-8 h-8 text-orange-500" />
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">
+                Cancel Registration
+              </h3>
+              <p className="text-gray-600">
+                We're sorry to see you go. Please let us know why you're
+                cancelling:
+              </p>
+            </div>
 
-            <div className="space-y-3 mb-6">
-              {predefinedReasons.map(reason => (
-                <label
+            <div className="space-y-4 mb-6">
+              {predefinedReasons.map((reason, index) => (
+                <motion.label
                   key={reason}
-                  className="flex items-center space-x-3 cursor-pointer"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className="flex items-center space-x-3 cursor-pointer p-3 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   <input
                     type="radio"
@@ -284,253 +505,514 @@ const EventDetails = () => {
                     value={reason}
                     checked={cancellationReason === reason}
                     onChange={e => setCancellationReason(e.target.value)}
-                    className="w-4 h-4 text-orange-600 focus:ring-orange-500"
+                    className="w-5 h-5 text-orange-500 focus:ring-orange-400 focus:ring-2"
                   />
-                  <span className="text-gray-700">{reason}</span>
-                </label>
+                  <span className="text-gray-700 font-medium">{reason}</span>
+                </motion.label>
               ))}
             </div>
 
             {cancellationReason === 'Other' && (
-              <div className="mb-6">
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                className="mb-6"
+              >
                 <textarea
                   value={customReason}
                   onChange={e => setCustomReason(e.target.value)}
-                  placeholder="Please specify your reason..."
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
-                  rows="3"
+                  placeholder="Please tell us more about your reason..."
+                  className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-400 focus:border-orange-400 resize-none transition-all"
+                  rows="4"
                   maxLength="200"
                 />
-                <p className="text-sm text-gray-500 mt-1">
-                  {customReason.length}/200 characters
-                </p>
-              </div>
+                <div className="flex justify-between items-center mt-2">
+                  <p className="text-sm text-gray-500">
+                    {customReason.length}/200 characters
+                  </p>
+                </div>
+              </motion.div>
             )}
 
-            <div className="flex gap-3">
-              <button
+            <div className="flex gap-4">
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setShowCancelModal(false)}
-                className="flex-1 px-4 py-3 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition"
+                className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-xl font-semibold hover:bg-gray-200 transition-colors"
               >
                 Keep Registration
-              </button>
-              <button
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={handleCancelRegistration}
                 disabled={
                   cancelLoading ||
                   !cancellationReason ||
                   (cancellationReason === 'Other' && !customReason.trim())
                 }
-                className="flex-1 px-4 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
+                className="flex-1 px-6 py-3 bg-red-500 text-white rounded-xl font-semibold hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
               >
                 {cancelLoading ? 'Cancelling...' : 'Cancel Registration'}
-              </button>
+              </motion.button>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
 
-      {loading ? (
-        <div className="flex justify-center items-center h-96">
-          <span className="text-xl">Loading event details...</span>
-        </div>
-      ) : error || !event ? (
-        <div className="text-center mt-20">
-          <p className="text-red-600 text-xl mb-4">
-            {error || 'Event not found'}
-          </p>
-          <button
-            onClick={fetchData}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg"
+      {/* Main Content */}
+      <div className="pt-20">
+        {loading ? (
+          <EventDetailsSkeleton />
+        ) : error || !event ? (
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mt-20 px-4"
           >
-            Retry
-          </button>
-        </div>
-      ) : (
-        <>
-          {/* Event Image Banner */}
-          <div className="relative rounded-2xl overflow-hidden shadow-lg mb-10">
-            <img
-              src={
-                event.banner_image?.trim() ? event.banner_image : defaultEvent
-              }
-              onError={e => (e.target.src = defaultEvent)}
-              alt={event.title}
-              className="w-full h-64 sm:h-96 object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-8">
-              <h1 className="text-4xl sm:text-5xl font-extrabold text-white mb-3">
-                {event.title}
-              </h1>
-              <span className="inline-block bg-white/90 text-gray-800 px-4 py-2 rounded-full text-base font-semibold mb-2">
-                {event.type}
-              </span>
+            <div className="w-24 h-24 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <XCircle className="w-12 h-12 text-red-500" />
             </div>
-          </div>
+            <h2 className="text-2xl font-bold text-gray-900 mb-2">
+              {error || 'Event not found'}
+            </h2>
+            <p className="text-gray-600 mb-6">
+              We couldn't load the event details. Please try again.
+            </p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={fetchData}
+              className="bg-blue-500 hover:bg-blue-600 text-white px-8 py-3 rounded-xl font-semibold transition-colors"
+            >
+              Try Again
+            </motion.button>
+          </motion.div>
+        ) : (
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="max-w-6xl mx-auto px-4 pb-20"
+          >
+            {/* Hero Section */}
+            <motion.div
+              variants={itemVariants}
+              className="relative rounded-3xl overflow-hidden shadow-2xl mb-12"
+            >
+              <div className="relative h-96 md:h-[500px]">
+                <img
+                  src={
+                    event.banner_image?.trim()
+                      ? event.banner_image
+                      : defaultEvent
+                  }
+                  onError={e => (e.target.src = defaultEvent)}
+                  alt={event.title}
+                  className="w-full h-full object-cover"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
-          {/* Event Details */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 mb-10">
-            <div className="text-gray-700 text-lg mb-4">
-              Duration: {new Date(event.start_date).toLocaleDateString()} -{' '}
-              {new Date(event.end_date).toLocaleDateString()}
-            </div>
-            <div className="text-gray-700 text-lg mb-4">
-              Time: {formatTime(event.start_time)} -{' '}
-              {formatTime(event.end_time)}
-            </div>
-            {event.type?.toLowerCase() === 'job fair' && (
-              <div className="text-gray-700 text-lg mb-4">
-                Location: {event.location}
-              </div>
-            )}
+                {/* Floating Elements */}
+                <div className="absolute inset-0 overflow-hidden">
+                  <div className="absolute top-20 left-20 w-2 h-2 bg-white/30 rounded-full animate-pulse" />
+                  <div className="absolute top-32 right-32 w-3 h-3 bg-white/20 rounded-full animate-pulse delay-300" />
+                  <div className="absolute bottom-40 left-40 w-1 h-1 bg-white/40 rounded-full animate-pulse delay-700" />
+                </div>
 
-            <div className="flex gap-4 mt-6 justify-end flex-wrap">
-              {!isRegistered ? (
-                <button
-                  onClick={handleRegister}
-                  disabled={registerLoading}
-                  className={`px-6 py-3 rounded-lg font-semibold text-white transition ${
-                    registerLoading
-                      ? 'bg-gray-500'
-                      : 'bg-red-900 hover:bg-red-800'
-                  }`}
-                >
-                  {registerLoading ? 'Registering...' : 'Apply'}
-                </button>
-              ) : (
-                <>
-                  <button
-                    disabled
-                    className="px-6 py-3 rounded-lg font-semibold text-white bg-green-500"
+                <div className="absolute bottom-0 left-0 right-0 p-8 md:p-12">
+                  <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5, duration: 0.8 }}
                   >
-                    Applied ✓
-                  </button>
-                  <button
-                    onClick={handleCancelClick}
-                    disabled={cancelLoading}
-                    className={`px-6 py-3 rounded-lg font-semibold text-white transition ${
-                      cancelLoading
-                        ? 'bg-gray-500'
-                        : 'bg-orange-600 hover:bg-orange-700'
-                    }`}
-                  >
-                    Cancel Registration
-                  </button>
-                </>
-              )}
-              {event.status === 'completed' && (
-                <button
-                  onClick={handleFeedback}
-                  disabled={feedbackLoading}
-                  className="px-6 py-3 rounded-lg font-semibold text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-                >
-                  {feedbackLoading ? 'Loading...' : 'Submit Feedback'}
-                </button>
-              )}
-            </div>
-
-            <div className="mt-6">
-              <h2 className="text-xl font-semibold mb-3">Description</h2>
-              <p className="text-gray-700 whitespace-pre-line">
-                {event.description || 'No description available.'}
-              </p>
-            </div>
-
-            {/* Slido Section */}
-            {event.slido_link || event.slido_embed_url ? (
-              <div className="mt-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
-                <h3 className="text-lg font-semibold text-blue-800 mb-3">
-                  💬 Ask Questions Live
-                </h3>
-                <p className="text-blue-700 mb-4">
-                  Join the conversation and ask your questions during the event!
-                </p>
-                <a
-                  href={event.slido_link || event.slido_embed_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition"
-                >
-                  🔗 Open Slido
-                </a>
-              </div>
-            ) : (
-              <div className="mt-8 p-6 bg-blue-50 rounded-lg border border-blue-200">
-                <h3 className="text-lg font-semibold text-blue-800 mb-3">
-                  💬 Ask Questions Live
-                </h3>
-                <p className="text-blue-700 mb-4">
-                  Join the conversation and ask your questions during the event!
-                </p>
-                <div className="text-blue-600 font-medium">
-                  📋 Slido will be available before the event starts
+                    <motion.span
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 0.7 }}
+                      className="inline-block bg-white/20 backdrop-blur-sm text-white px-6 py-2 rounded-full text-sm font-semibold mb-4 border border-white/30"
+                    >
+                      {event.type}
+                    </motion.span>
+                    <h1 className="text-4xl md:text-6xl font-bold text-white mb-4 leading-tight">
+                      {event.title}
+                    </h1>
+                    <div className="flex flex-wrap gap-6 text-white/90">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="w-5 h-5" />
+                        <span className="font-medium">
+                          {formatDate(event.start_date)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="w-5 h-5" />
+                        <span className="font-medium">
+                          {formatTime(event.start_time)} -{' '}
+                          {formatTime(event.end_time)}
+                        </span>
+                      </div>
+                      {event.location && (
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-5 h-5" />
+                          <span className="font-medium">{event.location}</span>
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
                 </div>
               </div>
-            )}
-          </div>
+            </motion.div>
 
-          {/* Agenda Section */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 mb-10">
-            <h2 className="text-2xl font-bold mb-6 text-orange-700 text-center">
-              Agenda
-            </h2>
-            {sessionsLoading ? (
-              <div className="text-center text-orange-600">
-                Loading agenda...
-              </div>
-            ) : sortedSessions.length === 0 ? (
-              <div className="text-center text-gray-500">
-                No sessions available
-              </div>
-            ) : (
-              <div className="grid gap-4 md:grid-cols-2">
-                {sortedSessions.map(session => (
-                  <div
-                    key={session.id}
-                    className={`rounded-lg border p-4 ${
-                      session.is_break
-                        ? 'bg-yellow-50 border-yellow-400'
-                        : 'bg-gray-50 border-gray-200'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xl">
-                        {session.is_break ? '☕' : '🎤'}
-                      </span>
-                      <span className="font-semibold">{session.title}</span>
+            {/* Event Details Card */}
+            <motion.div
+              variants={itemVariants}
+              className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200 p-8 md:p-10 mb-8"
+            >
+              <div className="grid md:grid-cols-2 gap-8 mb-8">
+                <motion.div variants={slideInVariants}>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                    <Calendar className="w-7 h-7 text-blue-500" />
+                    Event Information
+                  </h2>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                        <Calendar className="w-6 h-6 text-blue-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 font-medium">
+                          Duration
+                        </p>
+                        <p className="text-lg font-semibold text-gray-900">
+                          {formatDate(event.start_date)} -{' '}
+                          {formatDate(event.end_date)}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-sm text-gray-600 mb-1">
-                      🕒 {formatTime(session.start_time)} -{' '}
-                      {formatTime(session.end_time)}
-                      {event.type?.toLowerCase() === 'job fair' &&
-                        session.location && (
-                          <span className="ml-2">📍 {session.location}</span>
+
+                    <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+                      <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                        <Clock className="w-6 h-6 text-green-500" />
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600 font-medium">
+                          Time
+                        </p>
+                        <p className="text-lg font-semibold text-gray-900">
+                          {formatTime(event.start_time)} -{' '}
+                          {formatTime(event.end_time)}
+                        </p>
+                      </div>
+                    </div>
+
+                    {event.location && (
+                      <div className="flex items-center gap-4 p-4 bg-gray-50 rounded-xl">
+                        <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                          <MapPin className="w-6 h-6 text-purple-500" />
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600 font-medium">
+                            Location
+                          </p>
+                          <p className="text-lg font-semibold text-gray-900">
+                            {event.location}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+
+                <motion.div variants={slideInVariants}>
+                  <h3 className="text-xl font-bold text-gray-900 mb-6">
+                    Registration Status
+                  </h3>
+                  <div className="space-y-4">
+                    <div
+                      className={`p-6 rounded-2xl border-2 ${
+                        isRegistered
+                          ? 'bg-green-50 border-green-200'
+                          : 'bg-blue-50 border-blue-200'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 mb-4">
+                        {isRegistered ? (
+                          <CheckCircle className="w-8 h-8 text-green-500" />
+                        ) : (
+                          <Users className="w-8 h-8 text-blue-500" />
                         )}
+                        <div>
+                          <p className="text-lg font-semibold text-gray-900">
+                            {isRegistered
+                              ? 'You are registered!'
+                              : 'Ready to join?'}
+                          </p>
+                          <p className="text-sm text-gray-600">
+                            {isRegistered
+                              ? 'Your spot is confirmed for this event'
+                              : 'Register now to secure your spot'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-3">
+                        {!isRegistered ? (
+                          <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={handleRegister}
+                            disabled={registerLoading}
+                            className={`flex-1 px-6 py-3 rounded-xl font-semibold text-white transition-all ${
+                              registerLoading
+                                ? 'bg-gray-400 cursor-not-allowed'
+                                : 'bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg'
+                            }`}
+                          >
+                            {registerLoading ? (
+                              <span className="flex items-center gap-2">
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                Registering...
+                              </span>
+                            ) : (
+                              <span className="flex items-center gap-2">
+                                Register Now
+                                <ArrowRight className="w-4 h-4" />
+                              </span>
+                            )}
+                          </motion.button>
+                        ) : (
+                          <>
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              className="flex-1 px-6 py-3 bg-green-500 text-white rounded-xl font-semibold cursor-default"
+                            >
+                              <span className="flex items-center gap-2">
+                                <CheckCircle className="w-4 h-4" />
+                                Registered
+                              </span>
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              onClick={handleCancelClick}
+                              disabled={cancelLoading}
+                              className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold transition-colors"
+                            >
+                              Cancel
+                            </motion.button>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-500">
-                      Speaker: {session.speaker_name || 'TBA'}
+
+                    {event.status === 'completed' && (
+                      <motion.button
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                        onClick={handleFeedback}
+                        disabled={feedbackLoading}
+                        className="w-full px-6 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl font-semibold transition-all shadow-lg"
+                      >
+                        <span className="flex items-center gap-2">
+                          <MessageCircle className="w-4 h-4" />
+                          {feedbackLoading ? 'Loading...' : 'Submit Feedback'}
+                        </span>
+                      </motion.button>
+                    )}
+                  </div>
+                </motion.div>
+              </div>
+
+              {/* Description */}
+              <motion.div variants={slideInVariants}>
+                <h3 className="text-xl font-bold text-gray-900 mb-4">
+                  About This Event
+                </h3>
+                <div className="prose prose-lg max-w-none text-gray-700 bg-gray-50 rounded-xl p-6">
+                  <p className="whitespace-pre-line leading-relaxed">
+                    {event.description || 'No description available.'}
+                  </p>
+                </div>
+              </motion.div>
+            </motion.div>
+
+            {/* Slido Section */}
+            <motion.div variants={itemVariants}>
+              {event.slido_link || event.slido_embed_url ? (
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-3xl p-8 mb-8">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                      <MessageCircle className="w-6 h-6 text-blue-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">
+                        💬 Interactive Q&A
+                      </h3>
+                      <p className="text-gray-600">
+                        Join the conversation during the event!
+                      </p>
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
-          </div>
+                  <motion.a
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    href={event.slido_link || event.slido_embed_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-8 py-3 rounded-xl font-semibold transition-all shadow-lg"
+                  >
+                    🔗 Open Slido
+                    <ArrowRight className="w-4 h-4" />
+                  </motion.a>
+                </div>
+              ) : (
+                <div className="bg-gradient-to-r from-blue-50 to-purple-50 border border-blue-200 rounded-3xl p-8 mb-8">
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                      <MessageCircle className="w-6 h-6 text-blue-500" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-gray-900">
+                        💬 Interactive Q&A
+                      </h3>
+                      <p className="text-gray-600">
+                        Slido will be available before the event starts
+                      </p>
+                    </div>
+                  </div>
+                  <div className="text-blue-600 font-semibold bg-blue-100 rounded-xl p-4">
+                    📋 Q&A platform coming soon!
+                  </div>
+                </div>
+              )}
+            </motion.div>
 
-          {event.registration_deadline && (
-            <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded mb-10">
-              <span className="font-semibold text-yellow-700">
-                Registration Deadline:{' '}
-              </span>
-              <span className="text-yellow-800">
-                {new Date(event.registration_deadline).toLocaleString()}
-              </span>
-            </div>
-          )}
-        </>
-      )}
+            {/* Agenda Section */}
+            <motion.div
+              variants={itemVariants}
+              className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-xl border border-gray-200 p-8 md:p-10"
+            >
+              <div className="text-center mb-8">
+                <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                  Event Agenda
+                </h2>
+                <div className="w-24 h-1 bg-gradient-to-r from-orange-400 to-red-400 rounded-full mx-auto"></div>
+              </div>
+
+              {sessionsLoading ? (
+                <AgendaSkeleton />
+              ) : sortedSessions.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Calendar className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <p className="text-gray-500 text-lg font-medium">
+                    No sessions scheduled yet
+                  </p>
+                  <p className="text-gray-400">Check back soon for updates!</p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {sortedSessions.map((session, index) => (
+                    <motion.div
+                      key={session.id}
+                      initial={{ opacity: 0, x: -50 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1, duration: 0.6 }}
+                      className={`relative rounded-2xl border-2 p-6 transition-all hover:shadow-lg ${
+                        session.is_break
+                          ? 'bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-300 hover:border-yellow-400'
+                          : 'bg-gradient-to-r from-blue-50 to-purple-50 border-blue-300 hover:border-blue-400'
+                      }`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div
+                          className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                            session.is_break ? 'bg-yellow-100' : 'bg-blue-100'
+                          }`}
+                        >
+                          {session.is_break ? (
+                            <Coffee className="w-6 h-6 text-yellow-600" />
+                          ) : (
+                            <Mic className="w-6 h-6 text-blue-600" />
+                          )}
+                        </div>
+
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-2">
+                            <h4 className="text-lg font-bold text-gray-900">
+                              {session.title}
+                            </h4>
+                            {session.is_break && (
+                              <span className="bg-yellow-200 text-yellow-800 px-2 py-1 rounded-full text-xs font-medium">
+                                Break
+                              </span>
+                            )}
+                          </div>
+
+                          <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-3">
+                            <div className="flex items-center gap-1">
+                              <Clock className="w-4 h-4" />
+                              <span className="font-medium">
+                                {formatTime(session.start_time)} -{' '}
+                                {formatTime(session.end_time)}
+                              </span>
+                            </div>
+
+                            {event.type?.toLowerCase() === 'job fair' &&
+                              session.location && (
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="w-4 h-4" />
+                                  <span className="font-medium">
+                                    {session.location}
+                                  </span>
+                                </div>
+                              )}
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <Users className="w-4 h-4 text-gray-400" />
+                            <span className="text-sm text-gray-600 font-medium">
+                              Speaker:{' '}
+                              {session.speaker_name || 'To be announced'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+
+            {/* Registration Deadline */}
+            {event.registration_deadline && (
+              <motion.div
+                variants={itemVariants}
+                className="mt-8 bg-gradient-to-r from-yellow-50 to-orange-50 border-l-4 border-yellow-400 rounded-r-2xl p-6 shadow-lg"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
+                    <Clock className="w-6 h-6 text-yellow-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-yellow-800 text-lg">
+                      Registration Deadline
+                    </h4>
+                    <p className="text-yellow-700 font-medium">
+                      {new Date(event.registration_deadline).toLocaleString()}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
+        )}
+      </div>
 
       <Footer />
-    </Layout>
+    </div>
   );
 };
 

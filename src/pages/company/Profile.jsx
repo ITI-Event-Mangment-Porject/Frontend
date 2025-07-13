@@ -7,7 +7,7 @@ import {
 import api from '../../api/axios'; 
 
 const CompanyProfile = () => {
-  const { companyId } = useParams();
+  const companyId = localStorage.getItem('companyId');
   const [companyData, setCompanyData] = useState({
     name: "",
     description: "",
@@ -88,6 +88,7 @@ setCompanyData({
 
       if (response.data.success === 'true' || response.data.success === true) {
         setIsEditing(false);
+        window.location.reload(); 
       } else {
         setError("Update failed: " + (response.data.message || "Unknown error"));
       }

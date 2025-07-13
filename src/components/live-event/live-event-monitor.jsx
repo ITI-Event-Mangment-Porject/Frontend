@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import { getFriendlyErrorMessage } from '../../utils/errorMessages'
-import { useState, useEffect, useMemo } from "react"
+import { getFriendlyErrorMessage } from '../../utils/errorMessages';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Search,
   Filter,
@@ -26,7 +26,7 @@ import {
   PieChart,
   Activity,
   ChevronDown,
-} from "lucide-react"
+} from 'lucide-react';
 import {
   PieChart as RechartsPieChart,
   Cell,
@@ -41,341 +41,372 @@ import {
   Area,
   AreaChart,
   Pie,
-} from "recharts"
+} from 'recharts';
 import { useNavigate } from 'react-router-dom';
+const API_BASE_URL = 'http://127.0.0.1:8000';
 
 const LiveEventMonitor = () => {
-  const [events, setEvents] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(false)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedType, setSelectedType] = useState("all")
-  const [currentPage, setCurrentPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [totalEvents, setTotalEvents] = useState(0)
-  const [selectedEvent, setSelectedEvent] = useState(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [actionLoading, setActionLoading] = useState(false)
-  const [actionSuccess, setActionSuccess] = useState("")
-  const [actionError, setActionError] = useState("")
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedType, setSelectedType] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalEvents, setTotalEvents] = useState(0);
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionSuccess, setActionSuccess] = useState('');
+  const [actionError, setActionError] = useState('');
 
   // Add this right after all the useState declarations and before useEffect
-  const [userRole, setUserRole] = useState(null)
-  const [accessDenied, setAccessDenied] = useState(false)
+  const [userRole, setUserRole] = useState(null);
+  const [accessDenied, setAccessDenied] = useState(false);
 
-  const itemsPerPage = 6
+  const itemsPerPage = 6;
 
   // Static admin token as provided
   const ADMIN_TOKEN = localStorage.getItem('token');
 
-    const navigate = useNavigate();
+  const navigate = useNavigate();
 
-    useEffect(() => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login'); // redirect to login if token is missing
-      }
-    }, [navigate]);
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login'); // redirect to login if token is missing
+    }
+  }, [navigate]);
 
   const fetchAllActiveEvents = async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
-      let allActiveEvents = []
-      let currentPage = 1
-      let totalPages = 1
+      let allActiveEvents = [];
+      let currentPage = 1;
+      let totalPages = 1;
 
       do {
-        const response = await fetch(`http://127.0.0.1:8000/api/events?page=${currentPage}`, {
-          headers: {
-            Authorization: `Bearer ${ADMIN_TOKEN}`,
-            "Content-Type": "application/json",
-          },
-        })
+        const response = await fetch(
+          `http://127.0.0.1:8000/api/events?page=${currentPage}`,
+          {
+            headers: {
+              Authorization: `Bearer ${ADMIN_TOKEN}`,
+              'Content-Type': 'application/json',
+            },
+          }
+        );
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`)
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        const data = await response.json()
+        const data = await response.json();
 
         if (data.success) {
           const activeEventsFromPage = data.data.result.data.filter(
-            (event) => event.status === "published" || event.status === "ongoing",
-          )
+            event => event.status === 'published' || event.status === 'ongoing'
+          );
 
-          allActiveEvents = [...allActiveEvents, ...activeEventsFromPage]
-          totalPages = data.data.result.last_page
-          currentPage++
+          allActiveEvents = [...allActiveEvents, ...activeEventsFromPage];
+          totalPages = data.data.result.last_page;
+          currentPage++;
         } else {
-          throw new Error(data.message || "Failed to fetch events")
+          throw new Error(data.message || 'Failed to fetch events');
         }
-      } while (currentPage <= totalPages)
+      } while (currentPage <= totalPages);
 
       allActiveEvents.sort((a, b) => {
-        if (a.status === "ongoing" && b.status !== "ongoing") return -1
-        if (b.status === "ongoing" && a.status !== "ongoing") return 1
+        if (a.status === 'ongoing' && b.status !== 'ongoing') return -1;
+        if (b.status === 'ongoing' && a.status !== 'ongoing') return 1;
 
-        const dateA = new Date(a.start_date)
-        const dateB = new Date(b.start_date)
-        return dateA - dateB
-      })
+        const dateA = new Date(a.start_date);
+        const dateB = new Date(b.start_date);
+        return dateA - dateB;
+      });
 
-      setEvents(allActiveEvents)
-      setTotalEvents(allActiveEvents.length)
+      setEvents(allActiveEvents);
+      setTotalEvents(allActiveEvents.length);
     } catch (err) {
-      setError(err.message || "Error loading events")
-      console.error("Error fetching events:", err)
+      setError(err.message || 'Error loading events');
+      console.error('Error fetching events:', err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // Add this useEffect to check user role
   useEffect(() => {
-    const storedRole = localStorage.getItem("role")
-    const storedUser = localStorage.getItem("user")
-    const storedToken = localStorage.getItem("token")
+    const storedRole = localStorage.getItem('role');
+    const storedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('token');
 
     if (!storedRole || !storedUser || !storedToken) {
-      setAccessDenied(true)
-      setLoading(false)
-      return
+      setAccessDenied(true);
+      setLoading(false);
+      return;
     }
 
-    if (storedRole !== "admin") {
-      setAccessDenied(true)
-      setLoading(false)
-      return
+    if (storedRole !== 'admin') {
+      setAccessDenied(true);
+      setLoading(false);
+      return;
     }
 
-    setUserRole(storedRole)
-  }, [])
+    setUserRole(storedRole);
+  }, []);
 
   useEffect(() => {
-    if (userRole === "admin") {
-      fetchAllActiveEvents()
+    if (userRole === 'admin') {
+      fetchAllActiveEvents();
     }
-  }, [userRole])
+  }, [userRole]);
 
   useEffect(() => {
-    setCurrentPage(1)
-  }, [searchTerm, selectedType])
+    setCurrentPage(1);
+  }, [searchTerm, selectedType]);
 
   const filteredEvents = useMemo(() => {
-    return events.filter((event) => {
+    return events.filter(event => {
       const matchesSearch =
         event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         event.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.location.toLowerCase().includes(searchTerm.toLowerCase())
+        event.location.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesType = selectedType === "all" || event.type === selectedType
+      const matchesType = selectedType === 'all' || event.type === selectedType;
 
-      return matchesSearch && matchesType
-    })
-  }, [events, searchTerm, selectedType])
+      return matchesSearch && matchesType;
+    });
+  }, [events, searchTerm, selectedType]);
 
   const paginatedEvents = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage
-    return filteredEvents.slice(startIndex, startIndex + itemsPerPage)
-  }, [filteredEvents, currentPage])
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredEvents.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredEvents, currentPage]);
 
-  const totalFilteredPages = Math.ceil(filteredEvents.length / itemsPerPage)
+  const totalFilteredPages = Math.ceil(filteredEvents.length / itemsPerPage);
 
   // Analytics data for charts
   const analyticsData = useMemo(() => {
     const statusData = [
       {
-        name: "Published",
-        value: events.filter((e) => e.status === "published").length,
-        color: "var(--primary-400)",
+        name: 'Published',
+        value: events.filter(e => e.status === 'published').length,
+        color: 'var(--primary-400)',
       },
       {
-        name: "Ongoing",
-        value: events.filter((e) => e.status === "ongoing").length,
-        color: "var(--secondary-400)",
+        name: 'Ongoing',
+        value: events.filter(e => e.status === 'ongoing').length,
+        color: 'var(--secondary-400)',
       },
-    ]
+    ];
 
     const typeData = [
       {
-        name: "Job Fair",
-        published: events.filter((e) => e.type === "Job Fair" && e.status === "published").length,
-        ongoing: events.filter((e) => e.type === "Job Fair" && e.status === "ongoing").length,
-        total: events.filter((e) => e.type === "Job Fair").length,
+        name: 'Job Fair',
+        published: events.filter(
+          e => e.type === 'Job Fair' && e.status === 'published'
+        ).length,
+        ongoing: events.filter(
+          e => e.type === 'Job Fair' && e.status === 'ongoing'
+        ).length,
+        total: events.filter(e => e.type === 'Job Fair').length,
       },
       {
-        name: "Tech",
-        published: events.filter((e) => e.type === "Tech" && e.status === "published").length,
-        ongoing: events.filter((e) => e.type === "Tech" && e.status === "ongoing").length,
-        total: events.filter((e) => e.type === "Tech").length,
+        name: 'Tech',
+        published: events.filter(
+          e => e.type === 'Tech' && e.status === 'published'
+        ).length,
+        ongoing: events.filter(e => e.type === 'Tech' && e.status === 'ongoing')
+          .length,
+        total: events.filter(e => e.type === 'Tech').length,
       },
       {
-        name: "Fun",
-        published: events.filter((e) => e.type === "Fun" && e.status === "published").length,
-        ongoing: events.filter((e) => e.type === "Fun" && e.status === "ongoing").length,
-        total: events.filter((e) => e.type === "Fun").length,
+        name: 'Fun',
+        published: events.filter(
+          e => e.type === 'Fun' && e.status === 'published'
+        ).length,
+        ongoing: events.filter(e => e.type === 'Fun' && e.status === 'ongoing')
+          .length,
+        total: events.filter(e => e.type === 'Fun').length,
       },
-    ]
+    ];
 
     const timelineData = events
       .reduce((acc, event) => {
-        const date = new Date(event.start_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })
-        const existing = acc.find((item) => item.date === date)
+        const date = new Date(event.start_date).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        });
+        const existing = acc.find(item => item.date === date);
         if (existing) {
-          existing.events += 1
-          if (event.status === "ongoing") existing.ongoing += 1
-          if (event.status === "published") existing.published += 1
+          existing.events += 1;
+          if (event.status === 'ongoing') existing.ongoing += 1;
+          if (event.status === 'published') existing.published += 1;
         } else {
           acc.push({
             date,
             events: 1,
-            ongoing: event.status === "ongoing" ? 1 : 0,
-            published: event.status === "published" ? 1 : 0,
-          })
+            ongoing: event.status === 'ongoing' ? 1 : 0,
+            published: event.status === 'published' ? 1 : 0,
+          });
         }
-        return acc
+        return acc;
       }, [])
       .sort((a, b) => new Date(a.date) - new Date(b.date))
-      .slice(0, 7)
+      .slice(0, 7);
 
-    return { statusData, typeData, timelineData }
-  }, [events])
+    return { statusData, typeData, timelineData };
+  }, [events]);
 
   const handleRefresh = () => {
-    setCurrentPage(1)
-    fetchAllActiveEvents()
-  }
+    setCurrentPage(1);
+    fetchAllActiveEvents();
+  };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    })
-  }
+  const formatDate = dateString => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
 
-  const formatTime = (timeString) => {
-    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
+  const formatTime = timeString => {
+    return new Date(`2000-01-01T${timeString}`).toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
       hour12: true,
-    })
-  }
+    });
+  };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = status => {
     switch (status) {
-      case "ongoing":
-        return "bg-green-100 text-green-800 border-green-200"
-      case "published":
-        return "bg-blue-100 text-blue-800 border-blue-200"
+      case 'ongoing':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'published':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
       default:
-        return "bg-gray-100 text-gray-800 border-gray-200"
+        return 'bg-gray-100 text-gray-800 border-gray-200';
     }
-  }
+  };
 
-  const getTypeColor = (type) => {
+  const getTypeColor = type => {
     switch (type) {
-      case "Job Fair":
-        return "bg-[#901b20] text-white"
-      case "Tech":
-        return "bg-[#203947] text-white"
-      case "Fun":
-        return "bg-[#ad565a] text-white"
+      case 'Job Fair':
+        return 'bg-[#901b20] text-white';
+      case 'Tech':
+        return 'bg-[#203947] text-white';
+      case 'Fun':
+        return 'bg-[#ad565a] text-white';
       default:
-        return "bg-gray-500 text-white"
+        return 'bg-gray-500 text-white';
     }
-  }
+  };
 
-  const handleViewDetails = (event) => {
-    setSelectedEvent(event)
-    setIsModalOpen(true)
-    setActionSuccess("")
-    setActionError("")
-  }
+  const handleViewDetails = event => {
+    setSelectedEvent(event);
+    setIsModalOpen(true);
+    setActionSuccess('');
+    setActionError('');
+  };
 
   const handleStartEvent = async () => {
-    if (!selectedEvent) return
+    if (!selectedEvent) return;
 
-    setActionLoading(true)
-    setActionError("")
-    setActionSuccess("")
+    setActionLoading(true);
+    setActionError('');
+    setActionSuccess('');
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/test/live/events/${selectedEvent.id}/start`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${ADMIN_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      })
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/test/live/events/${selectedEvent.id}/start`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${ADMIN_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.success) {
-        setEvents((prevEvents) =>
-          prevEvents.map((event) => (event.id === selectedEvent.id ? { ...event, status: "ongoing" } : event)),
-        )
-        setSelectedEvent((prev) => ({ ...prev, status: "ongoing" }))
-        setActionSuccess("Event started successfully! 🎉")
+        setEvents(prevEvents =>
+          prevEvents.map(event =>
+            event.id === selectedEvent.id
+              ? { ...event, status: 'ongoing' }
+              : event
+          )
+        );
+        setSelectedEvent(prev => ({ ...prev, status: 'ongoing' }));
+        setActionSuccess('Event started successfully! 🎉');
       } else {
-        setActionError(data.message || "Failed to start event")
+        setActionError(data.message || 'Failed to start event');
       }
     } catch (error) {
-      console.error("Error starting event:", error)
-      setActionError("Network error occurred while starting the event")
+      console.error('Error starting event:', error);
+      setActionError('Network error occurred while starting the event');
     } finally {
-      setActionLoading(false)
+      setActionLoading(false);
     }
-  }
+  };
 
   const handleEndEvent = async () => {
-    if (!selectedEvent) return
+    if (!selectedEvent) return;
 
-    setActionLoading(true)
-    setActionError("")
-    setActionSuccess("")
+    setActionLoading(true);
+    setActionError('');
+    setActionSuccess('');
 
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/test/live/events/${selectedEvent.id}/end`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${ADMIN_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      })
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/test/live/events/${selectedEvent.id}/end`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${ADMIN_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.success) {
-        setEvents((prevEvents) => prevEvents.filter((event) => event.id !== selectedEvent.id))
-        setActionSuccess("Event ended successfully! The event has been completed.")
+        setEvents(prevEvents =>
+          prevEvents.filter(event => event.id !== selectedEvent.id)
+        );
+        setActionSuccess(
+          'Event ended successfully! The event has been completed.'
+        );
 
         setTimeout(() => {
-          setIsModalOpen(false)
-        }, 2000)
+          setIsModalOpen(false);
+        }, 2000);
       } else {
-        setActionError(data.message || "Failed to end event")
+        setActionError(data.message || 'Failed to end event');
       }
     } catch (error) {
-      console.error("Error ending event:", error)
-      setActionError("Network error occurred while ending the event")
+      console.error('Error ending event:', error);
+      setActionError('Network error occurred while ending the event');
     } finally {
-      setActionLoading(false)
+      setActionLoading(false);
     }
-  }
+  };
 
-  const canStartEvent = (event) => {
-    return event.status === "published"
-  }
+  const canStartEvent = event => {
+    return event.status === 'published';
+  };
 
-  const canEndEvent = (event) => {
-    return event.status === "ongoing"
-  }
+  const canEndEvent = event => {
+    return event.status === 'ongoing';
+  };
 
   const accessDeniedContent = useMemo(() => {
-    if (!accessDenied) return null
+    if (!accessDenied) return null;
 
     return (
       <div className="min-h-screen bg-[#ebebeb] p-6 flex items-center justify-center">
@@ -383,18 +414,23 @@ const LiveEventMonitor = () => {
           <div className="text-red-500 mb-6">
             <AlertCircle className="w-16 h-16 mx-auto" />
           </div>
-          <h3 className="text-2xl font-bold text-gray-900 mb-3">Access Denied</h3>
-          <p className="text-gray-600 mb-6">You don't have permission to access this page. Admin access required.</p>
+          <h3 className="text-2xl font-bold text-gray-900 mb-3">
+            Access Denied
+          </h3>
+          <p className="text-gray-600 mb-6">
+            You don't have permission to access this page. Admin access
+            required.
+          </p>
           <button
-            onClick={() => (window.location.href = "/")}
+            onClick={() => (window.location.href = '/')}
             className="bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
           >
             Go to Homepage
           </button>
         </div>
       </div>
-    )
-  }, [accessDenied])
+    );
+  }, [accessDenied]);
 
   if (loading) {
     return (
@@ -404,7 +440,10 @@ const LiveEventMonitor = () => {
             <div className="h-8 bg-gray-300 border border-gray-200 rounded w-1/4 mb-6 shimmer-effect"></div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white rounded-lg p-6 space-y-4 shimmer-effect">
+                <div
+                  key={i}
+                  className="bg-white rounded-lg p-6 space-y-4 shimmer-effect"
+                >
                   <div className="h-4 bg-gray-300 border border-gray-200  rounded w-3/4"></div>
                   <div className="h-3 bg-gray-300 border border-gray-200 rounded w-1/2"></div>
                   <div className="h-20 bg-gray-300 border border-gray-200 rounded"></div>
@@ -414,7 +453,7 @@ const LiveEventMonitor = () => {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -441,7 +480,7 @@ const LiveEventMonitor = () => {
   }
 
   if (accessDenied) {
-    return accessDeniedContent
+    return accessDeniedContent;
   }
 
   return (
@@ -454,7 +493,9 @@ const LiveEventMonitor = () => {
               <h1 className="text-3xl sm:text-4xl font-black text-primary bg-gradient-to-r from-[#901b20] to-[#901b20] bg-clip-text text-transparent mb-2">
                 Events Monitor
               </h1>
-              <p className="text-lg text-gray-600 font-medium">Monitor and manage all active events in real-time</p>
+              <p className="text-lg text-gray-600 font-medium">
+                Monitor and manage all active events in real-time
+              </p>
             </div>
             <button
               onClick={handleRefresh}
@@ -480,7 +521,7 @@ const LiveEventMonitor = () => {
                     />
                   </svg>
                 )}
-                <span>{loading ? "Loading..." : "Refresh"}</span>
+                <span>{loading ? 'Loading...' : 'Refresh'}</span>
               </div>
             </button>
           </div>
@@ -496,8 +537,12 @@ const LiveEventMonitor = () => {
                   <Eye className="w-6 h-6 text-white" />
                 </div>
               </div>
-              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Total Active</p>
-              <p className="text-3xl font-black text-primary animate-pulse">{events.length}</p>
+              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                Total Active
+              </p>
+              <p className="text-3xl font-black text-primary animate-pulse">
+                {events.length}
+              </p>
             </div>
           </div>
 
@@ -513,9 +558,11 @@ const LiveEventMonitor = () => {
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full animate-pulse"></div>
                 </div>
               </div>
-              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Ongoing</p>
+              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                Ongoing
+              </p>
               <p className="text-3xl font-black text-green-600 animate-pulse">
-                {filteredEvents.filter((e) => e.status === "ongoing").length}
+                {filteredEvents.filter(e => e.status === 'ongoing').length}
               </p>
             </div>
           </div>
@@ -528,9 +575,11 @@ const LiveEventMonitor = () => {
                   <Users className="w-6 h-6 text-white" />
                 </div>
               </div>
-              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Job Fairs</p>
+              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                Job Fairs
+              </p>
               <p className="text-3xl font-black text-[#901b20]">
-                {filteredEvents.filter((e) => e.type === "Job Fair").length}
+                {filteredEvents.filter(e => e.type === 'Job Fair').length}
               </p>
             </div>
           </div>
@@ -543,9 +592,11 @@ const LiveEventMonitor = () => {
                   <span className="text-white text-xl font-bold">T</span>
                 </div>
               </div>
-              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Tech Events</p>
+              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                Tech Events
+              </p>
               <p className="text-3xl font-black text-[#203947]">
-                {filteredEvents.filter((e) => e.type === "Tech").length}
+                {filteredEvents.filter(e => e.type === 'Tech').length}
               </p>
             </div>
           </div>
@@ -561,7 +612,7 @@ const LiveEventMonitor = () => {
                   type="text"
                   placeholder="Search events by title, description, or location..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={e => setSearchTerm(e.target.value)}
                   className="w-full pl-12 pr-6 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 text-lg font-medium placeholder-gray-400 bg-white"
                 />
               </div>
@@ -573,10 +624,10 @@ const LiveEventMonitor = () => {
                 <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-[#901b20] transition-colors duration-300 pointer-events-none z-10" />
                 <select
                   value={selectedType}
-                  onChange={(e) => setSelectedType(e.target.value)}
+                  onChange={e => setSelectedType(e.target.value)}
                   className="appearance-none pl-12 pr-12 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 bg-white text-lg font-medium cursor-pointer hover:border-[#901b20]/50 min-w-[160px]"
                   style={{
-                    backgroundImage: "none",
+                    backgroundImage: 'none',
                   }}
                 >
                   <option value="all">All Types</option>
@@ -596,14 +647,16 @@ const LiveEventMonitor = () => {
               <Calendar className="w-24 h-24 mx-auto" />
             </div>
             <h3 className="text-3xl font-bold text-gray-900 mb-4">
-              {events.length === 0 ? "No Active Events Found" : "No Events Match Your Filters"}
+              {events.length === 0
+                ? 'No Active Events Found'
+                : 'No Events Match Your Filters'}
             </h3>
             <p className="text-xl text-gray-600 mb-8">
               {events.length === 0
-                ? "There are no published or ongoing events at the moment."
-                : searchTerm || selectedType !== "all"
-                  ? "Try adjusting your search or filter criteria."
-                  : "No events found."}
+                ? 'There are no published or ongoing events at the moment.'
+                : searchTerm || selectedType !== 'all'
+                  ? 'Try adjusting your search or filter criteria.'
+                  : 'No events found.'}
             </p>
             {events.length === 0 && (
               <button
@@ -627,7 +680,11 @@ const LiveEventMonitor = () => {
                   <div className="h-48 bg-gradient-to-br from-[#901b20] via-[#ad565a] to-[#cc9598] relative overflow-hidden">
                     {event.banner_image ? (
                       <img
-                        src={event.banner_image || "/placeholder.svg"}
+                        src={
+                          event.banner_image
+                            ? `${API_BASE_URL}${event.banner_image}`
+                            : ''
+                        }
                         alt={event.title}
                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                       />
@@ -642,10 +699,11 @@ const LiveEventMonitor = () => {
                       <span
                         className={`px-4 py-2 rounded-full text-sm font-bold border-2 backdrop-blur-sm ${getStatusColor(event.status)} shadow-lg`}
                       >
-                        {event.status === "ongoing" && (
+                        {event.status === 'ongoing' && (
                           <div className="w-3 h-3 bg-green-500 rounded-full mr-2 animate-pulse inline-block"></div>
                         )}
-                        {event.status.charAt(0).toUpperCase() + event.status.slice(1)}
+                        {event.status.charAt(0).toUpperCase() +
+                          event.status.slice(1)}
                       </span>
                     </div>
 
@@ -672,7 +730,9 @@ const LiveEventMonitor = () => {
                         <div className="w-10 h-10 bg-[#901b20]/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0">
                           <MapPin className="w-5 h-5 text-[#901b20]" />
                         </div>
-                        <span className="font-medium truncate">{event.location}</span>
+                        <span className="font-medium truncate">
+                          {event.location}
+                        </span>
                       </div>
 
                       <div className="flex items-center text-gray-600 group-hover:text-gray-800 transition-colors duration-300">
@@ -681,7 +741,8 @@ const LiveEventMonitor = () => {
                         </div>
                         <span className="font-medium">
                           {formatDate(event.start_date)}
-                          {event.start_date !== event.end_date && ` - ${formatDate(event.end_date)}`}
+                          {event.start_date !== event.end_date &&
+                            ` - ${formatDate(event.end_date)}`}
                         </span>
                       </div>
 
@@ -690,14 +751,16 @@ const LiveEventMonitor = () => {
                           <Clock className="w-5 h-5 text-[#ad565a]" />
                         </div>
                         <span className="font-medium">
-                          {formatTime(event.start_time)} - {formatTime(event.end_time)}
+                          {formatTime(event.start_time)} -{' '}
+                          {formatTime(event.end_time)}
                         </span>
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between pt-6 border-t border-gray-100 mt-auto">
                       <div className="text-sm text-gray-500 font-medium">
-                        Created by {event.creator.first_name} {event.creator.last_name}
+                        Created by {event.creator.first_name}{' '}
+                        {event.creator.last_name}
                       </div>
 
                       <button
@@ -718,16 +781,29 @@ const LiveEventMonitor = () => {
               <div className="bg-gradient-to-r from-gray-50 to-white rounded-2xl p-6 shadow-lg mb-8 border border-gray-100">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                   <div className="text-lg text-gray-600 font-medium text-center sm:text-left">
-                    Showing <span className="font-bold text-[#901b20]">{(currentPage - 1) * itemsPerPage + 1}</span> to{" "}
+                    Showing{' '}
                     <span className="font-bold text-[#901b20]">
-                      {Math.min(currentPage * itemsPerPage, filteredEvents.length)}
-                    </span>{" "}
-                    of <span className="font-bold text-[#901b20]">{filteredEvents.length}</span> events
+                      {(currentPage - 1) * itemsPerPage + 1}
+                    </span>{' '}
+                    to{' '}
+                    <span className="font-bold text-[#901b20]">
+                      {Math.min(
+                        currentPage * itemsPerPage,
+                        filteredEvents.length
+                      )}
+                    </span>{' '}
+                    of{' '}
+                    <span className="font-bold text-[#901b20]">
+                      {filteredEvents.length}
+                    </span>{' '}
+                    events
                   </div>
 
                   <div className="flex items-center justify-center gap-3">
                     <button
-                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                      onClick={() =>
+                        setCurrentPage(prev => Math.max(prev - 1, 1))
+                      }
                       disabled={currentPage === 1}
                       className="flex items-center px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-[#901b20] hover:bg-[#901b20] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-transparent disabled:hover:text-gray-600 transition-all duration-300 font-medium"
                     >
@@ -736,36 +812,42 @@ const LiveEventMonitor = () => {
                     </button>
 
                     <div className="flex items-center gap-2">
-                      {[...Array(Math.min(3, totalFilteredPages))].map((_, i) => {
-                        let pageNum
-                        if (totalFilteredPages <= 3) {
-                          pageNum = i + 1
-                        } else if (currentPage <= 2) {
-                          pageNum = i + 1
-                        } else if (currentPage >= totalFilteredPages - 1) {
-                          pageNum = totalFilteredPages - 2 + i
-                        } else {
-                          pageNum = currentPage - 1 + i
-                        }
+                      {[...Array(Math.min(3, totalFilteredPages))].map(
+                        (_, i) => {
+                          let pageNum;
+                          if (totalFilteredPages <= 3) {
+                            pageNum = i + 1;
+                          } else if (currentPage <= 2) {
+                            pageNum = i + 1;
+                          } else if (currentPage >= totalFilteredPages - 1) {
+                            pageNum = totalFilteredPages - 2 + i;
+                          } else {
+                            pageNum = currentPage - 1 + i;
+                          }
 
-                        return (
-                          <button
-                            key={pageNum}
-                            onClick={() => setCurrentPage(pageNum)}
-                            className={`px-4 py-3 rounded-xl font-bold transition-all duration-300 ${
-                              currentPage === pageNum
-                                ? "bg-gradient-to-r from-[#901b20] to-[#ad565a] text-white shadow-lg transform scale-110"
-                                : "border-2 border-gray-200 hover:border-[#901b20] hover:bg-[#901b20] hover:text-white"
-                            }`}
-                          >
-                            {pageNum}
-                          </button>
-                        )
-                      })}
+                          return (
+                            <button
+                              key={pageNum}
+                              onClick={() => setCurrentPage(pageNum)}
+                              className={`px-4 py-3 rounded-xl font-bold transition-all duration-300 ${
+                                currentPage === pageNum
+                                  ? 'bg-gradient-to-r from-[#901b20] to-[#ad565a] text-white shadow-lg transform scale-110'
+                                  : 'border-2 border-gray-200 hover:border-[#901b20] hover:bg-[#901b20] hover:text-white'
+                              }`}
+                            >
+                              {pageNum}
+                            </button>
+                          );
+                        }
+                      )}
                     </div>
 
                     <button
-                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalFilteredPages))}
+                      onClick={() =>
+                        setCurrentPage(prev =>
+                          Math.min(prev + 1, totalFilteredPages)
+                        )
+                      }
                       disabled={currentPage === totalFilteredPages}
                       className="flex items-center px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-[#901b20] hover:bg-[#901b20] hover:text-white disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:border-gray-200 disabled:hover:bg-transparent disabled:hover:text-gray-600 transition-all duration-300 font-medium"
                     >
@@ -785,7 +867,9 @@ const LiveEventMonitor = () => {
             <h2 className="text-4xl font-black text-primary bg-gradient-to-r from-[#901b20] to-[#ad565a] bg-clip-text text-transparent mb-4">
               Live Events Analytics
             </h2>
-            <p className="text-xl text-gray-600 font-medium">Real-time insights and statistics</p>
+            <p className="text-xl text-gray-600 font-medium">
+              Real-time insights and statistics
+            </p>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
@@ -817,10 +901,10 @@ const LiveEventMonitor = () => {
                     </Pie>
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "white",
-                        border: "2px solid #901b20",
-                        borderRadius: "12px",
-                        boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+                        backgroundColor: 'white',
+                        border: '2px solid #901b20',
+                        borderRadius: '12px',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
                       }}
                     />
                     <Legend />
@@ -843,19 +927,32 @@ const LiveEventMonitor = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={analyticsData.typeData}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="name" tick={{ fontSize: 12, fontWeight: 600 }} />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: 12, fontWeight: 600 }}
+                    />
                     <YAxis tick={{ fontSize: 12, fontWeight: 600 }} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: "white",
-                        border: "2px solid #901b20",
-                        borderRadius: "12px",
-                        boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+                        backgroundColor: 'white',
+                        border: '2px solid #901b20',
+                        borderRadius: '12px',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
                       }}
                     />
                     <Legend />
-                    <Bar dataKey="published" fill="var(--primary-400)" name="Published" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="ongoing" fill="var(--secondary-400)" name="Ongoing" radius={[4, 4, 0, 0]} />
+                    <Bar
+                      dataKey="published"
+                      fill="var(--primary-400)"
+                      name="Published"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="ongoing"
+                      fill="var(--secondary-400)"
+                      name="Ongoing"
+                      radius={[4, 4, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -885,14 +982,19 @@ const LiveEventMonitor = () => {
                       {selectedEvent.type}
                     </span>
                     <span className="px-6 py-3 bg-white/20 rounded-full text-lg font-bold flex items-center gap-3 backdrop-blur-sm">
-                      {selectedEvent.status === "ongoing" && (
+                      {selectedEvent.status === 'ongoing' && (
                         <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse" />
                       )}
-                      {selectedEvent.status.charAt(0).toUpperCase() + selectedEvent.status.slice(1)}
+                      {selectedEvent.status.charAt(0).toUpperCase() +
+                        selectedEvent.status.slice(1)}
                     </span>
                   </div>
-                  <h1 className="text-5xl font-black mb-3 leading-tight">{selectedEvent.title}</h1>
-                  <p className="text-white/90 text-xl font-medium">Event ID: #{selectedEvent.id}</p>
+                  <h1 className="text-5xl font-black mb-3 leading-tight">
+                    {selectedEvent.title}
+                  </h1>
+                  <p className="text-white/90 text-xl font-medium">
+                    Event ID: #{selectedEvent.id}
+                  </p>
                 </div>
               </div>
 
@@ -905,13 +1007,17 @@ const LiveEventMonitor = () => {
                       {actionSuccess && (
                         <div className="bg-green-50 border-2 border-green-200 rounded-2xl p-6 flex items-center gap-4">
                           <CheckCircle className="w-8 h-8 text-green-600 flex-shrink-0" />
-                          <span className="text-green-800 font-bold text-lg">{actionSuccess}</span>
+                          <span className="text-green-800 font-bold text-lg">
+                            {actionSuccess}
+                          </span>
                         </div>
                       )}
                       {actionError && (
                         <div className="bg-red-50 border-2 border-red-200 rounded-2xl p-6 flex items-center gap-4 animate-shake">
                           <AlertCircle className="w-8 h-8 text-red-600 flex-shrink-0" />
-                          <span className="text-red-800 font-bold text-lg">{actionError}</span>
+                          <span className="text-red-800 font-bold text-lg">
+                            {actionError}
+                          </span>
                         </div>
                       )}
                     </div>
@@ -921,34 +1027,49 @@ const LiveEventMonitor = () => {
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 mb-12">
                     <div className="text-center p-8 bg-gradient-to-br from-[#901b20]/5 to-[#901b20]/10 rounded-3xl hover:shadow-lg transition-all duration-300">
                       <MapPin className="w-12 h-12 text-[#901b20] mx-auto mb-4" />
-                      <h3 className="font-bold text-gray-900 mb-2 text-lg">Location</h3>
-                      <p className="text-gray-600 font-medium">{selectedEvent.location}</p>
+                      <h3 className="font-bold text-gray-900 mb-2 text-lg">
+                        Location
+                      </h3>
+                      <p className="text-gray-600 font-medium">
+                        {selectedEvent.location}
+                      </p>
                     </div>
 
                     <div className="text-center p-8 bg-gradient-to-br from-[#203947]/5 to-[#203947]/10 rounded-3xl hover:shadow-lg transition-all duration-300">
                       <Calendar className="w-12 h-12 text-[#203947] mx-auto mb-4" />
-                      <h3 className="font-bold text-gray-900 mb-2 text-lg">Date</h3>
+                      <h3 className="font-bold text-gray-900 mb-2 text-lg">
+                        Date
+                      </h3>
                       <p className="text-gray-600 font-medium">
                         {formatDate(selectedEvent.start_date)}
-                        {selectedEvent.start_date !== selectedEvent.end_date && (
-                          <span className="block">to {formatDate(selectedEvent.end_date)}</span>
+                        {selectedEvent.start_date !==
+                          selectedEvent.end_date && (
+                          <span className="block">
+                            to {formatDate(selectedEvent.end_date)}
+                          </span>
                         )}
                       </p>
                     </div>
 
                     <div className="text-center p-8 bg-gradient-to-br from-[#ad565a]/5 to-[#ad565a]/10 rounded-3xl hover:shadow-lg transition-all duration-300">
                       <Clock className="w-12 h-12 text-[#ad565a] mx-auto mb-4" />
-                      <h3 className="font-bold text-gray-900 mb-2 text-lg">Time</h3>
+                      <h3 className="font-bold text-gray-900 mb-2 text-lg">
+                        Time
+                      </h3>
                       <p className="text-gray-600 font-medium">
-                        {formatTime(selectedEvent.start_time)} - {formatTime(selectedEvent.end_time)}
+                        {formatTime(selectedEvent.start_time)} -{' '}
+                        {formatTime(selectedEvent.end_time)}
                       </p>
                     </div>
 
                     <div className="text-center p-8 bg-gradient-to-br from-[#cc9598]/5 to-[#cc9598]/10 rounded-3xl hover:shadow-lg transition-all duration-300">
                       <User className="w-12 h-12 text-[#cc9598] mx-auto mb-4" />
-                      <h3 className="font-bold text-gray-900 mb-2 text-lg">Created By</h3>
+                      <h3 className="font-bold text-gray-900 mb-2 text-lg">
+                        Created By
+                      </h3>
                       <p className="text-gray-600 font-medium">
-                        {selectedEvent.creator.first_name} {selectedEvent.creator.last_name}
+                        {selectedEvent.creator.first_name}{' '}
+                        {selectedEvent.creator.last_name}
                       </p>
                     </div>
                   </div>
@@ -957,7 +1078,9 @@ const LiveEventMonitor = () => {
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
                     {/* Description */}
                     <div className="lg:col-span-2">
-                      <h2 className="text-3xl font-bold text-gray-900 mb-6">About This Event</h2>
+                      <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                        About This Event
+                      </h2>
                       <div className="bg-gray-50 rounded-3xl p-8 mb-8">
                         <p className="text-gray-700 leading-relaxed text-lg whitespace-pre-wrap">
                           {selectedEvent.description}
@@ -965,9 +1088,11 @@ const LiveEventMonitor = () => {
                       </div>
 
                       {/* Interactive Features */}
-                      {(selectedEvent.slido_embed_url) && (
+                      {selectedEvent.slido_embed_url && (
                         <div>
-                          <h3 className="text-2xl font-bold text-gray-900 mb-6">Interactive Feature</h3>
+                          <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                            Interactive Feature
+                          </h3>
                           <div className="space-y-6">
                             {selectedEvent.slido_embed_url && (
                               <div className="flex items-center justify-between p-6 bg-green-50 rounded-2xl border-2 border-green-200 hover:shadow-lg transition-all duration-300">
@@ -976,12 +1101,21 @@ const LiveEventMonitor = () => {
                                     <ExternalLink className="w-8 h-8 text-white" />
                                   </div>
                                   <div>
-                                    <h4 className="font-bold text-gray-900 text-lg">Slido Integration</h4>
-                                    <p className="text-gray-600 font-medium">Join live Q&A and polls</p>
+                                    <h4 className="font-bold text-gray-900 text-lg">
+                                      Slido Integration
+                                    </h4>
+                                    <p className="text-gray-600 font-medium">
+                                      Join live Q&A and polls
+                                    </p>
                                   </div>
                                 </div>
                                 <button
-                                  onClick={() => window.open(selectedEvent.slido_embed_url, "_blank")}
+                                  onClick={() =>
+                                    window.open(
+                                      selectedEvent.slido_embed_url,
+                                      '_blank'
+                                    )
+                                  }
                                   className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-xl font-bold transition-all duration-300 hover:scale-105"
                                 >
                                   Open Slido
@@ -997,14 +1131,16 @@ const LiveEventMonitor = () => {
                     <div className="space-y-8">
                       {/* Event Settings */}
                       <div className="bg-white border-2 border-gray-100 rounded-3xl p-8 hover:shadow-lg transition-all duration-300">
-                        <h3 className="text-xl font-bold text-gray-900 mb-6">Event Settings</h3>
+                        <h3 className="text-xl font-bold text-gray-900 mb-6">
+                          Event Settings
+                        </h3>
                         <div className="space-y-6">
                           <div>
                             <label className="text-sm font-bold text-gray-500 uppercase tracking-wider">
                               Visibility
                             </label>
                             <p className="text-gray-900 font-semibold text-lg capitalize">
-                              {selectedEvent.visibility_type.replace("_", " ")}
+                              {selectedEvent.visibility_type.replace('_', ' ')}
                             </p>
                           </div>
 
@@ -1014,12 +1150,14 @@ const LiveEventMonitor = () => {
                                 Registration Deadline
                               </label>
                               <p className="text-gray-900 font-semibold text-lg">
-                                {new Date(selectedEvent.registration_deadline).toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                  hour: "numeric",
-                                  minute: "2-digit",
+                                {new Date(
+                                  selectedEvent.registration_deadline
+                                ).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: 'numeric',
+                                  minute: '2-digit',
                                 })}
                               </p>
                             </div>
@@ -1029,19 +1167,23 @@ const LiveEventMonitor = () => {
 
                       {/* Timeline */}
                       <div className="bg-white border-2 border-gray-100 rounded-3xl p-8 hover:shadow-lg transition-all duration-300">
-                        <h3 className="text-xl font-bold text-gray-900 mb-6">Timeline</h3>
+                        <h3 className="text-xl font-bold text-gray-900 mb-6">
+                          Timeline
+                        </h3>
                         <div className="space-y-6">
                           <div className="flex items-start gap-4">
                             <div className="w-4 h-4 bg-green-500 rounded-full mt-2 flex-shrink-0"></div>
                             <div>
                               <p className="font-bold text-gray-900">Created</p>
                               <p className="text-gray-600 font-medium">
-                                {new Date(selectedEvent.created_at).toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                  hour: "numeric",
-                                  minute: "2-digit",
+                                {new Date(
+                                  selectedEvent.created_at
+                                ).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: 'numeric',
+                                  minute: '2-digit',
                                 })}
                               </p>
                             </div>
@@ -1050,14 +1192,18 @@ const LiveEventMonitor = () => {
                           <div className="flex items-start gap-4">
                             <div className="w-4 h-4 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                             <div>
-                              <p className="font-bold text-gray-900">Last Updated</p>
+                              <p className="font-bold text-gray-900">
+                                Last Updated
+                              </p>
                               <p className="text-gray-600 font-medium">
-                                {new Date(selectedEvent.updated_at).toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                  hour: "numeric",
-                                  minute: "2-digit",
+                                {new Date(
+                                  selectedEvent.updated_at
+                                ).toLocaleDateString('en-US', {
+                                  month: 'short',
+                                  day: 'numeric',
+                                  year: 'numeric',
+                                  hour: 'numeric',
+                                  minute: '2-digit',
                                 })}
                               </p>
                             </div>
@@ -1073,11 +1219,13 @@ const LiveEventMonitor = () => {
               <div className="border-t-2 border-gray-100 p-8 bg-gradient-to-r from-gray-50 to-white flex-shrink-0">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
                   <div className="text-lg text-gray-600 font-medium text-center sm:text-left">
-                    {canStartEvent(selectedEvent) && "🚀 Ready to start this event"}
-                    {canEndEvent(selectedEvent) && "⚡ Event is currently running"}
+                    {canStartEvent(selectedEvent) &&
+                      '🚀 Ready to start this event'}
+                    {canEndEvent(selectedEvent) &&
+                      '⚡ Event is currently running'}
                     {!canStartEvent(selectedEvent) &&
                       !canEndEvent(selectedEvent) &&
-                      "ℹ️ No actions available for this event"}
+                      'ℹ️ No actions available for this event'}
                   </div>
 
                   <div className="flex flex-col sm:flex-row gap-4">
@@ -1094,7 +1242,7 @@ const LiveEventMonitor = () => {
                           ) : (
                             <Play className="w-6 h-6 mr-3" />
                           )}
-                          {actionLoading ? "Starting..." : "Start Event"}
+                          {actionLoading ? 'Starting...' : 'Start Event'}
                         </div>
                       </button>
                     )}
@@ -1112,7 +1260,7 @@ const LiveEventMonitor = () => {
                           ) : (
                             <Square className="w-6 h-6 mr-3" />
                           )}
-                          {actionLoading ? "Ending..." : "End Event"}
+                          {actionLoading ? 'Ending...' : 'End Event'}
                         </div>
                       </button>
                     )}
@@ -1124,7 +1272,7 @@ const LiveEventMonitor = () => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default LiveEventMonitor
+export default LiveEventMonitor;

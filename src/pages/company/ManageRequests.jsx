@@ -209,7 +209,7 @@ const InterviewRequestsManager = () => {
 
       <div className="max-w-10xl mx-auto px-6 lg:px-8 -mt-8 relative z-20">
         <div className="grid grid-cols-1 xl:grid-cols-4 gap-8">
-          {/* Enhanced Job Profiles Sidebar */}
+          {/*Job Profiles Sidebar */}
           <div className="xl:col-span-1">
             <div className="bg-white/70 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
               <div className="px-6 py-6 bg-gradient-to-br from-slate-900 via-[#203947] to-[#901b20] text-white relative overflow-hidden">
@@ -393,40 +393,43 @@ const InterviewRequestsManager = () => {
                               animation: 'fadeInUp 0.6s ease-out forwards'
                             }}
                           >
-                            <div className="flex justify-between items-start mb-6">
-                              <div className="flex-1">
-                                <div className="flex items-center mb-4">
-                                  <div className="w-12 h-12 bg-gradient-to-br from-[#901b20] to-[#ad565a] rounded-2xl flex items-center justify-center mr-4 shadow-lg">
-                                    <div className="w-6 h-6 bg-white rounded-full flex items-center justify-center">
-                                      <div className="w-3 h-3 bg-[#901b20] rounded-full"></div>
-                                    </div>
-                                  </div>
-                                  <div>
-                                    <h4 className="font-bold text-[#203947] text-xl mb-1">
-                                      {`${request.user?.first_name || ''} ${request.user?.last_name || ''}`.trim() || 'Student Name'}
-                                    </h4>
-                                    <div className="flex items-center text-sm text-gray-600">
-                                      <Mail className="h-4 w-4 mr-2 text-[#901b20]" />
-                                      {request.user?.email || 'student@email.com'}
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex items-center text-sm text-gray-600 mb-4">
-                                  <Calendar className="h-4 w-4 mr-2 text-[#901b20]" />
-                                  <span className="font-medium">Submitted:</span>
-                                  <span className="ml-2">{new Date(request.created_at).toLocaleDateString('en-US', {
-                                    year: 'numeric',
-                                    month: 'long',
-                                    day: 'numeric'
-                                  })}</span>
-                                </div>
-                              </div>
-                              <div className="flex items-center space-x-3">
-                                <span className={`px-4 py-2 rounded-xl text-sm font-bold border-2 ${getStatusColor(request.status)}`}>
-                                  {request.status?.charAt(0).toUpperCase() + request.status?.slice(1) || 'Pending'}
-                                </span>
-                              </div>
-                            </div>
+<div className="flex justify-between items-start mb-3">
+  <div className="flex-1">
+    <div className="flex items-center mb-2">
+      <div className="w-8 h-8 bg-gradient-to-br from-[#901b20] to-[#ad565a] rounded-xl flex items-center justify-center mr-3 shadow">
+        <div className="w-4 h-4 bg-white rounded-full flex items-center justify-center">
+          <div className="w-2 h-2 bg-[#901b20] rounded-full"></div>
+        </div>
+      </div>
+      <div>
+        <h4 className="font-bold text-[#203947] text-base mb-0.5">
+          {`${request.user?.first_name || ''} ${request.user?.last_name || ''}`.trim() || 'Student Name'}
+        </h4>
+        <div className="flex items-center text-xs text-gray-600">
+          <Mail className="h-3 w-3 mr-1 text-[#901b20]" />
+          {request.user?.email || 'student@email.com'}
+        </div>
+      </div>
+    </div>
+    <div className="flex items-center text-xs text-gray-600 mb-2">
+      <Calendar className="h-3 w-3 mr-1 text-[#901b20]" />
+      <span className="font-medium">Submitted:</span>
+      <span className="ml-1">
+        {new Date(request.created_at).toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric'
+        })}
+      </span>
+    </div>
+  </div>
+  <div className="flex items-center space-x-2">
+    <span className={`px-3 py-1 rounded-lg text-xs font-semibold border ${getStatusColor(request.status)}`}>
+      {request.status?.charAt(0).toUpperCase() + request.status?.slice(1) || 'Pending'}
+    </span>
+  </div>
+</div>
+
 
                             {request.message && (
                               <div className="mb-6 p-6 bg-gradient-to-r from-gray-50/80 to-slate-50/80 rounded-2xl border-l-4 border-[#901b20] backdrop-blur-sm">
@@ -441,7 +444,7 @@ const InterviewRequestsManager = () => {
                               <div className="flex space-x-4">
                                 <button
   onClick={() => openProfileModal(request)}
-  className="flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
+  className="flex items-center px-6 py-3 bg-gradient-to-r from-[#203947]/90 to-[#203947]/80 text-white rounded-xl hover:from-[#203947]/80 hover:to-[#203947]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
 >
   View Profile
 </button>

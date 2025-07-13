@@ -8,7 +8,6 @@ const api = axios.create({
 
   headers: {
     'Content-Type': 'application/json',
-    
   },
 });
 
@@ -24,7 +23,7 @@ const PROTECTED_ROUTES = [
   '/auth/refresh',
   '/auth/me',
   '/notifications',
-  '/message/bulk-messages', // Add this line for bulk message endpoints
+  '/message/bulk-message', // Add this line for bulk message endpoints
   '/dashboard',
   '/analytics',
   '/reports',
@@ -161,37 +160,37 @@ export const companyAPI = {
 export const messageAPI = {
   getAll: params => {
     console.log('messageAPI.getAll - Token:', localStorage.getItem('token'));
-    return api.get('/message/bulk-messages', { params });
+    return api.get('/message/bulk-message', { params });
   },
   getAllMessages: params => {
     console.log(
       'messageAPI.getAllMessages - Token:',
       localStorage.getItem('token')
     );
-    return api.get('/message/bulk-messages', { params });
+    return api.get('/message/bulk-message', { params });
   },
   getStats: () => {
     console.log('messageAPI.getStats - Token:', localStorage.getItem('token'));
-    return api.get('/message/bulk-messages/stats').catch(() => {
+    return api.get('/message/bulk-message/stats').catch(() => {
       // If stats endpoint doesn't exist, return null
       return null;
     });
   },
   getById: id => {
     console.log('messageAPI.getById - Token:', localStorage.getItem('token'));
-    return api.get(`/message/bulk-messages/${id}`);
+    return api.get(`/message/bulk-message/${id}`);
   },
   create: messageData => {
     console.log('messageAPI.create - Token:', localStorage.getItem('token'));
     console.log('messageAPI.create - Data:', messageData);
-    return api.post('/message/bulk-messages', messageData);
+    return api.post('/message/bulk-message', messageData);
   },
   sendBulkMessages: messageData => {
     console.log(
       'messageAPI.sendBulkMessages - Token:',
       localStorage.getItem('token')
     );
-    return api.post('/message/bulk-messages', messageData);
+    return api.post('/message/bulk-message', messageData);
   }, // Keep for backward compatibility
   sendMessage: id => {
     console.log(
@@ -199,12 +198,12 @@ export const messageAPI = {
       localStorage.getItem('token')
     );
     console.log('messageAPI.sendMessage - ID:', id);
-    return api.post(`/message/bulk-messages/${id}/send`);
+    return api.post(`/message/bulk-message/${id}/send`);
   },
   getStatus: id => {
     console.log('messageAPI.getStatus - Token:', localStorage.getItem('token'));
     console.log('messageAPI.getStatus - ID:', id);
-    return api.get(`/message/bulk-messages/${id}/status`);
+    return api.get(`/message/bulk-message/${id}/status`);
   },
 };
 
@@ -520,22 +519,22 @@ export const jobFairAPI = {
       console.error('No token found in localStorage');
       return Promise.reject(new Error('Authentication token missing'));
     }
-  
-    return api.post('/job-fairs', jobFairData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        
-      },
-    }).catch(error => {
-      console.error(
-        'Error creating job fair:',
-        error.response?.status,
-        error.response?.data
-      );
-      return Promise.reject(error);
-    });
+
+    return api
+      .post('/job-fairs', jobFairData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .catch(error => {
+        console.error(
+          'Error creating job fair:',
+          error.response?.status,
+          error.response?.data
+        );
+        return Promise.reject(error);
+      });
   },
-  
 };
 
 // Attendance API endpoints

@@ -14,7 +14,7 @@ const Messenger = () => {
         console.warn('User not logged in');
         return;
       }
-      fetch(`${API_BASE_URL}/api/message/bulk-messages`, {
+      fetch(`${API_BASE_URL}/api/message/bulk-message`, {
         headers: { Authorization: `Bearer ${token}` },
         Accept: 'application/json',
       })

@@ -1,6 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { FaUserCircle, FaSignOutAlt, FaTachometerAlt } from 'react-icons/fa';
+import {
+  FaUserCircle,
+  FaSignOutAlt,
+  FaTachometerAlt,
+  FaBell,
+} from 'react-icons/fa';
+import axios from 'axios';
+
+const APP_URL = import.meta.env.VITE_API_BASE_URL;
 
 const CustomLink = ({ to, className, children }) => {
   return (
@@ -15,8 +23,11 @@ const HomeNavbar = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Handle navbar color change on scroll
   useEffect(() => {
@@ -48,6 +59,70 @@ const HomeNavbar = () => {
     }
   }, []);
 
+  // Fetch notifications when user is logged in
+  useEffect(() => {
+    if (user?.id) {
+      fetchNotifications();
+    }
+  }, [user]);
+
+  const fetchNotifications = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.get(`${APP_URL}/api/notify/notifications`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const notificationData = Array.isArray(response.data.data)
+        ? response.data.data
+        : [];
+      setNotifications(notificationData);
+      setUnreadCount(notificationData.filter(n => !n.read_at).length);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
+  const markAsRead = async id => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${APP_URL}/api/notifications/${id}/read`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      fetchNotifications();
+    } catch (error) {
+      console.log(error);
+      // Fallback: just update local state
+      setNotifications(prev =>
+        prev.map(n =>
+          n.id === id ? { ...n, read_at: new Date().toISOString() } : n
+        )
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    }
+  };
+
+  const markAllAsRead = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      await axios.post(
+        `${APP_URL}/api/notifications/mark-all-read`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      fetchNotifications();
+    } catch (error) {
+      console.log(error);
+      // Fallback: just update local state
+      setNotifications(prev =>
+        prev.map(n => ({ ...n, read_at: new Date().toISOString() }))
+      );
+      setUnreadCount(0);
+    }
+  };
+
   // Handle logout
   const handleSignOut = () => {
     localStorage.removeItem('token');
@@ -66,7 +141,7 @@ const HomeNavbar = () => {
         navigate('/admin/dashboard');
         break;
       case 'student':
-        navigate('/student/show-events');
+        navigate('/student/CompanyDirectory');
         break;
       case 'company_representative':
         navigate('/company/dashboard');
@@ -86,13 +161,19 @@ const HomeNavbar = () => {
       ) {
         setIsProfileMenuOpen(false);
       }
+      if (
+        isNotificationsOpen &&
+        !event.target.closest('.notifications-container')
+      ) {
+        setIsNotificationsOpen(false);
+      }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isProfileMenuOpen]);
+  }, [isProfileMenuOpen, isNotificationsOpen]);
 
   return (
     <nav
@@ -178,52 +259,129 @@ const HomeNavbar = () => {
             </>
           ) : (
             // Show user profile if logged in
-            <div className="profile-menu-container relative">
-              <button
-                onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-md transition-all ${
-                  isScrolled
-                    ? 'text-gray-700 hover:bg-gray-100 hover:bg-opacity-20'
-                    : 'text-white hover:bg-[var(--primary-500)]'
-                } `}
-              >
-                <FaUserCircle className="w-5 h-5" />
-                <span className="font-medium">
-                  {user.first_name || user.name || 'User'}
-                </span>
-              </button>
+            <div className="flex items-center gap-3">
+              {/* Notifications */}
+              <div className="notifications-container relative">
+                <button
+                  onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
+                  className={`relative p-2 rounded-md transition-all ${
+                    isScrolled
+                      ? 'text-gray-700 hover:bg-gray-100'
+                      : 'text-white hover:bg-white/10'
+                  }`}
+                >
+                  <FaBell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold animate-pulse">
+                      {unreadCount}
+                    </span>
+                  )}
+                </button>
 
-              {isProfileMenuOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 animate-fade-in-down">
-                  <div className="px-4 py-2 text-sm text-gray-900 border-b border-gray-100">
-                    <p className="font-medium">
-                      {user.first_name} {user.last_name}
-                    </p>
-                    <p className="text-sm text-gray-500">{user.email}</p>
-                    {user.role && (
-                      <p className="text-xs text-gray-500 mt-1 capitalize bg-gray-100 px-2 py-1 rounded inline-block">
-                        {user.role}
-                      </p>
-                    )}
+                {isNotificationsOpen && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-xl border border-gray-200 overflow-hidden animate-fade-in-down z-20">
+                    <div className="p-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-purple-50">
+                      <div className="flex justify-between items-center">
+                        <h3 className="font-bold text-gray-900 flex items-center gap-2">
+                          <FaBell className="w-4 h-4 text-blue-500" />
+                          Notifications
+                        </h3>
+                        {unreadCount > 0 && (
+                          <button
+                            onClick={markAllAsRead}
+                            className="text-xs text-blue-600 hover:text-blue-800 font-medium transition-colors"
+                          >
+                            Mark all as read
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                    <div className="max-h-64 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <div className="p-4 text-gray-500 text-center text-sm">
+                          No notifications
+                        </div>
+                      ) : (
+                        notifications.map(notification => (
+                          <div
+                            key={notification.id}
+                            className={`p-3 hover:bg-gray-50 transition-colors border-l-4 cursor-pointer ${
+                              !notification.read_at
+                                ? 'border-blue-500 bg-blue-50/30'
+                                : 'border-transparent'
+                            }`}
+                            onClick={() => markAsRead(notification.id)}
+                          >
+                            <p className="text-sm font-medium text-gray-900">
+                              {notification.title || notification.message}
+                            </p>
+                            <p className="text-xs text-gray-600 mt-1">
+                              {notification.body || notification.message}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {notification.created_at || notification.time}
+                            </p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                    <div className="p-3 border-t border-gray-100 bg-gray-50">
+                      <button className="w-full text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors py-1">
+                        View all notifications
+                      </button>
+                    </div>
                   </div>
+                )}
+              </div>
 
-                  <button
-                    onClick={navigateToDashboard}
-                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    <FaTachometerAlt className="mr-3 h-4 w-4 text-gray-400" />
-                    Dashboard
-                  </button>
+              {/* User Profile */}
+              <div className="profile-menu-container relative">
+                <button
+                  onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-md transition-all ${
+                    isScrolled
+                      ? 'text-gray-700 hover:bg-gray-100 hover:bg-opacity-20'
+                      : 'text-white hover:bg-[var(--primary-500)]'
+                  } `}
+                >
+                  <FaUserCircle className="w-5 h-5" />
+                  <span className="font-medium">
+                    {user.first_name || user.name || 'User'}
+                  </span>
+                </button>
 
-                  <button
-                    onClick={handleSignOut}
-                    className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                  >
-                    <FaSignOutAlt className="mr-3 h-4 w-4 text-gray-400" />
-                    Sign out
-                  </button>
-                </div>
-              )}
+                {isProfileMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-10 animate-fade-in-down">
+                    <div className="px-4 py-2 text-sm text-gray-900 border-b border-gray-100">
+                      <p className="font-medium">
+                        {user.first_name} {user.last_name}
+                      </p>
+                      <p className="text-sm text-gray-500">{user.email}</p>
+                      {user.role && (
+                        <p className="text-xs text-gray-500 mt-1 capitalize bg-gray-100 px-2 py-1 rounded inline-block">
+                          {user.role}
+                        </p>
+                      )}
+                    </div>
+
+                    <button
+                      onClick={navigateToDashboard}
+                      className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      <FaTachometerAlt className="mr-3 h-4 w-4 text-gray-400" />
+                      Dashboard
+                    </button>
+
+                    <button
+                      onClick={handleSignOut}
+                      className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      <FaSignOutAlt className="mr-3 h-4 w-4 text-gray-400" />
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -307,6 +465,75 @@ const HomeNavbar = () => {
                       {user.first_name} {user.last_name}
                     </p>
                     <p className="text-sm text-gray-500">{user.email}</p>
+                  </div>
+
+                  {/* Mobile Notifications */}
+                  <div className="notifications-container">
+                    <button
+                      onClick={() =>
+                        setIsNotificationsOpen(!isNotificationsOpen)
+                      }
+                      className="flex items-center justify-between w-full py-2 px-3 text-gray-700 hover:bg-gray-100 rounded-md"
+                    >
+                      <div className="flex items-center gap-3">
+                        <FaBell className="w-4 h-4" />
+                        <span>Notifications</span>
+                      </div>
+                      {unreadCount > 0 && (
+                        <span className="w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </button>
+
+                    {isNotificationsOpen && (
+                      <div className="mt-2 bg-gray-50 rounded-md overflow-hidden">
+                        <div className="p-3 bg-gradient-to-r from-blue-50 to-purple-50 border-b border-gray-200">
+                          <div className="flex justify-between items-center">
+                            <h3 className="font-bold text-gray-900 text-sm">
+                              Notifications
+                            </h3>
+                            {unreadCount > 0 && (
+                              <button
+                                onClick={markAllAsRead}
+                                className="text-xs text-blue-600 font-medium"
+                              >
+                                Mark all as read
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                        <div className="max-h-48 overflow-y-auto">
+                          {notifications.length === 0 ? (
+                            <div className="p-3 text-gray-500 text-center text-sm">
+                              No notifications
+                            </div>
+                          ) : (
+                            notifications.map(notification => (
+                              <div
+                                key={notification.id}
+                                className={`p-3 border-l-4 ${
+                                  !notification.read_at
+                                    ? 'border-blue-500 bg-blue-50/50'
+                                    : 'border-transparent'
+                                }`}
+                                onClick={() => markAsRead(notification.id)}
+                              >
+                                <p className="text-sm font-medium text-gray-900">
+                                  {notification.title || notification.message}
+                                </p>
+                                <p className="text-xs text-gray-600 mt-1">
+                                  {notification.body || notification.message}
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">
+                                  {notification.created_at || notification.time}
+                                </p>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   <button

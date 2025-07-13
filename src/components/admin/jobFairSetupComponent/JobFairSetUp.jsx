@@ -13,7 +13,7 @@ const JobFairSetUp = () => {
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedJobFairId, setSelectedJobFairId] = useState(1);
+  const [selectedJobFairId] = useState(1);
   const [selectedDetails, setSelectedDetails] = useState(null);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showCreateModal, setShowCreateModal] = useState(false);
@@ -288,7 +288,6 @@ const JobFairSetUp = () => {
           + New Job Fair
         </button>
       </div>
-
       {showCreateModal && (
         <NewJobFairModal onClose={() => setShowCreateModal(false)} />
       )}
