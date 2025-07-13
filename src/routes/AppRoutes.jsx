@@ -34,6 +34,7 @@ import FeedbackFormsCreaton from '../pages/admin/FeedbackFormsCreaton';
 import BrandingDaySetup from '../pages/admin/BrandingDaySetup';
 import LiveMonitor from '../pages/admin/LiveMonitor';
 import AlFeedbackAnalyics from '../pages/admin/FeedbackAnalytics';
+import EventDetailsPage from "../components/admin/Event Management Components/EventDetails";
 
 // System Pages
 import NotFoundPage from '../pages/System/NotFoundPage';
@@ -114,6 +115,15 @@ const AppRoutes = () => {
           // <ProtectedRoute requiredRole="admin">
             <ManageEvents />
           // {/* </ProtectedRoute> */}
+        }
+      />
+      {/* New Admin Event Details Route */}
+      <Route
+        path="/admin/events/:id"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <EventDetailsPage />
+          </ProtectedRoute>
         }
       />
       <Route

@@ -1,5 +1,5 @@
 import React from 'react';
-import FeedbackAnalytics from '../../components/admin/Analytics/AlFeedbackAnalyics';
+import FeedbackAnalytics from '../../components/admin/Analytics/FeedbackAnalytics';
 import Layout from '../../components/common/Layout';
 import useScrollToTop from '../../hooks/useScrollToTop';
 
