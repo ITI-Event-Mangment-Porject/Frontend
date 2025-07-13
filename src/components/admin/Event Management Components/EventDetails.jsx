@@ -15,6 +15,7 @@ import {
   FaGlobe,
   FaLock,
   FaFileAlt,
+  
   FaSearch,
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
@@ -23,6 +24,7 @@ import { ClipLoader } from 'react-spinners';
 import Attendance_Reports from '../Attendance_ReportsComponent/Attendance_Reports';
 import AttendanceReports from '@/pages/admin/AttendanceReports';
 import AttendanceTable from './AttendanceTable';
+import ParticipatingCompaniesTab from './ParticipationCompaniesTab';
 
 const EventDetails = () => {
   const { id } = useParams();
@@ -76,28 +78,28 @@ const EventDetails = () => {
 
   const fetchAttendanceData = async () => {
     try {
-           setLoading(true);
-           const response = await attendanceAPI.getReports();
-   
-           if (response?.data?.success) {
-             setAttendanceData(response.data.data.result);
-            //  // Set first event as active by default
-            //  if (response.data.data.result.length > 0) {
-            //    setActiveEventTab(response.data.data.result[0].event);
-            //  }
-           } else {
-             console.error(
-               'Failed to fetch attendance data:',
-               response?.data?.message || 'Unknown error'
-             );
-             toast.error('Failed to load attendance data');
-           }
-         } catch (error) {
-           console.error('Error fetching attendance data:', error);
-           toast.error('Error loading attendance data');
-         } finally {
-           setLoading(false);
-         }
+      setLoading(true);
+      const response = await attendanceAPI.getReports();
+
+      if (response?.data?.success) {
+        setAttendanceData(response.data.data.result);
+        //  // Set first event as active by default
+        //  if (response.data.data.result.length > 0) {
+        //    setActiveEventTab(response.data.data.result[0].event);
+        //  }
+      } else {
+        console.error(
+          'Failed to fetch attendance data:',
+          response?.data?.message || 'Unknown error'
+        );
+        toast.error('Failed to load attendance data');
+      }
+    } catch (error) {
+      console.error('Error fetching attendance data:', error);
+      toast.error('Error loading attendance data');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleTabChange = tab => {
@@ -196,7 +198,6 @@ const EventDetails = () => {
     );
   });
 
- 
   // Reset pagination when search changes
   useEffect(() => {
     setCurrentPage(1);
@@ -395,25 +396,39 @@ const EventDetails = () => {
               >
                 <FaUsers className="inline w-4 h-4 mr-2" />
                 Attendance & Reports
-                
+              </button>
+              <button
+                onClick={() => handleTabChange('companies')}
+                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                  activeTab === 'companies'
+                    ? 'border-blue-500 text-blue-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                }`}
+              >
+                Participating Companies
               </button>
             </nav>
           </div>
         </div>
       </div>
 
-      {/* Tab Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === 'details' ? (
+      <div className="max-w-[1700px] mx-auto px-6 sm:px-6 lg:px-8 py-8">
+        {activeTab === 'details' && (
           <EventDetailsTab
             event={event}
             formatDate={formatDate}
             formatTime={formatTime}
             getStatusColor={getStatusColor}
           />
-        ) : (
-          <AttendanceTab event={event} formatDate={formatDate} />
+        )}
 
+        {activeTab === 'attendance' && (
+          <AttendanceTab event={event} formatDate={formatDate} />
+        )}
+        
+
+        {activeTab === 'companies' && (
+          <ParticipatingCompaniesTab event={event} />
         )}
       </div>
     </div>
@@ -629,12 +644,12 @@ const AttendanceTab = ({ event, formatDate }) => {
         setLoading(true);
         const response = await attendanceAPI.getReports();
         const allEvents = response?.data?.data?.result || [];
-  
+
         const normalize = str => str?.trim().toLowerCase().replace(/\s+/g, ' ');
         const matchedEvent = allEvents.find(
           e => normalize(e.event) === normalize(event.title)
         );
-  
+
         if (matchedEvent) {
           const attendees = matchedEvent.attendees.map(a => ({
             ...a,
@@ -652,10 +667,10 @@ const AttendanceTab = ({ event, formatDate }) => {
         setLoading(false);
       }
     };
-  
+
     fetchData();
   }, [event.title]);
-  
+
   // Filtering
   const filteredAttendees = attendanceData.filter(attendee => {
     const search = searchTerm.toLowerCase();
@@ -701,6 +716,5 @@ const AttendanceTab = ({ event, formatDate }) => {
     />
   );
 };
-
 
 export default EventDetails;
