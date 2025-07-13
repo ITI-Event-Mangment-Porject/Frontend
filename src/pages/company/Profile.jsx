@@ -7,7 +7,7 @@ import {
 import api from '../../api/axios'; 
 
 const CompanyProfile = () => {
-  const { companyId } = useParams();
+  const companyId = localStorage.getItem('companyId');
   const [companyData, setCompanyData] = useState({
     name: "",
     description: "",
