@@ -41,32 +41,6 @@ const Navbar = ({ sidebarOpen, setSidebarOpen }) => {
       setUnreadCount(notificationData.filter(n => !n.read_at).length);
     } catch (error) {
       console.log(error);
-      // Fallback to mock notifications if API fails
-      const mockNotifications = [
-        {
-          id: 1,
-          title: 'New user registration',
-          body: 'A new user has registered',
-          created_at: '5 minutes ago',
-          read_at: null,
-        },
-        {
-          id: 2,
-          title: 'Event schedule updated',
-          body: 'The schedule for upcoming events has been updated',
-          created_at: '1 hour ago',
-          read_at: '2024-01-01T00:00:00Z',
-        },
-        {
-          id: 3,
-          title: 'System maintenance scheduled',
-          body: 'System maintenance is scheduled for tonight',
-          created_at: '2 hours ago',
-          read_at: '2024-01-01T00:00:00Z',
-        },
-      ];
-      setNotifications(mockNotifications);
-      setUnreadCount(mockNotifications.filter(n => !n.read_at).length);
     }
   };
 
