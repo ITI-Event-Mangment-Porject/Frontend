@@ -26,26 +26,26 @@ const ShowEvents = () => {
     const fetchEvents = async () => {
       setLoading(true);
       setError(null);
-      
+
       try {
         const token = localStorage.getItem('token');
-        
+
         const res = await fetch(`${API_BASE_URL}/api/events`, {
           headers: {
             'Content-Type': 'application/json',
             ...(token && { Authorization: `Bearer ${token}` }),
           },
         });
-        
+
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
-        
+
         const data = await res.json();
-        
+
         // Improve data extraction
         let eventsData = [];
-        
+
         if (Array.isArray(data?.data?.result?.data)) {
           eventsData = data.data.result.data;
         } else if (Array.isArray(data?.data?.result)) {
@@ -57,9 +57,8 @@ const ShowEvents = () => {
         } else {
           eventsData = [];
         }
-        
+
         setEvents(eventsData);
-        
       } catch (err) {
         setEvents([]);
         setError(`Failed to load events: ${err.message}`);
@@ -108,13 +107,13 @@ const ShowEvents = () => {
   const parseEventDate = (dateStr, timeStr) => {
     try {
       if (!dateStr) return null;
-      
+
       // Extract date part from ISO string if present
       let datePart = dateStr;
       if (dateStr.includes('T')) {
         datePart = dateStr.split('T')[0]; // Get only the date part (2025-08-08)
       }
-      
+
       // If time is provided, combine date and time
       if (timeStr) {
         // Handle different time formats
@@ -122,7 +121,7 @@ const ShowEvents = () => {
         const fullDateTime = `${datePart}T${timeFormatted}`;
         return new Date(fullDateTime);
       }
-      
+
       // If only date is provided, set to start of day
       const fullDateTime = `${datePart}T00:00:00`;
       return new Date(fullDateTime);
@@ -135,11 +134,11 @@ const ShowEvents = () => {
   const ongoingEvents = filteredEvents.filter(event => {
     const start = parseEventDate(event.start_date, event.start_time);
     const end = parseEventDate(event.end_date, event.end_time);
-    
+
     if (!start || !end) {
       return false;
     }
-    
+
     return start <= now && now <= end;
   });
 
@@ -165,7 +164,9 @@ const ShowEvents = () => {
 
   // Event Card component
   const EventCard = ({ event, isPast = false }) => (
-    <div className={`group relative flex flex-col bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden ${isPast ? 'opacity-75' : ''}`}>
+    <div
+      className={`group relative flex flex-col bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 overflow-hidden ${isPast ? 'opacity-75' : ''}`}
+    >
       {/* "NEW" Badge */}
       {event.id === latestEventId && !isPast && (
         <div className="absolute top-4 right-4 z-20">
@@ -188,9 +189,11 @@ const ShowEvents = () => {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
         <div className="absolute bottom-4 left-4">
-          <span className={`inline-block px-4 py-2 rounded-full text-xs font-bold shadow-lg ${
-            eventTypeColors[event.type] || eventTypeColors.Default
-          }`}>
+          <span
+            className={`inline-block px-4 py-2 rounded-full text-xs font-bold shadow-lg ${
+              eventTypeColors[event.type] || eventTypeColors.Default
+            }`}
+          >
             {event.type}
           </span>
         </div>
@@ -205,7 +208,9 @@ const ShowEvents = () => {
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-4">
             <div className="flex items-center text-gray-600">
               <i className="fa-regular fa-calendar text-[#901b20] mr-2"></i>
-              <span className="text-sm font-medium">{formatDate(event.start_date)}</span>
+              <span className="text-sm font-medium">
+                {formatDate(event.start_date)}
+              </span>
             </div>
             <div className="flex items-center text-gray-600">
               <i className="fa-solid fa-location-dot text-[#901b20] mr-2"></i>
@@ -254,7 +259,8 @@ const ShowEvents = () => {
               Discover Amazing Events
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Explore workshops, seminars, conferences and career fairs that will boost your career
+              Explore workshops, seminars, conferences and career fairs that
+              will boost your career
             </p>
           </div>
 
@@ -278,7 +284,9 @@ const ShowEvents = () => {
                   className="px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#901b20] text-sm min-w-32"
                 >
                   {eventTypes.map(type => (
-                    <option key={type} value={type}>{type}</option>
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
                   ))}
                 </select>
                 <select
@@ -298,7 +306,9 @@ const ShowEvents = () => {
             <div className="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-xl mb-8">
               <div className="flex items-center">
                 <i className="fa-solid fa-exclamation-circle mr-3"></i>
-                <span><strong>Error:</strong> {error}</span>
+                <span>
+                  <strong>Error:</strong> {error}
+                </span>
               </div>
             </div>
           )}
@@ -307,14 +317,16 @@ const ShowEvents = () => {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-32">
               <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-[#901b20] mb-4"></div>
-              <span className="text-[#901b20] text-xl font-semibold">Loading events...</span>
+              <span className="text-[#901b20] text-xl font-semibold">
+                Loading events...
+              </span>
             </div>
           ) : (
             <div className="space-y-16">
               {/* Upcoming Events Section */}
               <section>
-                <SectionHeader 
-                  title="Upcoming Events" 
+                <SectionHeader
+                  title="Upcoming Events"
                   count={upcomingEvents.length}
                   icon="fa-solid fa-calendar-plus"
                   color="bg-gradient-to-r from-green-500 to-green-600"
@@ -322,7 +334,9 @@ const ShowEvents = () => {
                 {upcomingEvents.length === 0 ? (
                   <div className="text-center py-16 bg-white rounded-2xl shadow-lg">
                     <i className="fa-solid fa-calendar-xmark text-6xl text-gray-300 mb-4"></i>
-                    <p className="text-gray-500 text-lg">No upcoming events found.</p>
+                    <p className="text-gray-500 text-lg">
+                      No upcoming events found.
+                    </p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -335,8 +349,8 @@ const ShowEvents = () => {
 
               {/* Ongoing Events Section */}
               <section>
-                <SectionHeader 
-                  title="Ongoing Events" 
+                <SectionHeader
+                  title="Ongoing Events"
                   count={ongoingEvents.length}
                   icon="fa-solid fa-hourglass-half"
                   color="bg-gradient-to-r from-blue-500 to-blue-600"
@@ -344,7 +358,9 @@ const ShowEvents = () => {
                 {ongoingEvents.length === 0 ? (
                   <div className="text-center py-16 bg-white rounded-2xl shadow-lg">
                     <i className="fa-solid fa-clock text-6xl text-gray-300 mb-4"></i>
-                    <p className="text-gray-500 text-lg">No ongoing events at the moment.</p>
+                    <p className="text-gray-500 text-lg">
+                      No ongoing events at the moment.
+                    </p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -357,8 +373,8 @@ const ShowEvents = () => {
 
               {/* Past Events Section */}
               <section>
-                <SectionHeader 
-                  title="Past Events" 
+                <SectionHeader
+                  title="Past Events"
                   count={pastEvents.length}
                   icon="fa-solid fa-calendar-check"
                   color="bg-gradient-to-r from-gray-500 to-gray-600"
@@ -366,7 +382,9 @@ const ShowEvents = () => {
                 {pastEvents.length === 0 ? (
                   <div className="text-center py-16 bg-white rounded-2xl shadow-lg">
                     <i className="fa-solid fa-calendar-xmark text-6xl text-gray-300 mb-4"></i>
-                    <p className="text-gray-500 text-lg">No past events found.</p>
+                    <p className="text-gray-500 text-lg">
+                      No past events found.
+                    </p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

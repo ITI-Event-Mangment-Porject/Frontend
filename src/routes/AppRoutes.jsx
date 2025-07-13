@@ -44,6 +44,7 @@ import SignUpRedirect from '../pages/System/SignUpRedirect';
 
 // Protected Route Component
 import ProtectedRoute from '../components/ProtectedRoute';
+import AttendanceCheckin from '../pages/staff/AttendanceCheckin';
 
 const AppRoutes = () => {
   return (
@@ -152,6 +153,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute requiredRole="admin">
             <FeedbackFormsCreaton />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin/qrAttendance"
+        element={
+          <ProtectedRoute requiredRole="admin">
+            <AttendanceCheckin />
           </ProtectedRoute>
         }
       />

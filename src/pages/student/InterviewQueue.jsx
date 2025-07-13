@@ -16,7 +16,9 @@ const JobFairDashboard = () => {
 
     try {
       const parsedUser = JSON.parse(savedUser);
-      return parsedUser.id || parsedUser.user_id || parsedUser.studentId || null;
+      return (
+        parsedUser.id || parsedUser.user_id || parsedUser.studentId || null
+      );
     } catch (e) {
       console.error('Error parsing user from localStorage:', e);
       return null;
@@ -38,19 +40,23 @@ const JobFairDashboard = () => {
         return;
       }
 
-      const response = await fetch(`http://127.0.0.1:8000/api/job-fairs/1/queues/student/${userId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Accept': 'application/json'
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/job-fairs/2/queues/student/${userId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: 'application/json',
+          },
         }
-      });
+      );
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data = await response.json();
-      const queuesArray = data.success && data.data && data.data.queue ? data.data.queue : [];
+      const queuesArray =
+        data.success && data.data && data.data.queue ? data.data.queue : [];
 
       setAllQueuesData(queuesArray);
     } catch (err) {
@@ -76,13 +82,13 @@ const JobFairDashboard = () => {
     return `${startTime.slice(0, 5)} - ${endTime.slice(0, 5)}`;
   };
 
-  const formatDate = (dateString) => {
+  const formatDate = dateString => {
     if (!dateString) return 'TBD';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
-      year: 'numeric'
+      year: 'numeric',
     });
   };
 
@@ -113,7 +119,9 @@ const JobFairDashboard = () => {
             </div>
           ) : allQueuesData.length === 0 ? (
             <div className="p-8 text-center">
-              <p className="text-gray-600 text-lg">No interviews scheduled for today</p>
+              <p className="text-gray-600 text-lg">
+                No interviews scheduled for today
+              </p>
             </div>
           ) : (
             <>
@@ -144,9 +152,14 @@ const JobFairDashboard = () => {
                           )}
                         </div>
                         <div className="text-left">
-                          <div className="font-semibold">{queueItem.company?.name}</div>
+                          <div className="font-semibold">
+                            {queueItem.company?.name}
+                          </div>
                           <div className="text-xs text-gray-500">
-                            {formatTime(queueItem.slot?.start_time, queueItem.slot?.end_time)}
+                            {formatTime(
+                              queueItem.slot?.start_time,
+                              queueItem.slot?.end_time
+                            )}
                           </div>
                         </div>
                       </div>
@@ -177,7 +190,13 @@ const JobFairDashboard = () => {
                       </h2>
                       <div className="flex justify-center gap-4 text-sm text-gray-600">
                         <span>📅 {formatDate(currentQueue.slot?.date)}</span>
-                        <span>🕐 {formatTime(currentQueue.slot?.start_time, currentQueue.slot?.end_time)}</span>
+                        <span>
+                          🕐{' '}
+                          {formatTime(
+                            currentQueue.slot?.start_time,
+                            currentQueue.slot?.end_time
+                          )}
+                        </span>
                       </div>
                     </div>
 
@@ -187,34 +206,49 @@ const JobFairDashboard = () => {
                           <div className="text-3xl font-bold text-orange-500 mb-2">
                             {currentQueue.queue_position}
                           </div>
-                          <div className="text-gray-600 text-sm">Your Position</div>
+                          <div className="text-gray-600 text-sm">
+                            Your Position
+                          </div>
                         </div>
                         <div className="bg-white rounded-xl p-6 shadow-sm">
                           <div className="text-3xl font-bold text-blue-500 mb-2">
-                            {currentQueue.queue_position > 0 ? currentQueue.queue_position - 1 : 0}
+                            {currentQueue.queue_position > 0
+                              ? currentQueue.queue_position - 1
+                              : 0}
                           </div>
-                          <div className="text-gray-600 text-sm">People Before You</div>
+                          <div className="text-gray-600 text-sm">
+                            People Before You
+                          </div>
                         </div>
                         <div className="bg-white rounded-xl p-6 shadow-sm">
                           <div className="text-3xl font-bold text-green-500 mb-2">
-                            {currentQueue.queue_position <= 1 ? '0-5' : Math.ceil(currentQueue.queue_position * 15)}
+                            {currentQueue.queue_position <= 1
+                              ? '0-5'
+                              : Math.ceil(currentQueue.queue_position * 15)}
                           </div>
-                          <div className="text-gray-600 text-sm">Minutes Wait</div>
+                          <div className="text-gray-600 text-sm">
+                            Minutes Wait
+                          </div>
                         </div>
                       </div>
                     </div>
 
                     <div className="text-center mb-6">
-                      <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
-                        currentQueue.status === 'waiting' && currentQueue.queue_position === 1
-                          ? 'bg-green-100 text-green-800'
+                      <span
+                        className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold ${
+                          currentQueue.status === 'waiting' &&
+                          currentQueue.queue_position === 1
+                            ? 'bg-green-100 text-green-800'
+                            : currentQueue.status === 'waiting'
+                              ? 'bg-orange-100 text-orange-800'
+                              : 'bg-gray-100 text-gray-800'
+                        }`}
+                      >
+                        {currentQueue.queue_position === 1
+                          ? '🎯 Next in line!'
                           : currentQueue.status === 'waiting'
-                          ? 'bg-orange-100 text-orange-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {currentQueue.queue_position === 1 ? '🎯 Next in line!' : 
-                         currentQueue.status === 'waiting' ? '⏳ In Queue' : 
-                         `📋 ${currentQueue.status.charAt(0).toUpperCase() + currentQueue.status.slice(1)}`}
+                            ? '⏳ In Queue'
+                            : `📋 ${currentQueue.status.charAt(0).toUpperCase() + currentQueue.status.slice(1)}`}
                       </span>
                     </div>
 
@@ -222,18 +256,29 @@ const JobFairDashboard = () => {
                       <div className="flex justify-between text-sm text-gray-600 mb-2">
                         <span>Queue Progress</span>
                         <span>
-                          {currentQueue.queue_position > 0 ? 
-                            Math.round((currentQueue.order_key / (currentQueue.order_key + currentQueue.queue_position)) * 100) 
-                            : 0}%
+                          {currentQueue.queue_position > 0
+                            ? Math.round(
+                                (currentQueue.order_key /
+                                  (currentQueue.order_key +
+                                    currentQueue.queue_position)) *
+                                  100
+                              )
+                            : 0}
+                          %
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div
                           className="bg-gradient-to-r from-orange-500 to-red-500 h-2 rounded-full transition-all duration-500"
                           style={{
-                            width: `${currentQueue.queue_position > 0 ? 
-                              (currentQueue.order_key / (currentQueue.order_key + currentQueue.queue_position)) * 100 
-                              : 0}%`
+                            width: `${
+                              currentQueue.queue_position > 0
+                                ? (currentQueue.order_key /
+                                    (currentQueue.order_key +
+                                      currentQueue.queue_position)) *
+                                  100
+                                : 0
+                            }%`,
                           }}
                         ></div>
                       </div>
@@ -241,7 +286,9 @@ const JobFairDashboard = () => {
 
                     {currentQueue.notes && (
                       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                        <h3 className="font-semibold text-blue-800 mb-2">Notes:</h3>
+                        <h3 className="font-semibold text-blue-800 mb-2">
+                          Notes:
+                        </h3>
                         <p className="text-blue-700">{currentQueue.notes}</p>
                       </div>
                     )}

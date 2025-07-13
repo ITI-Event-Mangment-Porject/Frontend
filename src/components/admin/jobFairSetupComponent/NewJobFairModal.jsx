@@ -15,6 +15,7 @@ const NewJobFairModal = ({ onClose }) => {
     banner_image: '',
   });
 
+
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -75,6 +76,14 @@ const NewJobFairModal = ({ onClose }) => {
     setLoading(true);
     try {
       const formData = new FormData();
+      // const res = await fetch('http://127.0.0.1:8000/job-fairs', {
+      //   method: 'POST',
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     Authorization: `Bearer ${JWT_TOKEN}`,
+      //   },
+      //   body: JSON.stringify(form),
+      // });
 
       // Generate slug from title
       const slug = form.title
