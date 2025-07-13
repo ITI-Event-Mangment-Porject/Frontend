@@ -1,5 +1,5 @@
 "use client"
-import { FaEdit, FaTrash, FaCalendarAlt, FaMapMarkerAlt, FaCalendarPlus, FaEye } from "react-icons/fa"
+import { FaEdit, FaTrash, FaCalendarAlt, FaMapMarkerAlt, FaCalendarPlus, FaEye, FaPlay, FaStop } from "react-icons/fa"
 
 // Helper function to format time for display (e.g., "9:00 AM", "10:30 PM")
 const formatTimeDisplay = (timeString) => {
@@ -39,6 +39,9 @@ export const getEventTableColumns = (
   handlePublishEvent,
   handleArchiveEvent,
   handleViewDetails,
+  handleStartEvent,
+  handleEndEvent,
+  actionLoading,
 ) => [
   {
     header: "Event",
@@ -118,7 +121,7 @@ export const getEventTableColumns = (
     header: "Actions",
     accessor: "actions",
     render: (event) => (
-      <div className="flex gap-2">
+      <div className="flex gap-2 flex-wrap">
         {/* View Details button - always visible */}
         <button
           onClick={(e) => {
@@ -131,6 +134,38 @@ export const getEventTableColumns = (
           <FaEye className="w-3 h-3 mr-1" />
           View
         </button>
+
+        {/* Start Event button - only show for published events */}
+        {event.status?.toLowerCase() === "published" && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handleStartEvent(event)
+            }}
+            disabled={actionLoading}
+            className="px-3 py-1 text-sm bg-green-500 text-white rounded-md hover:bg-green-600 disabled:opacity-50 flex items-center"
+            title="Start Event"
+          >
+            <FaPlay className="w-3 h-3 mr-1" />
+            Start
+          </button>
+        )}
+
+        {/* End Event button - only show for ongoing events */}
+        {event.status?.toLowerCase() === "ongoing" && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              handleEndEvent(event)
+            }}
+            disabled={actionLoading}
+            className="px-3 py-1 text-sm bg-orange-500 text-white rounded-md hover:bg-orange-600 disabled:opacity-50 flex items-center"
+            title="End Event"
+          >
+            <FaStop className="w-3 h-3 mr-1" />
+            End
+          </button>
+        )}
 
         {/* Publish button - only show for draft events */}
         {event.status?.toLowerCase() === "draft" && (

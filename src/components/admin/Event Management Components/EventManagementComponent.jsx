@@ -56,6 +56,7 @@ const EventManagementComponent = () => {
 
   // New states for tabs
   const [activeTab, setActiveTab] = useState("active") // 'active' or 'archived'
+  const [actionLoading, setActionLoading] = useState(false)
 
   // Handler for viewing event details
   const handleViewDetails = (event) => {
@@ -87,6 +88,52 @@ const EventManagementComponent = () => {
     } catch (error) {
       console.error("Error archiving event:", error)
       toast.error(`Failed to archive event: ${error.message || "Unknown error"}`)
+    }
+  }
+
+  // Handler for starting events
+  const handleStartEvent = async (event) => {
+    if (
+      window.confirm(
+        `Are you sure you want to start the event "${event.title}"? This will change its status to ongoing.`,
+      )
+    ) {
+      try {
+        setActionLoading(true)
+        const response = await eventAPI.startEvent(event.id)
+        if (response && response.data) {
+          toast.success(`Event "${event.title}" started successfully!`)
+          loadEvents() // Reload events to reflect changes
+        }
+      } catch (error) {
+        console.error("Error starting event:", error)
+        toast.error(`Failed to start event: ${error.message || "Unknown error"}`)
+      } finally {
+        setActionLoading(false)
+      }
+    }
+  }
+
+  // Handler for ending events
+  const handleEndEvent = async (event) => {
+    if (
+      window.confirm(
+        `Are you sure you want to end the event "${event.title}"? This will change its status to completed.`,
+      )
+    ) {
+      try {
+        setActionLoading(true)
+        const response = await eventAPI.endEvent(event.id)
+        if (response && response.data) {
+          toast.success(`Event "${event.title}" ended successfully!`)
+          loadEvents() // Reload events to reflect changes
+        }
+      } catch (error) {
+        console.error("Error ending event:", error)
+        toast.error(`Failed to end event: ${error.message || "Unknown error"}`)
+      } finally {
+        setActionLoading(false)
+      }
     }
   }
 
@@ -402,7 +449,10 @@ const EventManagementComponent = () => {
     handleDeleteEvent,
     handlePublishEvent,
     handleArchiveEvent,
-    handleViewDetails, // Add the view details handler
+    handleViewDetails,
+    handleStartEvent, // Add the start event handler
+    handleEndEvent, // Add the end event handler
+    actionLoading, // Pass loading state for button disabling
   )
 
   return (
@@ -694,6 +744,33 @@ const EventManagementComponent = () => {
                     >
                       Actions
                     </button>
+                    {/* Add Start Event button for published events */}
+                    {event.status?.toLowerCase() === "published" && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleStartEvent(event)
+                        }}
+                        disabled={actionLoading}
+                        className="flex-1 py-2 bg-green-600 text-white rounded hover:bg-green-700 text-xs transition-colors min-h-[2rem] disabled:opacity-50"
+                      >
+                        {actionLoading ? "Starting..." : "Start Event"}
+                      </button>
+                    )}
+
+                    {/* Add End Event button for ongoing events */}
+                    {event.status?.toLowerCase() === "ongoing" && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleEndEvent(event)
+                        }}
+                        disabled={actionLoading}
+                        className="flex-1 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 text-xs transition-colors min-h-[2rem] disabled:opacity-50"
+                      >
+                        {actionLoading ? "Ending..." : "End Event"}
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
