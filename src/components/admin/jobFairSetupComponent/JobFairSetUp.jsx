@@ -45,7 +45,7 @@ const JobFairSetUp = () => {
         }
 
         const res = await fetch(
-          `http://127.0.0.1:8001/api/job-fairs/${selectedJobFairId}/participations?${params}`,
+          `http://127.0.0.1:8000/api/job-fairs/${selectedJobFairId}/participations?${params}`,
           {
             headers: {
               Authorization: `Bearer ${JWT_TOKEN}`,
@@ -86,7 +86,7 @@ const JobFairSetUp = () => {
     try {
       // Step 1: Update participation status
       await fetch(
-        `http://127.0.0.1:8001/api/job-fairs/${selectedJobFairId}/participations/${participationId}`,
+        `http://127.0.0.1:8000/api/job-fairs/${selectedJobFairId}/participations/${participationId}`,
         {
           method: 'PUT',
           headers: {
@@ -105,7 +105,7 @@ const JobFairSetUp = () => {
       }
 
       const response = await fetch(
-        `http://localhost:8001/api/companies/${companyId}/${action}`,
+        `http://localhost:8000/api/companies/${companyId}/${action}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -150,7 +150,7 @@ const JobFairSetUp = () => {
 
   const handleViewDetails = async id => {
     const res = await fetch(
-      `http://127.0.0.1:8001/api/job-fairs/${selectedJobFairId}/participations/${id}`,
+      `http://127.0.0.1:8000/api/job-fairs/${selectedJobFairId}/participations/${id}`,
       {
         headers: {
           Authorization: `Bearer ${JWT_TOKEN}`,
