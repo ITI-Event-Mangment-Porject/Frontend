@@ -68,7 +68,7 @@ const LoginPage = () => {
             setLoading(false);
             return;
           }
-          navigate(`/company/${newCompanyId}/dashboard`);
+          navigate(`/company/${newCompanyId}/profile`);
         }
           
 
@@ -82,7 +82,7 @@ const LoginPage = () => {
             navigate('/events');
             break;
           case 'company_representative':
-            navigate(`/company/${newCompanyId}/dashboard`); // Replace with actual company ID if available
+            navigate(`/company/${newCompanyId}/profile`); // Replace with actual company ID if available
             break;
           default:
             navigate('/');

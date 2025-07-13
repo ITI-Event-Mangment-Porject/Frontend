@@ -20,7 +20,6 @@ const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
 
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    // Clear messages on input change
     if (successMsg) setSuccessMsg('');
     if (errorMsg) setErrorMsg('');
   };

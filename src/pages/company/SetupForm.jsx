@@ -1304,7 +1304,7 @@ const renderStepContent = () => {
             ...interviewSlot,
             is_break: e.target.checked,
             break_reason: e.target.checked ? interviewSlot.break_reason : null,
-            is_available: e.target.checked ? false : interviewSlot.is_available, // إذا اختار break نلغي available
+            is_available: e.target.checked ? false : interviewSlot.is_available, 
           })
         }
         className="w-5 h-5 text-blue-600 border-2 border-gray-300 rounded focus:ring-[#203947]/50 focus:ring-2 transition-all duration-200"

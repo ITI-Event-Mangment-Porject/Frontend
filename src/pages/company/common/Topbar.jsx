@@ -76,9 +76,9 @@ const Topbar = () => {
         const res = await api.get(`/companies/${companyId}`, {
           headers: { Authorization: `Bearer ${token}` }
         });
-
+        
         const data = res.data.data?.result || {};
-
+        
         setCompanyData(prev => ({
           ...prev,
           logo_path: data.logo_path
