@@ -66,7 +66,7 @@ const HomeNavbar = () => {
         navigate('/admin/dashboard');
         break;
       case 'student':
-        navigate('student/CompanyDirectory');
+        navigate('/student/CompanyDirectory');
         break;
       case 'company_representative':
         navigate('/company/dashboard');
