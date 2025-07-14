@@ -15,7 +15,6 @@ import {
   FaGlobe,
   FaLock,
   FaFileAlt,
-  
   FaSearch,
 } from 'react-icons/fa';
 import { toast } from 'react-toastify';
@@ -25,6 +24,7 @@ import { ClipLoader } from 'react-spinners';
 // import AttendanceReports from '@/pages/admin/AttendanceReports';
 import AttendanceTable from './AttendanceTable';
 import ParticipatingCompaniesTab from './ParticipationCompaniesTab';
+import RegistrationsTab from './RegistrationsTab';
 
 const EventDetails = () => {
   const { id } = useParams();
@@ -398,15 +398,27 @@ const EventDetails = () => {
                 Attendance & Reports
               </button>
               <button
-                onClick={() => handleTabChange('companies')}
+                onClick={() => handleTabChange('registrations')}
                 className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
-                  activeTab === 'companies'
+                  activeTab === 'registrations'
                     ? 'border-blue-500 text-blue-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
-                Participating Companies
+                Registrations
               </button>
+              {event.type === 'Job Fair' && (
+                <button
+                  onClick={() => handleTabChange('companies')}
+                  className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                    activeTab === 'companies'
+                      ? 'border-blue-500 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  Participating Companies
+                </button>
+              )}
             </nav>
           </div>
         </div>
@@ -425,11 +437,12 @@ const EventDetails = () => {
         {activeTab === 'attendance' && (
           <AttendanceTab event={event} formatDate={formatDate} />
         )}
-        
 
         {activeTab === 'companies' && (
           <ParticipatingCompaniesTab event={event} />
         )}
+
+        {activeTab === 'registrations' && <RegistrationsTab event={event} />}
       </div>
     </div>
   );
