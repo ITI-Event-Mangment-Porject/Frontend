@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'react-toastify';
 import axios from 'axios';
 import { ClipLoader } from 'react-spinners';
+const APP_URL = import.meta.env.VITE_API_BASE_URL;
 
 const RegistrationsTab = ({ event }) => {
   const [registrations, setRegistrations] = useState([]);
@@ -20,7 +21,7 @@ const RegistrationsTab = ({ event }) => {
         setError(null);
         const token = localStorage.getItem('token');
         const response = await axios.get(
-          `http://127.0.0.1:8000/api/events/${event.id}/registrations?page=${page}`,
+          `${APP_URL}/api/events/${event.id}/registrations?page=${page}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,

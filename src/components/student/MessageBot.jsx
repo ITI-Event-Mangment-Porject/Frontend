@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaComments, FaTimes } from 'react-icons/fa';
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+const APP_URL = import.meta.env.VITE_API_BASE_URL;
 
 const Messenger = () => {
   const [open, setOpen] = useState(false);
@@ -14,7 +14,7 @@ const Messenger = () => {
         console.warn('User not logged in');
         return;
       }
-      fetch(`${API_BASE_URL}/api/message/bulk-message`, {
+      fetch(`${APP_URL}/api/message/bulk-message`, {
         headers: { Authorization: `Bearer ${token}` },
         Accept: 'application/json',
       })

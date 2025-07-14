@@ -1,7 +1,7 @@
-"use client"
+'use client';
 
-import { getFriendlyErrorMessage } from "../../../utils/errorMessages"
-import { useState, useEffect, useMemo } from "react"
+import { getFriendlyErrorMessage } from '../../../utils/errorMessages';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Search,
   Plus,
@@ -20,246 +20,257 @@ import {
   Users,
   Building2,
   Zap,
-} from "lucide-react"
-import { useNavigate } from "react-router-dom"
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+const APP_URL = import.meta.env.VITE_API_BASE_URL;
 
 const CreateFeedbackForms = () => {
-  const [events, setEvents] = useState([])
-  const [selectedEvent, setSelectedEvent] = useState("")
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [selectedType, setSelectedType] = useState("all")
-  const [submitting, setSubmitting] = useState(false)
-  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [events, setEvents] = useState([]);
+  const [selectedEvent, setSelectedEvent] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedType, setSelectedType] = useState('all');
+  const [submitting, setSubmitting] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [formData, setFormData] = useState({
-    title: "Event Feedback",
+    title: 'Event Feedback',
     description: "We'd love your thoughts to help improve future events.",
     form_config: [
       {
-        question: "How would you rate the event content?",
-        type: "rating",
+        question: 'How would you rate the event content?',
+        type: 'rating',
       },
       {
-        question: "How would you rate the event organization?",
-        type: "rating",
+        question: 'How would you rate the event organization?',
+        type: 'rating',
       },
       {
-        question: "What did you like most about the event?",
-        type: "text",
+        question: 'What did you like most about the event?',
+        type: 'text',
       },
       {
-        question: "What could be improved for future events?",
-        type: "text",
+        question: 'What could be improved for future events?',
+        type: 'text',
       },
     ],
-  })
+  });
 
-  const ADMIN_TOKEN = localStorage.getItem("token")
-  const navigate = useNavigate()
+  const ADMIN_TOKEN = localStorage.getItem('token');
+  const navigate = useNavigate();
 
   const questionTypes = [
-    { value: "text", label: "Text Answer" },
-    { value: "rating", label: "Rating (1-5)" },
-  ]
+    { value: 'text', label: 'Text Answer' },
+    { value: 'rating', label: 'Rating (1-5)' },
+  ];
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
+    const token = localStorage.getItem('token');
     if (!token) {
-      navigate("/login")
+      navigate('/login');
     }
-  }, [navigate])
+  }, [navigate]);
 
   const fetchCompletedEvents = async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
-      const response = await fetch("http://localhost:8000/api/events?filter[status]=completed", {
-        headers: {
-          Authorization: `Bearer ${ADMIN_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-      })
+      const response = await fetch(
+        `${APP_URL}/api/events?filter[status]=completed`,
+        {
+          headers: {
+            Authorization: `Bearer ${ADMIN_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data.success) {
         // Filter only events without feedback forms
-        const eventsWithoutForms = data.data.result.data.filter((event) => !event.has_feedback_form)
-        setEvents(eventsWithoutForms || [])
+        const eventsWithoutForms = data.data.result.data.filter(
+          event => !event.has_feedback_form
+        );
+        setEvents(eventsWithoutForms || []);
       } else {
-        throw new Error(data.message || "Failed to fetch events")
+        throw new Error(data.message || 'Failed to fetch events');
       }
     } catch (err) {
-      setError(err.message || "Error loading events")
-      console.error("Error fetching events:", err)
+      setError(err.message || 'Error loading events');
+      console.error('Error fetching events:', err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
-    fetchCompletedEvents()
-  }, [])
+    fetchCompletedEvents();
+  }, []);
 
   const filteredEvents = useMemo(() => {
-    return events.filter((event) => {
+    return events.filter(event => {
       const matchesSearch =
         event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        event.location.toLowerCase().includes(searchTerm.toLowerCase())
+        event.location.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesType = selectedType === "all" || event.type === selectedType
+      const matchesType = selectedType === 'all' || event.type === selectedType;
 
-      return matchesSearch && matchesType
-    })
-  }, [events, searchTerm, selectedType])
+      return matchesSearch && matchesType;
+    });
+  }, [events, searchTerm, selectedType]);
 
   const eventTypes = useMemo(() => {
-    const types = [...new Set(events.map((event) => event.type))]
-    return types.sort()
-  }, [events])
+    const types = [...new Set(events.map(event => event.type))];
+    return types.sort();
+  }, [events]);
 
   const handleAddQuestion = () => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       form_config: [
         ...prev.form_config,
         {
-          question: "",
-          type: "text",
+          question: '',
+          type: 'text',
         },
       ],
-    }))
-  }
+    }));
+  };
 
-  const handleRemoveQuestion = (index) => {
-    if (index < 4) return // Can't remove static questions
-    setFormData((prev) => ({
+  const handleRemoveQuestion = index => {
+    if (index < 4) return; // Can't remove static questions
+    setFormData(prev => ({
       ...prev,
       form_config: prev.form_config.filter((_, i) => i !== index),
-    }))
-  }
+    }));
+  };
 
   const handleQuestionChange = (index, field, value) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
-      form_config: prev.form_config.map((q, i) => (i === index ? { ...q, [field]: value } : q)),
-    }))
-  }
+      form_config: prev.form_config.map((q, i) =>
+        i === index ? { ...q, [field]: value } : q
+      ),
+    }));
+  };
 
   const validateForm = () => {
     if (!selectedEvent) {
-      setError("Please select an event")
-      return false
+      setError('Please select an event');
+      return false;
     }
     if (!formData.title.trim()) {
-      setError("Form title is required")
-      return false
+      setError('Form title is required');
+      return false;
     }
     if (!formData.description.trim()) {
-      setError("Form description is required")
-      return false
+      setError('Form description is required');
+      return false;
     }
 
     // Validate all questions have content
     for (let i = 0; i < formData.form_config.length; i++) {
       if (!formData.form_config[i].question.trim()) {
-        setError(`Question ${i + 1} cannot be empty`)
-        return false
+        setError(`Question ${i + 1} cannot be empty`);
+        return false;
       }
     }
 
-    return true
-  }
+    return true;
+  };
 
   const handleSubmit = async () => {
-    if (!validateForm()) return
+    if (!validateForm()) return;
 
     try {
-      setSubmitting(true)
-      setError(null)
+      setSubmitting(true);
+      setError(null);
 
-      const response = await fetch(`http://localhost:8000/api/feedback/events/${selectedEvent}/forms`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${ADMIN_TOKEN}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      })
+      const response = await fetch(
+        `${APP_URL}/api/feedback/events/${selectedEvent}/forms`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${ADMIN_TOKEN}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
+        }
+      );
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`)
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (data) {
         // Success - reset form and refresh events
-        setSelectedEvent("")
+        setSelectedEvent('');
         setFormData({
-          title: "Event Feedback",
+          title: 'Event Feedback',
           description: "We'd love your thoughts to help improve future events.",
           form_config: [
             {
-              question: "How would you rate the event content?",
-              type: "rating",
+              question: 'How would you rate the event content?',
+              type: 'rating',
             },
             {
-              question: "How would you rate the event organization?",
-              type: "rating",
+              question: 'How would you rate the event organization?',
+              type: 'rating',
             },
             {
-              question: "What did you like most about the event?",
-              type: "text",
+              question: 'What did you like most about the event?',
+              type: 'text',
             },
             {
-              question: "What could be improved for future events?",
-              type: "text",
+              question: 'What could be improved for future events?',
+              type: 'text',
             },
           ],
-        })
-        setShowConfirmModal(false)
+        });
+        setShowConfirmModal(false);
         // Refresh events to remove the one we just created a form for
-        await fetchCompletedEvents()
+        await fetchCompletedEvents();
       } else {
-        throw new Error("Failed to create feedback form")
+        throw new Error('Failed to create feedback form');
       }
     } catch (err) {
-      setError(err.message || "Error creating feedback form")
-      console.error("Error creating form:", err)
+      setError(err.message || 'Error creating feedback form');
+      console.error('Error creating form:', err);
     } finally {
-      setSubmitting(false)
+      setSubmitting(false);
     }
-  }
+  };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    })
-  }
+  const formatDate = dateString => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
 
-  const getEventTypeIcon = (type) => {
+  const getEventTypeIcon = type => {
     switch (type) {
-      case "Job Fair":
-        return Building2
-      case "Tech":
-        return Zap
-      case "Fun":
-        return Users
+      case 'Job Fair':
+        return Building2;
+      case 'Tech':
+        return Zap;
+      case 'Fun':
+        return Users;
       default:
-        return Calendar
+        return Calendar;
     }
-  }
+  };
 
-  const selectedEventData = events.find((e) => e.id.toString() === selectedEvent)
+  const selectedEventData = events.find(e => e.id.toString() === selectedEvent);
 
   if (loading) {
     return (
@@ -283,11 +294,11 @@ const CreateFeedbackForms = () => {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   if (error && !events.length) {
-    const message = getFriendlyErrorMessage(error)
+    const message = getFriendlyErrorMessage(error);
     return (
       <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
         <div className="p-6">
@@ -295,7 +306,9 @@ const CreateFeedbackForms = () => {
             <div className="text-red-500 mb-6">
               <AlertCircle className="w-16 h-16 mx-auto" />
             </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-3">Error Loading Events</h3>
+            <h3 className="text-2xl font-bold text-gray-900 mb-3">
+              Error Loading Events
+            </h3>
             <p className="text-gray-600 mb-6">{message}</p>
             <button
               onClick={() => window.location.reload()}
@@ -306,7 +319,7 @@ const CreateFeedbackForms = () => {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -319,7 +332,9 @@ const CreateFeedbackForms = () => {
               <h1 className="text-3xl sm:text-4xl font-black bg-gradient-to-r from-[#901b20] to-[#901b20] bg-clip-text text-transparent mb-2">
                 Create Feedback Forms
               </h1>
-              <p className="text-lg text-gray-600 font-medium">Create custom feedback forms for completed events</p>
+              <p className="text-lg text-gray-600 font-medium">
+                Create custom feedback forms for completed events
+              </p>
             </div>
             <button
               onClick={fetchCompletedEvents}
@@ -333,7 +348,7 @@ const CreateFeedbackForms = () => {
                 ) : (
                   <RefreshCw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
                 )}
-                <span>{loading ? "Loading..." : "Refresh"}</span>
+                <span>{loading ? 'Loading...' : 'Refresh'}</span>
               </div>
             </button>
           </div>
@@ -358,7 +373,7 @@ const CreateFeedbackForms = () => {
                   type="text"
                   placeholder="Search by event title or location..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={e => setSearchTerm(e.target.value)}
                   className="w-full pl-12 pr-6 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 text-lg font-medium placeholder-gray-400 bg-white"
                 />
               </div>
@@ -370,12 +385,12 @@ const CreateFeedbackForms = () => {
                 <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5 group-focus-within:text-[#901b20] transition-colors duration-300 pointer-events-none z-10" />
                 <select
                   value={selectedType}
-                  onChange={(e) => setSelectedType(e.target.value)}
+                  onChange={e => setSelectedType(e.target.value)}
                   className="appearance-none pl-12 pr-12 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 bg-white text-lg font-medium cursor-pointer hover:border-[#901b20]/50 min-w-[160px]"
-                  style={{ backgroundImage: "none" }}
+                  style={{ backgroundImage: 'none' }}
                 >
                   <option value="all">All Event Types</option>
-                  {eventTypes.map((type) => (
+                  {eventTypes.map(type => (
                     <option key={type} value={type}>
                       {type}
                     </option>
@@ -393,14 +408,16 @@ const CreateFeedbackForms = () => {
               <FileText className="w-24 h-24 mx-auto" />
             </div>
             <h3 className="text-3xl font-bold text-gray-900 mb-4">
-              {events.length === 0 ? "No Events Need Feedback Forms" : "No Events Match Your Filters"}
+              {events.length === 0
+                ? 'No Events Need Feedback Forms'
+                : 'No Events Match Your Filters'}
             </h3>
             <p className="text-xl text-gray-600 mb-8">
               {events.length === 0
-                ? "All completed events already have feedback forms created."
-                : searchTerm || selectedType !== "all"
-                  ? "Try adjusting your search or filter criteria."
-                  : "No events found."}
+                ? 'All completed events already have feedback forms created.'
+                : searchTerm || selectedType !== 'all'
+                  ? 'Try adjusting your search or filter criteria.'
+                  : 'No events found.'}
             </p>
             {events.length === 0 && (
               <button
@@ -415,8 +432,8 @@ const CreateFeedbackForms = () => {
           <>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {filteredEvents.map((event, index) => {
-                const EventIcon = getEventTypeIcon(event.type)
-                const isSelected = selectedEvent === event.id.toString()
+                const EventIcon = getEventTypeIcon(event.type);
+                const isSelected = selectedEvent === event.id.toString();
 
                 return (
                   <div
@@ -424,8 +441,8 @@ const CreateFeedbackForms = () => {
                     onClick={() => setSelectedEvent(event.id.toString())}
                     className={`group bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-3 overflow-hidden animate-slide-in-left flex flex-col h-full cursor-pointer ${
                       isSelected
-                        ? "ring-4 ring-[#901b20]/20 border-2 border-[#901b20]"
-                        : "border border-gray-100 hover:border-[#901b20]/30"
+                        ? 'ring-4 ring-[#901b20]/20 border-2 border-[#901b20]'
+                        : 'border border-gray-100 hover:border-[#901b20]/30'
                     }`}
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
@@ -465,7 +482,8 @@ const CreateFeedbackForms = () => {
                             <Calendar className="w-5 h-5 text-[#901b20]" />
                           </div>
                           <span className="font-medium">
-                            {formatDate(event.start_date)} - {formatDate(event.end_date)}
+                            {formatDate(event.start_date)} -{' '}
+                            {formatDate(event.end_date)}
                           </span>
                         </div>
 
@@ -482,12 +500,14 @@ const CreateFeedbackForms = () => {
                           <div className="w-10 h-10 bg-[#ad565a]/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0">
                             <MapPin className="w-5 h-5 text-[#ad565a]" />
                           </div>
-                          <span className="font-medium line-clamp-1">{event.location}</span>
+                          <span className="font-medium line-clamp-1">
+                            {event.location}
+                          </span>
                         </div>
                       </div>
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
 
@@ -502,20 +522,34 @@ const CreateFeedbackForms = () => {
                 {/* Form Details */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Form Title *</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Form Title *
+                    </label>
                     <input
                       type="text"
                       value={formData.title}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+                      onChange={e =>
+                        setFormData(prev => ({
+                          ...prev,
+                          title: e.target.value,
+                        }))
+                      }
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300"
                       placeholder="Enter form title"
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Form Description *</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Form Description *
+                    </label>
                     <textarea
                       value={formData.description}
-                      onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                      onChange={e =>
+                        setFormData(prev => ({
+                          ...prev,
+                          description: e.target.value,
+                        }))
+                      }
                       rows={3}
                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 resize-none"
                       placeholder="Enter form description"
@@ -526,7 +560,9 @@ const CreateFeedbackForms = () => {
                 {/* Questions */}
                 <div className="mb-8">
                   <div className="flex items-center justify-between mb-6">
-                    <h3 className="text-xl font-bold text-gray-900">Questions</h3>
+                    <h3 className="text-xl font-bold text-gray-900">
+                      Questions
+                    </h3>
                     <button
                       onClick={handleAddQuestion}
                       className="bg-[#901b20] hover:bg-[#7a1619] text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 transform hover:scale-105"
@@ -547,17 +583,28 @@ const CreateFeedbackForms = () => {
                             <div className="flex items-center gap-2">
                               <span className="text-sm font-semibold text-gray-500">
                                 Question {index + 1}
-                                {index < 4 && <span className="text-[#901b20]"> (Required)</span>}
+                                {index < 4 && (
+                                  <span className="text-[#901b20]">
+                                    {' '}
+                                    (Required)
+                                  </span>
+                                )}
                               </span>
                             </div>
 
                             <input
                               type="text"
                               value={question.question}
-                              onChange={(e) => handleQuestionChange(index, "question", e.target.value)}
+                              onChange={e =>
+                                handleQuestionChange(
+                                  index,
+                                  'question',
+                                  e.target.value
+                                )
+                              }
                               disabled={index < 4} // Static questions can't be edited
                               className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 ${
-                                index < 4 ? "bg-gray-50 cursor-not-allowed" : ""
+                                index < 4 ? 'bg-gray-50 cursor-not-allowed' : ''
                               }`}
                               placeholder="Enter question"
                             />
@@ -565,13 +612,21 @@ const CreateFeedbackForms = () => {
                             <div className="relative">
                               <select
                                 value={question.type}
-                                onChange={(e) => handleQuestionChange(index, "type", e.target.value)}
+                                onChange={e =>
+                                  handleQuestionChange(
+                                    index,
+                                    'type',
+                                    e.target.value
+                                  )
+                                }
                                 disabled={index < 4} // Static question types can't be changed
                                 className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 appearance-none ${
-                                  index < 4 ? "bg-gray-50 cursor-not-allowed" : ""
+                                  index < 4
+                                    ? 'bg-gray-50 cursor-not-allowed'
+                                    : ''
                                 }`}
                               >
-                                {questionTypes.map((type) => (
+                                {questionTypes.map(type => (
                                   <option key={type.value} value={type.value}>
                                     {type.label}
                                   </option>
@@ -619,10 +674,13 @@ const CreateFeedbackForms = () => {
                 <div className="w-16 h-16 bg-[#901b20]/10 rounded-full flex items-center justify-center mx-auto mb-4">
                   <AlertCircle className="w-8 h-8 text-[#901b20]" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">Confirm Form Creation</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                  Confirm Form Creation
+                </h3>
                 <p className="text-gray-600 mb-6">
-                  Are you sure you want to create this feedback form for "{selectedEventData.title}"? This action will
-                  make the form available for participants.
+                  Are you sure you want to create this feedback form for "
+                  {selectedEventData.title}"? This action will make the form
+                  available for participants.
                 </p>
                 <div className="flex gap-4">
                   <button
@@ -638,8 +696,12 @@ const CreateFeedbackForms = () => {
                     className="flex-1 bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 disabled:cursor-not-allowed"
                   >
                     <div className="flex items-center justify-center gap-2">
-                      {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                      {submitting ? "Creating..." : "Confirm"}
+                      {submitting ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <CheckCircle className="w-4 h-4" />
+                      )}
+                      {submitting ? 'Creating...' : 'Confirm'}
                     </div>
                   </button>
                 </div>
@@ -649,7 +711,7 @@ const CreateFeedbackForms = () => {
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default CreateFeedbackForms
+export default CreateFeedbackForms;

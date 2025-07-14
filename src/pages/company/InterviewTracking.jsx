@@ -22,8 +22,10 @@ import {
   Download,
   ExternalLink,
   UserCheck,
-  StopCircle
+  StopCircle,
 } from 'lucide-react';
+
+const APP_URL = import.meta.env.VITE_API_BASE_URL;
 
 const InterviewTracking = () => {
   const { companyId } = useParams();
@@ -38,9 +40,11 @@ const InterviewTracking = () => {
   useEffect(() => {
     const fetchQueue = async () => {
       try {
-        const res = await api.get(`/job-fairs/${jobFairId}/queues/company/${companyId}`);
+        const res = await api.get(
+          `/job-fairs/${jobFairId}/queues/company/${companyId}`
+        );
         const approvedOnly = res.data.data.queue.filter(
-          (entry) => entry.interview_request_id && entry.status !== 'cancelled'
+          entry => entry.interview_request_id && entry.status !== 'cancelled'
         );
         setQueueData(approvedOnly);
       } catch (err) {
@@ -53,19 +57,20 @@ const InterviewTracking = () => {
     fetchQueue();
   }, [jobFairId, companyId]);
   const fetchQueue = async () => {
-  try {
-    const res = await api.get(`/job-fairs/${jobFairId}/queues/company/${companyId}`);
-    const approvedOnly = res.data.data.queue.filter(
-      (entry) => entry.interview_request_id && entry.status !== 'cancelled'
-    );
-    setQueueData(approvedOnly);
-  } catch (err) {
-    console.error('Error fetching interview queue:', err);
-  } finally {
-    setLoading(false);
-  }
-};
-
+    try {
+      const res = await api.get(
+        `/job-fairs/${jobFairId}/queues/company/${companyId}`
+      );
+      const approvedOnly = res.data.data.queue.filter(
+        entry => entry.interview_request_id && entry.status !== 'cancelled'
+      );
+      setQueueData(approvedOnly);
+    } catch (err) {
+      console.error('Error fetching interview queue:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const fetchExtraUserInfo = async () => {
@@ -73,7 +78,7 @@ const InterviewTracking = () => {
       if (!studentId) return;
 
       try {
-        const res = await api.get(`/users/${studentId}`); 
+        const res = await api.get(`/users/${studentId}`);
         const user = res.data.data.user;
 
         setSelectedStudent(prev => ({
@@ -81,8 +86,8 @@ const InterviewTracking = () => {
           student: {
             ...prev.student,
             linkedin_url: user.linkedin_url,
-            github_url: user.github_url
-          }
+            github_url: user.github_url,
+          },
         }));
       } catch (err) {
         console.error('Error fetching user profile links:', err);
@@ -98,90 +103,91 @@ const InterviewTracking = () => {
       waiting: queueData.filter(e => e.status === 'waiting').length,
       in_interview: queueData.filter(e => e.status === 'in_interview').length,
       completed: queueData.filter(e => e.status === 'completed').length,
-      skipped: queueData.filter(e => e.status === 'skipped' || e.status === 'pending').length
+      skipped: queueData.filter(
+        e => e.status === 'skipped' || e.status === 'pending'
+      ).length,
     };
   };
 
-const handleInterviewAction = async (action) => {
-  if (!selectedStudent) return;
+  const handleInterviewAction = async action => {
+    if (!selectedStudent) return;
 
-  setProcessingInterview(true);
-  try {
-    let endpoint = '';
-    let method = 'put'; 
-    let data = {};
-    let newStatus = selectedStudent.status;
+    setProcessingInterview(true);
+    try {
+      let endpoint = '';
+      let method = 'put';
+      let data = {};
+      let newStatus = selectedStudent.status;
 
-    switch (action) {
-      case 'start':
-        endpoint = `/job-fairs/${jobFairId}/queues/slot/${selectedStudent.slot.id}/next`;
-        method = 'post';
-        newStatus = 'in_interview';
-        break;
+      switch (action) {
+        case 'start':
+          endpoint = `/job-fairs/${jobFairId}/queues/slot/${selectedStudent.slot.id}/next`;
+          method = 'post';
+          newStatus = 'in_interview';
+          break;
 
-      case 'end':
-        endpoint = `/job-fairs/${jobFairId}/queues/${selectedStudent.queue_id}/end-interview`;
-        method = 'post';
-        newStatus = 'completed';
-        break;
+        case 'end':
+          endpoint = `/job-fairs/${jobFairId}/queues/${selectedStudent.queue_id}/end-interview`;
+          method = 'post';
+          newStatus = 'completed';
+          break;
 
-      case 'skip':
-      case 'pending':
-        endpoint = `/job-fairs/${jobFairId}/queues/${selectedStudent.queue_id}/pending`;
-        method = 'put';
-        data = { status: 'pending' };
-        newStatus = 'waiting';
-        break;
+        case 'skip':
+        case 'pending':
+          endpoint = `/job-fairs/${jobFairId}/queues/${selectedStudent.queue_id}/pending`;
+          method = 'put';
+          data = { status: 'pending' };
+          newStatus = 'waiting';
+          break;
 
-      case 'resume':
-        endpoint = `/job-fairs/${jobFairId}/queues/${selectedStudent.queue_id}/resume`;
-        method = 'put';
-        data = { status: 'resume' };
-        newStatus = 'start interview';
-        break;
+        case 'resume':
+          endpoint = `/job-fairs/${jobFairId}/queues/${selectedStudent.queue_id}/resume`;
+          method = 'put';
+          data = { status: 'resume' };
+          newStatus = 'start interview';
+          break;
 
-      default:
-        return;
+        default:
+          return;
+      }
+
+      console.log(`Calling ${method} ${endpoint} with data:`, data);
+
+      const headers = {
+        Authorization: `Bearer ${localStorage.getItem('token')}`,
+      };
+
+      let res;
+      if (method === 'post') {
+        res = await api.post(endpoint, { headers });
+      } else if (method === 'put') {
+        res = await api.put(endpoint, data, { headers });
+      } else if (method === 'delete') {
+        res = await api.delete(endpoint, { headers });
+      }
+
+      setQueueData(prev =>
+        prev.map(entry =>
+          entry.queue_id === selectedStudent.queue_id
+            ? { ...entry, status: newStatus }
+            : entry
+        )
+      );
+      setSelectedStudent(prev => ({ ...prev, status: newStatus }));
+    } catch (error) {
+      console.error(
+        `❌ Error performing action [${action}]:`,
+        error.response?.data || error.message
+      );
+      alert(error.response?.data?.message || 'Something went wrong');
+    } finally {
+      await fetchQueue();
+
+      setProcessingInterview(false);
     }
+  };
 
-    console.log(`Calling ${method} ${endpoint} with data:`, data);
-
-    const headers = {
-      Authorization: `Bearer ${localStorage.getItem('token')}`,
-    };
-
-    let res;
-    if (method === 'post') {
-      res = await api.post(endpoint, { headers });
-    } else if (method === 'put') {
-      res = await api.put(endpoint, data, { headers });
-    } else if (method === 'delete') {
-      res = await api.delete(endpoint, { headers });
-    }
-
-
-
-    setQueueData((prev) =>
-      prev.map((entry) =>
-        entry.queue_id === selectedStudent.queue_id
-          ? { ...entry, status: newStatus }
-          : entry
-      )
-    );
-    setSelectedStudent((prev) => ({ ...prev, status: newStatus }));
-  } catch (error) {
-    console.error(`❌ Error performing action [${action}]:`, error.response?.data || error.message);
-    alert(error.response?.data?.message || 'Something went wrong');
-  } finally {
-    await fetchQueue();
-
-    setProcessingInterview(false);
-  }
-};
-
-
-
-  const openStudentModal = (entry) => {
+  const openStudentModal = entry => {
     setSelectedStudent(entry);
     setShowModal(true);
   };
@@ -191,28 +197,38 @@ const handleInterviewAction = async (action) => {
     setSelectedStudent(null);
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = status => {
     switch (status) {
-      case 'waiting': return 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white';
-      case 'in_interview': return 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white';
-      case 'completed': return 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white';
-      case 'skipped': return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white';
-      default: return 'bg-gradient-to-r from-red-500 to-rose-500 text-white';
+      case 'waiting':
+        return 'bg-gradient-to-r from-yellow-500 to-amber-500 text-white';
+      case 'in_interview':
+        return 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white';
+      case 'completed':
+        return 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white';
+      case 'skipped':
+        return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white';
+      default:
+        return 'bg-gradient-to-r from-red-500 to-rose-500 text-white';
     }
   };
 
-  const getStatusIcon = (status) => {
+  const getStatusIcon = status => {
     switch (status) {
-      case 'waiting': return <Clock className="h-4 w-4" />;
-      case 'in_interview': return <PlayCircle className="h-4 w-4" />;
-      case 'completed': return <CheckCircle className="h-4 w-4" />;
-      case 'skipped': return <PauseCircle className="h-4 w-4" />;
-      default: return <XCircle className="h-4 w-4" />;
+      case 'waiting':
+        return <Clock className="h-4 w-4" />;
+      case 'in_interview':
+        return <PlayCircle className="h-4 w-4" />;
+      case 'completed':
+        return <CheckCircle className="h-4 w-4" />;
+      case 'skipped':
+        return <PauseCircle className="h-4 w-4" />;
+      default:
+        return <XCircle className="h-4 w-4" />;
     }
   };
 
   return (
-<div className="min-h-screen bg-gradient-to-br from-white/20 via-white/40 to-white/20">
+    <div className="min-h-screen bg-gradient-to-br from-white/20 via-white/40 to-white/20">
       {/* Ultra Modern Header */}
       <div className="relative h-48 bg-gradient-to-br from-slate-900 via-[#203947] to-[#901b20] overflow-hidden">
         {/* Animated Background Elements */}
@@ -220,11 +236,11 @@ const handleInterviewAction = async (action) => {
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.1),transparent_50%)]"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(144,27,32,0.3),transparent_50%)]"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_40%,rgba(255,255,255,0.05),transparent)] animate-pulse"></div>
-        
+
         {/* Floating Elements */}
         <div className="absolute top-10 right-20 w-20 h-20 bg-white/5 rounded-full blur-sm animate-pulse"></div>
         <div className="absolute bottom-10 left-20 w-32 h-32 bg-[#901b20]/10 rounded-full blur-lg animate-pulse delay-1000"></div>
-        
+
         <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8 h-full flex items-center">
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center space-x-6">
@@ -254,26 +270,62 @@ const handleInterviewAction = async (action) => {
         {/* Enhanced Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
           {[
-            { label: 'Total Interviews', value: getStatusStats().total, color: '#203947', icon: TrendingUp, bg: 'from-slate-500 to-slate-600' },
-            { label: 'Waiting', value: getStatusStats().waiting, color: '#f59e0b', icon: Clock, bg: 'from-amber-500 to-yellow-500' },
-            { label: 'In Interview', value: getStatusStats().in_interview, color: '#3b82f6', icon: PlayCircle, bg: 'from-blue-500 to-indigo-500' },
-            { label: 'Completed', value: getStatusStats().completed, color: '#10b981', icon: CheckCircle, bg: 'from-emerald-500 to-teal-500' },
-            { label: 'Skipped', value: getStatusStats().skipped, color: '#6b7280', icon: PauseCircle, bg: 'from-gray-400 to-gray-500' }
+            {
+              label: 'Total Interviews',
+              value: getStatusStats().total,
+              color: '#203947',
+              icon: TrendingUp,
+              bg: 'from-slate-500 to-slate-600',
+            },
+            {
+              label: 'Waiting',
+              value: getStatusStats().waiting,
+              color: '#f59e0b',
+              icon: Clock,
+              bg: 'from-amber-500 to-yellow-500',
+            },
+            {
+              label: 'In Interview',
+              value: getStatusStats().in_interview,
+              color: '#3b82f6',
+              icon: PlayCircle,
+              bg: 'from-blue-500 to-indigo-500',
+            },
+            {
+              label: 'Completed',
+              value: getStatusStats().completed,
+              color: '#10b981',
+              icon: CheckCircle,
+              bg: 'from-emerald-500 to-teal-500',
+            },
+            {
+              label: 'Skipped',
+              value: getStatusStats().skipped,
+              color: '#6b7280',
+              icon: PauseCircle,
+              bg: 'from-gray-400 to-gray-500',
+            },
           ].map((stat, index) => (
-            <div 
+            <div
               key={stat.label}
               className="bg-white/70 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-white/20 transform transition-all duration-500 hover:scale-105 hover:shadow-2xl group"
               style={{
                 animationDelay: `${index * 100}ms`,
-                animation: 'fadeInUp 0.6s ease-out forwards'
+                animation: 'fadeInUp 0.6s ease-out forwards',
               }}
             >
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-semibold text-gray-600 mb-1">{stat.label}</p>
-                  <p className="text-3xl font-bold text-[#203947] group-hover:scale-110 transition-transform">{stat.value}</p>
+                  <p className="text-sm font-semibold text-gray-600 mb-1">
+                    {stat.label}
+                  </p>
+                  <p className="text-3xl font-bold text-[#203947] group-hover:scale-110 transition-transform">
+                    {stat.value}
+                  </p>
                 </div>
-                <div className={`p-4 rounded-2xl bg-gradient-to-br ${stat.bg} shadow-lg`}>
+                <div
+                  className={`p-4 rounded-2xl bg-gradient-to-br ${stat.bg} shadow-lg`}
+                >
                   <stat.icon className="h-6 w-6 text-white" />
                 </div>
               </div>
@@ -289,9 +341,7 @@ const handleInterviewAction = async (action) => {
             <div className="relative z-10">
               <div className="flex items-center space-x-3 mb-2">
                 <Sparkles className="h-6 w-6 text-yellow-300" />
-                <h2 className="text-2xl font-bold">
-                  Interview Queue
-                </h2>
+                <h2 className="text-2xl font-bold">Interview Queue</h2>
               </div>
               <p className="text-white/90 font-medium">
                 Real-time tracking of all scheduled interviews
@@ -306,16 +356,21 @@ const handleInterviewAction = async (action) => {
                   <div className="w-16 h-16 border-4 border-gray-200 rounded-full animate-spin"></div>
                   <div className="absolute top-0 left-0 w-16 h-16 border-4 border-[#901b20] rounded-full animate-spin border-t-transparent"></div>
                 </div>
-                <p className="text-gray-600 mt-6 font-semibold text-lg">Loading interview queue...</p>
+                <p className="text-gray-600 mt-6 font-semibold text-lg">
+                  Loading interview queue...
+                </p>
               </div>
             ) : queueData.length === 0 ? (
               <div className="text-center py-20">
                 <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Eye className="h-12 w-12 text-gray-400" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">No Interviews Scheduled</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                  No Interviews Scheduled
+                </h3>
                 <p className="text-gray-600 max-w-md mx-auto text-lg">
-                  No interviews found for this company. Check back later for updates.
+                  No interviews found for this company. Check back later for
+                  updates.
                 </p>
               </div>
             ) : (
@@ -326,7 +381,7 @@ const handleInterviewAction = async (action) => {
                     className="border border-gray-200/50 rounded-2xl p-8 hover:shadow-2xl transition-all duration-500 transform hover:scale-[1.02] bg-white/50 backdrop-blur-sm"
                     style={{
                       animationDelay: `${index * 150}ms`,
-                      animation: 'fadeInUp 0.6s ease-out forwards'
+                      animation: 'fadeInUp 0.6s ease-out forwards',
                     }}
                   >
                     <div className="flex flex-col md:flex-row items-start md:items-center justify-between">
@@ -343,7 +398,8 @@ const handleInterviewAction = async (action) => {
                         </div>
                         <div className="flex-1">
                           <h3 className="text-xl font-bold text-[#203947] mb-2">
-                            {entry.student?.first_name} {entry.student?.last_name}
+                            {entry.student?.first_name}{' '}
+                            {entry.student?.last_name}
                           </h3>
                           <div className="flex items-center text-sm text-gray-600 mb-2">
                             <Mail className="h-4 w-4 mr-2 text-[#901b20]" />
@@ -372,9 +428,13 @@ const handleInterviewAction = async (action) => {
                           View Profile
                         </button>
                         <div className="flex items-center">
-                          <span className={`px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2 ${getStatusColor(entry.status)}`}>
+                          <span
+                            className={`px-4 py-2 rounded-xl text-sm font-bold flex items-center space-x-2 ${getStatusColor(entry.status)}`}
+                          >
                             {getStatusIcon(entry.status)}
-                            <span>{entry.status.replace('_', ' ').toUpperCase()}</span>
+                            <span>
+                              {entry.status.replace('_', ' ').toUpperCase()}
+                            </span>
                           </span>
                         </div>
                       </div>
@@ -402,7 +462,8 @@ const handleInterviewAction = async (action) => {
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold">
-                        {selectedStudent.student?.first_name} {selectedStudent.student?.last_name}
+                        {selectedStudent.student?.first_name}{' '}
+                        {selectedStudent.student?.last_name}
                       </h2>
                       <p className="text-white/90 font-medium">
                         Queue Position #{selectedStudent.queue_position}
@@ -443,9 +504,12 @@ const handleInterviewAction = async (action) => {
                         </div>
                         <div>
                           <h4 className="font-bold text-[#203947] text-lg">
-                            {selectedStudent.student?.first_name} {selectedStudent.student?.last_name}
+                            {selectedStudent.student?.first_name}{' '}
+                            {selectedStudent.student?.last_name}
                           </h4>
-                          <p className="text-gray-600 font-medium">{selectedStudent.student?.track_name}</p>
+                          <p className="text-gray-600 font-medium">
+                            {selectedStudent.student?.track_name}
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center text-gray-600">
@@ -457,35 +521,34 @@ const handleInterviewAction = async (action) => {
                         <span>{selectedStudent.student?.phone}</span>
                       </div>
                       {selectedStudent.student?.linkedin_url && (
-  <div className="flex items-center text-gray-600">
-    <ExternalLink className="h-4 w-4 mr-3 text-[#0e76a8]" />
-    <a
-      href={selectedStudent.student.linkedin_url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-blue-700 hover:underline"
-    >
-      LinkedIn Profile
-    </a>
-  </div>
-)}
+                        <div className="flex items-center text-gray-600">
+                          <ExternalLink className="h-4 w-4 mr-3 text-[#0e76a8]" />
+                          <a
+                            href={selectedStudent.student.linkedin_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-700 hover:underline"
+                          >
+                            LinkedIn Profile
+                          </a>
+                        </div>
+                      )}
 
-{selectedStudent.student?.github_url && (
-  <div className="flex items-center text-gray-600 mt-2">
-    <ExternalLink className="h-4 w-4 mr-3 text-black" />
-    <a
-      href={selectedStudent.student.github_url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-gray-800 hover:underline"
-    >
-      GitHub Profile
-    </a>
-  </div>
-)}
+                      {selectedStudent.student?.github_url && (
+                        <div className="flex items-center text-gray-600 mt-2">
+                          <ExternalLink className="h-4 w-4 mr-3 text-black" />
+                          <a
+                            href={selectedStudent.student.github_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-gray-800 hover:underline"
+                          >
+                            GitHub Profile
+                          </a>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  
 
                   {/* CV Section */}
                   <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50">
@@ -500,30 +563,38 @@ const handleInterviewAction = async (action) => {
                             <FileText className="h-5 w-5 text-white" />
                           </div>
                           <div>
-                            <p className="font-semibold text-[#203947]">CV Document</p>
+                            <p className="font-semibold text-[#203947]">
+                              CV Document
+                            </p>
                             <p className="text-sm text-gray-600">PDF Format</p>
                           </div>
                         </div>
-{selectedStudent?.student?.cv_path ? (
-  <button
-    onClick={() => {
-      const fullUrl = selectedStudent.student.cv_path.startsWith('http')
-        ? selectedStudent.student.cv_path
-        : `http://127.0.0.1:8000/storage/${selectedStudent.student.cv_path}`;
-      window.open(fullUrl, '_blank');
-    }}
-    className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg"
-  >
-    <ExternalLink className="h-4 w-4 mr-2" />
-    View PDF
-  </button>
-) : (
-  <p className="text-sm text-gray-500 italic">No CV uploaded</p>
-)}
-
+                        {selectedStudent?.student?.cv_path ? (
+                          <button
+                            onClick={() => {
+                              const fullUrl =
+                                selectedStudent.student.cv_path.startsWith(
+                                  'http'
+                                )
+                                  ? selectedStudent.student.cv_path
+                                  : `${APP_URL}/storage/${selectedStudent.student.cv_path}`;
+                              window.open(fullUrl, '_blank');
+                            }}
+                            className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg"
+                          >
+                            <ExternalLink className="h-4 w-4 mr-2" />
+                            View PDF
+                          </button>
+                        ) : (
+                          <p className="text-sm text-gray-500 italic">
+                            No CV uploaded
+                          </p>
+                        )}
                       </div>
                     ) : (
-                      <p className="text-gray-500 text-center py-4">No CV uploaded</p>
+                      <p className="text-gray-500 text-center py-4">
+                        No CV uploaded
+                      </p>
                     )}
                   </div>
                 </div>
@@ -538,11 +609,19 @@ const handleInterviewAction = async (action) => {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-slate-50 rounded-xl border border-gray-200/50">
                         <div>
-                          <p className="font-semibold text-[#203947]">Current Status</p>
+                          <p className="font-semibold text-[#203947]">
+                            Current Status
+                          </p>
                           <div className="flex items-center mt-1">
-                            <span className={`px-3 py-1 rounded-lg text-sm font-bold flex items-center space-x-2 ${getStatusColor(selectedStudent.status)}`}>
+                            <span
+                              className={`px-3 py-1 rounded-lg text-sm font-bold flex items-center space-x-2 ${getStatusColor(selectedStudent.status)}`}
+                            >
                               {getStatusIcon(selectedStudent.status)}
-                              <span>{selectedStudent.status.replace('_', ' ').toUpperCase()}</span>
+                              <span>
+                                {selectedStudent.status
+                                  .replace('_', ' ')
+                                  .toUpperCase()}
+                              </span>
                             </span>
                           </div>
                         </div>
@@ -558,7 +637,9 @@ const handleInterviewAction = async (action) => {
                               className="w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
                             >
                               <PlayCircle className="h-5 w-5 mr-2" />
-                              {processingInterview ? 'Processing...' : 'Start Interview'}
+                              {processingInterview
+                                ? 'Processing...'
+                                : 'Start Interview'}
                             </button>
                             <button
                               onClick={() => handleInterviewAction('skip')}
@@ -566,7 +647,9 @@ const handleInterviewAction = async (action) => {
                               className="w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl hover:from-gray-600 hover:to-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
                             >
                               <PauseCircle className="h-5 w-5 mr-2" />
-                              {processingInterview ? 'Processing...' : 'Skip Interview'}
+                              {processingInterview
+                                ? 'Processing...'
+                                : 'Skip Interview'}
                             </button>
                           </>
                         )}
@@ -579,7 +662,9 @@ const handleInterviewAction = async (action) => {
                               className="w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
                             >
                               <CheckCircle className="h-5 w-5 mr-2" />
-                              {processingInterview ? 'Processing...' : 'End Interview'}
+                              {processingInterview
+                                ? 'Processing...'
+                                : 'End Interview'}
                             </button>
                             <button
                               onClick={() => handleInterviewAction('pending')}
@@ -587,7 +672,9 @@ const handleInterviewAction = async (action) => {
                               className="w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-[#901b20]/50 to-[#901b20]/80 text-white rounded-xl hover:from-[#901b20]/90 hover:to-[#901b20]/50 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
                             >
                               <Clock className="h-5 w-5 mr-2" />
-                              {processingInterview ? 'Processing...' : 'Mark as Pending'}
+                              {processingInterview
+                                ? 'Processing...'
+                                : 'Mark as Pending'}
                             </button>
                           </>
                         )}
@@ -604,7 +691,9 @@ const handleInterviewAction = async (action) => {
                               className="mt-3 flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold mx-auto"
                             >
                               <Clock className="h-5 w-5 mr-2" />
-                              {processingInterview ? 'Processing...' : 'Reset to Pending'}
+                              {processingInterview
+                                ? 'Processing...'
+                                : 'Reset to Pending'}
                             </button>
                           </div>
                         )}
@@ -621,7 +710,9 @@ const handleInterviewAction = async (action) => {
                               className="w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl hover:from-indigo-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
                             >
                               <PlayCircle className="h-5 w-5 mr-2" />
-                              {processingInterview ? 'Processing...' : 'Resume Interview'}
+                              {processingInterview
+                                ? 'Processing...'
+                                : 'Resume Interview'}
                             </button>
                             <button
                               onClick={() => handleInterviewAction('pending')}
@@ -629,7 +720,9 @@ const handleInterviewAction = async (action) => {
                               className="w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
                             >
                               <Clock className="h-5 w-5 mr-2" />
-                              {processingInterview ? 'Processing...' : 'Reset to Pending'}
+                              {processingInterview
+                                ? 'Processing...'
+                                : 'Reset to Pending'}
                             </button>
                           </div>
                         )}
@@ -642,7 +735,9 @@ const handleInterviewAction = async (action) => {
                             className="w-full flex items-center justify-center px-6 py-4 bg-gradient-to-r from-indigo-500 to-indigo-600 text-white rounded-xl hover:from-indigo-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold"
                           >
                             <PlayCircle className="h-5 w-5 mr-2" />
-                            {processingInterview ? 'Processing...' : 'Resume Interview'}
+                            {processingInterview
+                              ? 'Processing...'
+                              : 'Resume Interview'}
                           </button>
                         )}
                       </div>
@@ -651,12 +746,19 @@ const handleInterviewAction = async (action) => {
 
                   {/* Notes Section */}
                   <div className="bg-white/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-200/50">
-                    <h3 className="text-lg font-bold text-[#203947] mb-4">Notes</h3>
+                    <h3 className="text-lg font-bold text-[#203947] mb-4">
+                      Notes
+                    </h3>
                     <textarea
                       className="w-full h-32 p-4 border border-gray-200/50 rounded-xl focus:ring-2 focus:ring-[#901b20] focus:border-transparent resize-none bg-white/70 backdrop-blur-sm"
                       placeholder="Add notes about this interview..."
                       value={selectedStudent.notes || ''}
-                      onChange={(e) => setSelectedStudent(prev => ({ ...prev, notes: e.target.value }))}
+                      onChange={e =>
+                        setSelectedStudent(prev => ({
+                          ...prev,
+                          notes: e.target.value,
+                        }))
+                      }
                     />
                   </div>
                 </div>

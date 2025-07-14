@@ -21,6 +21,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
+const APP_URL = import.meta.env.VITE_API_BASE_URL;
+
 export default function QRCheckInScanner({ events = [] }) {
   const [qrToken, setQrToken] = useState('');
   const [lastResult, setLastResult] = useState(null);
@@ -45,7 +47,7 @@ export default function QRCheckInScanner({ events = [] }) {
       }
 
       const response = await fetch(
-        `http://127.0.0.1:8000/api/events/${eventId}/check-in`,
+        `${APP_URL}/api/events/${eventId}/check-in`,
         {
           method: 'POST',
           headers: {
