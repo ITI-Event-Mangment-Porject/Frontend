@@ -7,6 +7,8 @@ import DetailModal from './DetailModal';
 import NewJobFairModal from './NewJobFairModal';
 
 const JWT_TOKEN = localStorage.getItem('token');
+const APP_URL = import.meta.env.VITE_API_BASE_URL;
+
 const JobFairSetUp = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All Statuses');
@@ -45,7 +47,7 @@ const JobFairSetUp = () => {
         }
 
         const res = await fetch(
-          `http://127.0.0.1:8000/api/job-fairs/${selectedJobFairId}/participations?${params}`,
+          `${APP_URL}/api/job-fairs/${selectedJobFairId}/participations?${params}`,
           {
             headers: {
               Authorization: `Bearer ${JWT_TOKEN}`,
@@ -86,7 +88,7 @@ const JobFairSetUp = () => {
     try {
       // Step 1: Update participation status
       await fetch(
-        `http://127.0.0.1:8000/api/job-fairs/${selectedJobFairId}/participations/${participationId}`,
+        `${APP_URL}/api/job-fairs/${selectedJobFairId}/participations/${participationId}`,
         {
           method: 'PUT',
           headers: {
@@ -105,7 +107,7 @@ const JobFairSetUp = () => {
       }
 
       const response = await fetch(
-        `http://localhost:8000/api/companies/${companyId}/${action}`,
+        `${APP_URL}/api/companies/${companyId}/${action}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -150,7 +152,7 @@ const JobFairSetUp = () => {
 
   const handleViewDetails = async id => {
     const res = await fetch(
-      `http://127.0.0.1:8000/api/job-fairs/${selectedJobFairId}/participations/${id}`,
+      `${APP_URL}/api/job-fairs/${selectedJobFairId}/participations/${id}`,
       {
         headers: {
           Authorization: `Bearer ${JWT_TOKEN}`,

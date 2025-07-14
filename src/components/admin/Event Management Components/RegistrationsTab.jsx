@@ -1,5 +1,8 @@
 "use client"
 
+import { ClipLoader } from 'react-spinners';
+const APP_URL = import.meta.env.VITE_API_BASE_URL;
+
 import { useEffect, useState } from "react"
 import { toast } from "react-toastify"
 import axios from "axios"
@@ -38,14 +41,17 @@ const RegistrationsTabEnhanced = ({ event }) => {
   useEffect(() => {
     const fetchRegistrations = async (page = 1) => {
       try {
-        setLoading(true)
-        setError(null)
-        const token = localStorage.getItem("token")
-        const response = await axios.get(`http://127.0.0.1:8000/api/events/${event.id}/registrations?page=${page}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+        setLoading(true);
+        setError(null);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(
+          `${APP_URL}/api/events/${event.id}/registrations?page=${page}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
 
         if (response.data.success) {
           setRegistrations(Array.isArray(response.data.data.result.data) ? response.data.data.result.data : [])

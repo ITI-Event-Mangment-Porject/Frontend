@@ -43,7 +43,8 @@ import {
   Pie,
 } from 'recharts';
 import { useNavigate } from 'react-router-dom';
-const API_BASE_URL = 'http://127.0.0.1:8000';
+
+const APP_URL = import.meta.env.VITE_API_BASE_URL;
 
 const LiveEventMonitor = () => {
   const [events, setEvents] = useState([]);
@@ -89,7 +90,7 @@ const LiveEventMonitor = () => {
 
       do {
         const response = await fetch(
-          `http://127.0.0.1:8000/api/events?page=${currentPage}`,
+          `${APP_URL}/api/events?page=${currentPage}`,
           {
             headers: {
               Authorization: `Bearer ${ADMIN_TOKEN}`,
@@ -321,7 +322,7 @@ const LiveEventMonitor = () => {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/api/test/live/events/${selectedEvent.id}/start`,
+        `${APP_URL}/api/test/live/events/${selectedEvent.id}/start`,
         {
           method: 'POST',
           headers: {
@@ -363,7 +364,7 @@ const LiveEventMonitor = () => {
 
     try {
       const response = await fetch(
-        `http://127.0.0.1:8000/api/test/live/events/${selectedEvent.id}/end`,
+        `${APP_URL}/api/test/live/events/${selectedEvent.id}/end`,
         {
           method: 'POST',
           headers: {
@@ -682,7 +683,7 @@ const LiveEventMonitor = () => {
                       <img
                         src={
                           event.banner_image
-                            ? `${API_BASE_URL}${event.banner_image}`
+                            ? `${APP_URL}${event.banner_image}`
                             : ''
                         }
                         alt={event.title}

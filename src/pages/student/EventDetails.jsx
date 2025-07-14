@@ -20,8 +20,7 @@ import {
   Mic,
 } from 'lucide-react';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const APP_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 const EventDetails = () => {
   const { id } = useParams();
@@ -91,8 +90,14 @@ const EventDetails = () => {
     setError(null);
 
     try {
-      // Get event details
-      const eventRes = await apiCall(`${API_BASE_URL}/api/events/${id}`);
+      const [eventRes] = await Promise.all([
+        apiCall(`${APP_URL}/api/events/${id}`),
+        apiCall(`${APP_URL}/api/events/${id}/registration-status`).catch(
+          () => null
+        ),
+        apiCall(`${APP_URL}/api/events/${id}/sessions`),
+      ]);
+
       if (!eventRes.ok) throw new Error('Event not found');
       const eventData = await eventRes.json();
       setEvent(eventData?.data?.result || null);
@@ -101,7 +106,7 @@ const EventDetails = () => {
       try {
         // First try with the registration status endpoint
         const statusRes = await apiCall(
-          `${API_BASE_URL}/api/events/${id}/registration-status`
+          `${APP_URL}/api/events/${id}/registration-status`
         );
         if (statusRes.ok) {
           const statusData = await statusRes.json();
@@ -109,7 +114,7 @@ const EventDetails = () => {
             setIsRegistered(true);
             // Get sessions if registered
             const sessionsRes = await apiCall(
-              `${API_BASE_URL}/api/events/${id}/sessions`
+              `${APP_URL}/api/events/${id}/sessions`
             );
             if (sessionsRes.ok) {
               const sessionsData = await sessionsRes.json();
@@ -121,7 +126,7 @@ const EventDetails = () => {
 
         // If first method doesn't confirm registration, try with my-registrations endpoint
         const myRegistrationsRes = await apiCall(
-          `${API_BASE_URL}/api/events/my-registrations`
+          `${APP_URL}/api/events/my-registrations`
         );
         if (myRegistrationsRes.ok) {
           const myRegistrationsData = await myRegistrationsRes.json();
@@ -137,7 +142,7 @@ const EventDetails = () => {
 
         // Get sessions data
         const sessionsRes = await apiCall(
-          `${API_BASE_URL}/api/events/${id}/sessions`
+          `${APP_URL}/api/events/${id}/sessions`
         );
         if (sessionsRes.ok) {
           const sessionsData = await sessionsRes.json();
@@ -160,7 +165,7 @@ const EventDetails = () => {
     if (registerLoading || isRegistered) return;
     setRegisterLoading(true);
     try {
-      const res = await apiCall(`${API_BASE_URL}/api/events/${id}/register`, {
+      const res = await apiCall(`${APP_URL}/api/events/${id}/register`, {
         method: 'POST',
       });
       if (res.status === 409) {
@@ -174,7 +179,7 @@ const EventDetails = () => {
     } catch {
       try {
         const statusRes = await apiCall(
-          `${API_BASE_URL}/api/events/${id}/registration-status`
+          `${APP_URL}/api/events/${id}/registration-status`
         );
         if (statusRes.ok) {
           const statusData = await statusRes.json();
@@ -221,7 +226,7 @@ const EventDetails = () => {
     setCancelLoading(true);
     try {
       const res = await apiCall(
-        `${API_BASE_URL}/api/events/${id}/cancel-registration`,
+        `${APP_URL}/api/events/${id}/cancel-registration`,
         {
           method: 'PATCH',
           body: JSON.stringify({
@@ -265,9 +270,7 @@ const EventDetails = () => {
   const handleFeedback = async () => {
     setFeedbackLoading(true);
     try {
-      const res = await apiCall(
-        `${API_BASE_URL}/api/feedback/events/${id}/forms`
-      );
+      const res = await apiCall(`${APP_URL}/api/feedback/events/${id}/forms`);
       if (!res.ok) {
         showMessage(
           res.status === 404

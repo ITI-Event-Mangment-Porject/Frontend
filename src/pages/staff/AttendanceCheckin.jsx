@@ -5,6 +5,8 @@ import { XCircle } from 'lucide-react';
 import Layout from '@/components/common/Layout';
 import useScrollToTop from '../../hooks/useScrollToTop';
 
+const APP_URL = import.meta.env.VITE_API_BASE_URL;
+
 const AttendanceCheckin = () => {
   useScrollToTop();
   const [events, setEvents] = useState([]);
@@ -24,7 +26,7 @@ const AttendanceCheckin = () => {
         }
 
         const response = await fetch(
-          'http://127.0.0.1:8000/api/events?filter[status]=ongoing',
+          `${APP_URL}/api/events?filter[status]=ongoing`,
           {
             headers: {
               Authorization: `Bearer ${authToken}`,

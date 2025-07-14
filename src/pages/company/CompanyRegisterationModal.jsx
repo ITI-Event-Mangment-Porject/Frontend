@@ -1,5 +1,18 @@
 import React, { useState } from 'react';
-import { Shield, Building, Mail, Phone, Globe, MapPin, Users, Briefcase, Linkedin, Upload, X, Camera } from 'lucide-react';
+import {
+  Shield,
+  Building,
+  Mail,
+  Phone,
+  Globe,
+  MapPin,
+  Users,
+  Briefcase,
+  Linkedin,
+  Upload,
+  X,
+  Camera,
+} from 'lucide-react';
 
 const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
   const [form, setForm] = useState({
@@ -13,8 +26,6 @@ const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
     contact_email: '',
     contact_phone: '',
     linkedin_url: '',
-
-    
   });
 
   const [selectedImage, setSelectedImage] = useState(null);
@@ -23,35 +34,40 @@ const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
   const [successMsg, setSuccessMsg] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
 
-  const handleChange = (e) => {
+  const handleChange = e => {
     setForm({ ...form, [e.target.name]: e.target.value });
     if (successMsg) setSuccessMsg('');
     if (errorMsg) setErrorMsg('');
   };
 
-  const handleImageChange = (e) => {
+  const handleImageChange = e => {
     const file = e.target.files[0];
     if (file) {
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif'];
+      const allowedTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/gif',
+      ];
       if (!allowedTypes.includes(file.type)) {
         setErrorMsg('Please select a valid image file (JPEG, PNG, or GIF)');
         return;
       }
 
-      const maxSize = 5 * 1024 * 1024; 
+      const maxSize = 5 * 1024 * 1024;
       if (file.size > maxSize) {
         setErrorMsg('Image size must be less than 5MB');
         return;
       }
 
       setSelectedImage(file);
-      
+
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         setImagePreview(e.target.result);
       };
       reader.readAsDataURL(file);
-      
+
       if (errorMsg) setErrorMsg('');
     }
   };
@@ -72,27 +88,28 @@ const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
 
     try {
       const token = localStorage.getItem('token');
-      const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
-      
+      const APP_URL =
+        import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+
       const formData = new FormData();
-      
+
       Object.keys(form).forEach(key => {
         if (form[key]) {
           formData.append(key, form[key]);
         }
       });
-      
+
       if (selectedImage) {
         formData.append('logo_path', selectedImage);
       }
 
-      const response = await fetch(`${API_BASE_URL}/api/companies`, {
+      const response = await fetch(`${APP_URL}/api/companies`, {
         method: 'POST',
         headers: {
-          'Accept': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`,
         },
-        body: formData
+        body: formData,
       });
 
       console.log('Response:', response);
@@ -112,7 +129,7 @@ const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
         setErrorMsg(data?.message || 'Registration failed. Please try again.');
       }
     } catch (err) {
-      console.error("Company creation failed", err);
+      console.error('Company creation failed', err);
       setErrorMsg('Network error. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
@@ -132,7 +149,7 @@ const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
         <div className="absolute top-20 left-10 w-48 h-48 bg-white/30 rounded-full blur-3xl animate-pulse" />
         <div className="absolute bottom-10 right-20 w-72 h-72 bg-[#f2b5b8]/30 rounded-full blur-2xl animate-pulse delay-1000" />
       </div>
-      
+
       <div className="relative z-10 bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
         <div className="space-y-8 p-8">
           {/* Header */}
@@ -141,7 +158,7 @@ const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_80%,rgba(255,255,255,0.1),transparent_50%)]"></div>
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_80%_20%,rgba(144,27,32,0.3),transparent_50%)]"></div>
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_40%_40%,rgba(255,255,255,0.05),transparent)] animate-pulse"></div>
-            
+
             <div className="absolute top-6 right-6 w-16 h-16 bg-white/10 rounded-full blur-md animate-pulse"></div>
             <div className="absolute bottom-6 left-6 w-24 h-24 bg-[#901b20]/20 rounded-full blur-2xl animate-pulse delay-1000"></div>
 
@@ -149,22 +166,25 @@ const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
               <div className="bg-white/10 p-4 rounded-2xl mb-4 backdrop-blur-sm border border-white/20">
                 <Building className="w-14 h-14 text-white" />
               </div>
-              <h2 className="text-white text-3xl font-bold mb-2">Company Registration</h2>
-              <p className="text-white/80 text-lg">Join our platform and connect with top talent</p>
+              <h2 className="text-white text-3xl font-bold mb-2">
+                Company Registration
+              </h2>
+              <p className="text-white/80 text-lg">
+                Join our platform and connect with top talent
+              </p>
             </div>
           </div>
 
           {/* Form */}
           <div>
             <div className="bg-white rounded-2xl p-8 shadow-lg border border-gray-200 hover:shadow-xl transition-all duration-300 hover:border-[#203947]/20 mb-8">
-              
               {/* Company Logo Upload Section */}
               <div className="mb-8">
                 <label className="block text-base font-semibold text-gray-900 mb-3 flex items-center space-x-2">
                   <Camera className="w-4 h-4 text-[#203947]" />
                   <span>Company Logo</span>
                 </label>
-                
+
                 <div className="flex items-start space-x-6">
                   {/* Upload Area */}
                   <div className="flex-1">
@@ -376,7 +396,7 @@ const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
                 >
                   <span>Cancel</span>
                 </button>
-                
+
                 <button
                   type="button"
                   onClick={handleSubmit}
@@ -385,8 +405,18 @@ const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
                 >
                   {isLoading ? (
                     <>
-                      <svg className="w-5 h-5 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a7.646 7.646 0 100 15.292 7.646 7.646 0 000-15.292zm0 0V1m0 3.354a7.646 7.646 0 100 15.292 7.646 7.646 0 000-15.292z" />
+                      <svg
+                        className="w-5 h-5 animate-spin"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 4.354a7.646 7.646 0 100 15.292 7.646 7.646 0 000-15.292zm0 0V1m0 3.354a7.646 7.646 0 100 15.292 7.646 7.646 0 000-15.292z"
+                        />
                       </svg>
                       <span>Registering...</span>
                     </>
@@ -405,8 +435,18 @@ const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
           {successMsg && (
             <div className="bg-gradient-to-r from-[#203947]/10 to-[#203947]/30 border-2 border-[#203947]/50 text-[#203947]/90 px-6 py-4 rounded-xl shadow-lg animate-fade-in">
               <div className="flex items-center space-x-2">
-                <svg className="w-5 h-5 text-[#203947]/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <svg
+                  className="w-5 h-5 text-[#203947]/90"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 13l4 4L19 7"
+                  />
                 </svg>
                 <span className="font-medium">{successMsg}</span>
               </div>
@@ -417,8 +457,18 @@ const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
           {errorMsg && (
             <div className="bg-gradient-to-r from-red-100 to-red-50 border-2 border-red-300 text-red-800 px-6 py-4 rounded-xl shadow-lg animate-fade-in">
               <div className="flex items-center space-x-2">
-                <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.664-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                <svg
+                  className="w-5 h-5 text-red-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.664-.833-2.464 0L3.34 16.5c-.77.833.192 2.5 1.732 2.5z"
+                  />
                 </svg>
                 <span className="font-medium">{errorMsg}</span>
               </div>

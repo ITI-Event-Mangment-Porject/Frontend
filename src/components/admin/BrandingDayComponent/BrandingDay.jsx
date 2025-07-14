@@ -1,6 +1,6 @@
-"use client"
+'use client';
 
-import { useState, useEffect } from "react"
+import { useState, useEffect } from 'react';
 import {
   Calendar,
   Clock,
@@ -19,233 +19,241 @@ import {
   Plus,
   Loader2,
   TrendingUp,
-} from "lucide-react"
+} from 'lucide-react';
 
 const BrandingDay = () => {
-  const [candidates, setCandidates] = useState([])
-  const [schedule, setSchedule] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [showScheduleForm, setShowScheduleForm] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [selectedCompanies, setSelectedCompanies] = useState([])
-  const [editingSlot, setEditingSlot] = useState(null)
-  const [deletingSlot, setDeletingSlot] = useState(null)
-  const [actionLoading, setActionLoading] = useState(false)
-  const [actionSuccess, setActionSuccess] = useState("")
-  const [actionError, setActionError] = useState("")
-  const [lastUpdated, setLastUpdated] = useState(new Date())
-  const [userRole, setUserRole] = useState(null)
-  const [accessDenied, setAccessDenied] = useState(false)
-  const [error, setError] = useState(null)
+  const [candidates, setCandidates] = useState([]);
+  const [schedule, setSchedule] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedCompanies, setSelectedCompanies] = useState([]);
+  const [editingSlot, setEditingSlot] = useState(null);
+  const [deletingSlot, setDeletingSlot] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
+  const [actionSuccess, setActionSuccess] = useState('');
+  const [actionError, setActionError] = useState('');
+  const [lastUpdated, setLastUpdated] = useState(new Date());
+  const [userRole, setUserRole] = useState(null);
+  const [accessDenied, setAccessDenied] = useState(false);
+  const [error, setError] = useState(null);
   const [scheduleData, setScheduleData] = useState({
-    branding_day_date: "2025-06-25",
+    branding_day_date: '2025-06-25',
     slots: [],
-  })
+  });
 
-  const BASE_URL = "http://127.0.0.1:8000/api"
+  const APP_URL = import.meta.env.VITE_API_BASE_URL;
 
   // Authentication check
   useEffect(() => {
-    const storedRole = localStorage.getItem("role")
-    const storedUser = localStorage.getItem("user")
-    const storedToken = localStorage.getItem("token")
+    const storedRole = localStorage.getItem('role');
+    const storedUser = localStorage.getItem('user');
+    const storedToken = localStorage.getItem('token');
 
     if (!storedRole || !storedUser || !storedToken) {
-      setAccessDenied(true)
-      setLoading(false)
-      return
+      setAccessDenied(true);
+      setLoading(false);
+      return;
     }
 
-    if (storedRole !== "admin") {
-      setAccessDenied(true)
-      setLoading(false)
-      return
+    if (storedRole !== 'admin') {
+      setAccessDenied(true);
+      setLoading(false);
+      return;
     }
 
-    setUserRole(storedRole)
-  }, [])
+    setUserRole(storedRole);
+  }, []);
 
   // Fetch data when authenticated
   useEffect(() => {
-    if (userRole === "admin") {
-      fetchData()
+    if (userRole === 'admin') {
+      fetchData();
     }
-  }, [userRole])
+  }, [userRole]);
 
   // Auto-refresh every 5 minutes
   useEffect(() => {
-    if (userRole !== "admin") return
+    if (userRole !== 'admin') return;
 
     const interval = setInterval(
       () => {
-        fetchData()
+        fetchData();
       },
-      5 * 60 * 1000,
-    ) // 5 minutes
+      5 * 60 * 1000
+    ); // 5 minutes
 
-    return () => clearInterval(interval)
-  }, [userRole])
+    return () => clearInterval(interval);
+  }, [userRole]);
 
   // Auto-hide success/error messages
   useEffect(() => {
     if (actionSuccess) {
-      const timer = setTimeout(() => setActionSuccess(""), 5000)
-      return () => clearTimeout(timer)
+      const timer = setTimeout(() => setActionSuccess(''), 5000);
+      return () => clearTimeout(timer);
     }
-  }, [actionSuccess])
+  }, [actionSuccess]);
 
   useEffect(() => {
     if (actionError) {
-      const timer = setTimeout(() => setActionError(""), 5000)
-      return () => clearTimeout(timer)
+      const timer = setTimeout(() => setActionError(''), 5000);
+      return () => clearTimeout(timer);
     }
-  }, [actionError])
+  }, [actionError]);
 
   const fetchData = async () => {
     try {
-      setLoading(true)
-      setError(null)
-      setActionError("")
-      const token = localStorage.getItem("token")
+      setLoading(true);
+      setError(null);
+      setActionError('');
+      const token = localStorage.getItem('token');
 
       if (!token) {
-        setAccessDenied(true)
-        return
+        setAccessDenied(true);
+        return;
       }
 
       // Fetch candidates
-      const candidatesResponse = await fetch(`${BASE_URL}/job-fairs/1/branding-day/candidates`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      })
+      const candidatesResponse = await fetch(
+        `${APP_URL}/job-fairs/1/branding-day/candidates`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!candidatesResponse.ok) {
-        throw new Error(`HTTP error! status: ${candidatesResponse.status}`)
+        throw new Error(`HTTP error! status: ${candidatesResponse.status}`);
       }
 
-      const candidatesData = await candidatesResponse.json()
+      const candidatesData = await candidatesResponse.json();
 
       // Fetch schedule
-      const scheduleResponse = await fetch(`${BASE_URL}/job-fairs/1/branding-day/schedule`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      })
+      const scheduleResponse = await fetch(
+        `${APP_URL}/job-fairs/1/branding-day/schedule`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
       if (!scheduleResponse.ok) {
-        throw new Error(`HTTP error! status: ${scheduleResponse.status}`)
+        throw new Error(`HTTP error! status: ${scheduleResponse.status}`);
       }
 
-      const scheduleData = await scheduleResponse.json()
+      const scheduleData = await scheduleResponse.json();
 
       if (candidatesData.success) {
-        setCandidates(candidatesData.data.result || [])
+        setCandidates(candidatesData.data.result || []);
       } else {
-        throw new Error(candidatesData.message || "Failed to fetch candidates")
+        throw new Error(candidatesData.message || 'Failed to fetch candidates');
       }
 
       if (scheduleData.success) {
         // Merge speaker data from candidates into schedule
-        const scheduleWithSpeakers = scheduleData.data.result.map((slot) => {
-          const candidate = candidatesData.data.result?.find((c) => c.company_id === slot.company_id)
+        const scheduleWithSpeakers = scheduleData.data.result.map(slot => {
+          const candidate = candidatesData.data.result?.find(
+            c => c.company_id === slot.company_id
+          );
           return {
             ...slot,
             speaker: candidate?.speaker || null,
-          }
-        })
-        setSchedule(scheduleWithSpeakers || [])
+          };
+        });
+        setSchedule(scheduleWithSpeakers || []);
       } else {
-        throw new Error(scheduleData.message || "Failed to fetch schedule")
+        throw new Error(scheduleData.message || 'Failed to fetch schedule');
       }
 
-      setLastUpdated(new Date())
+      setLastUpdated(new Date());
     } catch (err) {
-      console.error("Error fetching data:", err)
-      setError(err.message || "Error loading branding day data")
+      console.error('Error fetching data:', err);
+      setError(err.message || 'Error loading branding day data');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   // Get unscheduled companies
   const unscheduledCandidates = candidates.filter(
-    (candidate) =>
-      !schedule.some((slot) => slot.company_id === candidate.company_id) &&
-      candidate.company_name.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+    candidate =>
+      !schedule.some(slot => slot.company_id === candidate.company_id) &&
+      candidate.company_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const handleScheduleCompany = (candidate) => {
-    setSelectedCompanies([candidate])
+  const handleScheduleCompany = candidate => {
+    setSelectedCompanies([candidate]);
     setScheduleData({
-      branding_day_date: "2025-06-25",
+      branding_day_date: '2025-06-25',
       slots: [
         {
           company_id: candidate.company_id,
           participation_id: candidate.job_fair_participation_id,
           company_name: candidate.company_name,
           speaker: candidate.speaker,
-          start_time: "09:00",
-          end_time: "09:30",
+          start_time: '09:00',
+          end_time: '09:30',
           order: schedule.length + 1,
         },
       ],
-    })
-    setShowScheduleForm(true)
-  }
+    });
+    setShowScheduleForm(true);
+  };
 
   const handleBulkSchedule = () => {
-    if (selectedCompanies.length === 0) return
+    if (selectedCompanies.length === 0) return;
 
     const slots = selectedCompanies.map((candidate, index) => {
-      const startHour = 9 + Math.floor(index * 0.5)
-      const startMinute = (index % 2) * 30
-      const endHour = 9 + Math.floor((index + 1) * 0.5)
-      const endMinute = ((index + 1) % 2) * 30
+      const startHour = 9 + Math.floor(index * 0.5);
+      const startMinute = (index % 2) * 30;
+      const endHour = 9 + Math.floor((index + 1) * 0.5);
+      const endMinute = ((index + 1) % 2) * 30;
 
       return {
         company_id: candidate.company_id,
         participation_id: candidate.job_fair_participation_id,
         company_name: candidate.company_name,
         speaker: candidate.speaker,
-        start_time: `${startHour.toString().padStart(2, "0")}:${startMinute.toString().padStart(2, "0")}`,
-        end_time: `${endHour.toString().padStart(2, "0")}:${endMinute.toString().padStart(2, "0")}`,
+        start_time: `${startHour.toString().padStart(2, '0')}:${startMinute.toString().padStart(2, '0')}`,
+        end_time: `${endHour.toString().padStart(2, '0')}:${endMinute.toString().padStart(2, '0')}`,
         order: schedule.length + index + 1,
-      }
-    })
+      };
+    });
 
     setScheduleData({
-      branding_day_date: "2025-06-25",
+      branding_day_date: '2025-06-25',
       slots,
-    })
-    setShowScheduleForm(true)
-  }
+    });
+    setShowScheduleForm(true);
+  };
 
   const updateSlotTime = (index, field, value) => {
-    const updatedSlots = [...scheduleData.slots]
-    updatedSlots[index] = { ...updatedSlots[index], [field]: value }
-    setScheduleData({ ...scheduleData, slots: updatedSlots })
-  }
+    const updatedSlots = [...scheduleData.slots];
+    updatedSlots[index] = { ...updatedSlots[index], [field]: value };
+    setScheduleData({ ...scheduleData, slots: updatedSlots });
+  };
 
-  const removeSlot = (index) => {
-    const updatedSlots = scheduleData.slots.filter((_, i) => i !== index)
-    setScheduleData({ ...scheduleData, slots: updatedSlots })
-  }
+  const removeSlot = index => {
+    const updatedSlots = scheduleData.slots.filter((_, i) => i !== index);
+    setScheduleData({ ...scheduleData, slots: updatedSlots });
+  };
 
-  const handleSubmitSchedule = async (e) => {
-    e.preventDefault()
-    setActionLoading(true)
-    setActionError("")
-    setActionSuccess("")
+  const handleSubmitSchedule = async e => {
+    e.preventDefault();
+    setActionLoading(true);
+    setActionError('');
+    setActionSuccess('');
 
     try {
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem('token');
       const payload = {
-        schedule: scheduleData.slots.map((slot) => ({
+        schedule: scheduleData.slots.map(slot => ({
           company_id: slot.company_id,
           participation_id: slot.participation_id,
           branding_day_date: scheduleData.branding_day_date,
@@ -253,26 +261,29 @@ const BrandingDay = () => {
           end_time: slot.end_time,
           order: slot.order,
         })),
-      }
+      };
 
-      console.log("Submitting schedule:", payload)
+      console.log('Submitting schedule:', payload);
 
-      const response = await fetch(`${BASE_URL}/job-fairs/1/branding-day/schedule`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      })
+      const response = await fetch(
+        `${APP_URL}/job-fairs/1/branding-day/schedule`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
-      const data = await response.json()
-      console.log("Schedule response:", data)
+      const data = await response.json();
+      console.log('Schedule response:', data);
 
       if (data.success) {
-        setActionSuccess("Schedule created successfully! 🎉")
-        setShowScheduleForm(false)
-        setSelectedCompanies([])
+        setActionSuccess('Schedule created successfully! 🎉');
+        setShowScheduleForm(false);
+        setSelectedCompanies([]);
 
         // Create new schedule slots with proper structure
         const newScheduleSlots = scheduleData.slots.map((slot, index) => ({
@@ -285,117 +296,127 @@ const BrandingDay = () => {
           end_time: slot.end_time,
           order: slot.order,
           branding_day_date: scheduleData.branding_day_date,
-        }))
+        }));
 
         // Update schedule state
-        setSchedule((prevSchedule) => [...prevSchedule, ...newScheduleSlots])
+        setSchedule(prevSchedule => [...prevSchedule, ...newScheduleSlots]);
 
-        console.log("Updated schedule with new slots:", newScheduleSlots)
+        console.log('Updated schedule with new slots:', newScheduleSlots);
 
         // Don't automatically refresh - let user manually refresh if needed
         // This prevents the optimistic update from being overwritten
       } else {
-        setActionError(data.message || "Failed to create schedule")
+        setActionError(data.message || 'Failed to create schedule');
       }
     } catch (error) {
-      console.error("Error creating schedule:", error)
-      setActionError("Network error occurred while creating the schedule")
+      console.error('Error creating schedule:', error);
+      setActionError('Network error occurred while creating the schedule');
     } finally {
-      setActionLoading(false)
+      setActionLoading(false);
     }
-  }
+  };
 
-  const handleEditSlot = (slot) => {
-    console.log("Edit slot clicked:", slot)
+  const handleEditSlot = slot => {
+    console.log('Edit slot clicked:', slot);
     setEditingSlot({
       ...slot,
       start_time: slot.start_time.substring(0, 5), // Remove seconds
       end_time: slot.end_time.substring(0, 5), // Remove seconds
-    })
-    setShowEditModal(true)
-    setActionSuccess("")
-    setActionError("")
-  }
+    });
+    setShowEditModal(true);
+    setActionSuccess('');
+    setActionError('');
+  };
 
-  const handleUpdateSlot = async (e) => {
-    e.preventDefault()
-    setActionLoading(true)
-    setActionError("")
-    setActionSuccess("")
+  const handleUpdateSlot = async e => {
+    e.preventDefault();
+    setActionLoading(true);
+    setActionError('');
+    setActionSuccess('');
 
     try {
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem('token');
       const payload = {
         start_time: editingSlot.start_time,
         end_time: editingSlot.end_time,
-      }
+      };
 
-      console.log("Updating slot:", editingSlot.id, payload)
+      console.log('Updating slot:', editingSlot.id, payload);
 
-      const response = await fetch(`${BASE_URL}/job-fairs/1/branding-day/schedule/${editingSlot.id}`, {
-        method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      })
+      const response = await fetch(
+        `${APP_URL}/job-fairs/1/branding-day/schedule/${editingSlot.id}`,
+        {
+          method: 'PUT',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+        }
+      );
 
-      const data = await response.json()
-      console.log("Update response:", data)
+      const data = await response.json();
+      console.log('Update response:', data);
 
       if (data.success) {
-        setActionSuccess("Schedule updated successfully! ✅")
-        setShowEditModal(false)
+        setActionSuccess('Schedule updated successfully! ✅');
+        setShowEditModal(false);
 
         // Update local state immediately
-        setSchedule((prevSchedule) =>
-          prevSchedule.map((slot) =>
+        setSchedule(prevSchedule =>
+          prevSchedule.map(slot =>
             slot.id === editingSlot.id
-              ? { ...slot, start_time: editingSlot.start_time, end_time: editingSlot.end_time }
-              : slot,
-          ),
-        )
+              ? {
+                  ...slot,
+                  start_time: editingSlot.start_time,
+                  end_time: editingSlot.end_time,
+                }
+              : slot
+          )
+        );
 
-        setEditingSlot(null)
+        setEditingSlot(null);
       } else {
-        setActionError(data.message || "Failed to update schedule")
+        setActionError(data.message || 'Failed to update schedule');
       }
     } catch (error) {
-      console.error("Error updating schedule:", error)
-      setActionError("Network error occurred while updating the schedule")
+      console.error('Error updating schedule:', error);
+      setActionError('Network error occurred while updating the schedule');
     } finally {
-      setActionLoading(false)
+      setActionLoading(false);
     }
-  }
+  };
 
-  const handleDeleteClick = (slot) => {
-    console.log("Delete slot clicked:", slot)
-    setDeletingSlot(slot)
-    setShowDeleteModal(true)
-  }
+  const handleDeleteClick = slot => {
+    console.log('Delete slot clicked:', slot);
+    setDeletingSlot(slot);
+    setShowDeleteModal(true);
+  };
 
   const handleConfirmDelete = async () => {
-    if (!deletingSlot) return
+    if (!deletingSlot) return;
 
-    setActionLoading(true)
-    setActionError("")
-    setActionSuccess("")
+    setActionLoading(true);
+    setActionError('');
+    setActionSuccess('');
 
     try {
-      const token = localStorage.getItem("token")
-      console.log("Deleting slot:", deletingSlot.id)
+      const token = localStorage.getItem('token');
+      console.log('Deleting slot:', deletingSlot.id);
 
-      const response = await fetch(`${BASE_URL}/job-fairs/1/branding-day/schedule/${deletingSlot.id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      })
+      const response = await fetch(
+        `${APP_URL}/job-fairs/1/branding-day/schedule/${deletingSlot.id}`,
+        {
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
 
-      const data = await response.json()
-      console.log("Delete response:", data)
+      const data = await response.json();
+      console.log('Delete response:', data);
 
       if (data.success) {
         // Create candidate object from the deleted slot to add back to available companies
@@ -405,57 +426,66 @@ const BrandingDay = () => {
           job_fair_participation_id: deletingSlot.participation_id,
           company_name: deletingSlot.company_name,
           speaker: deletingSlot.speaker,
-        }
+        };
 
-        console.log("Restoring candidate:", restoredCandidate)
+        console.log('Restoring candidate:', restoredCandidate);
 
         // Update states immediately and atomically
-        setSchedule((prevSchedule) => {
-          const updatedSchedule = prevSchedule.filter((slot) => slot.id !== deletingSlot.id)
-          console.log("Updated schedule after deletion:", updatedSchedule)
-          return updatedSchedule
-        })
+        setSchedule(prevSchedule => {
+          const updatedSchedule = prevSchedule.filter(
+            slot => slot.id !== deletingSlot.id
+          );
+          console.log('Updated schedule after deletion:', updatedSchedule);
+          return updatedSchedule;
+        });
 
         // Add the company back to candidates
-        setCandidates((prevCandidates) => {
-          const exists = prevCandidates.some((c) => c.company_id === restoredCandidate.company_id)
+        setCandidates(prevCandidates => {
+          const exists = prevCandidates.some(
+            c => c.company_id === restoredCandidate.company_id
+          );
           if (!exists) {
-            const updatedCandidates = [...prevCandidates, restoredCandidate]
-            console.log("Updated candidates after restoration:", updatedCandidates)
-            return updatedCandidates
+            const updatedCandidates = [...prevCandidates, restoredCandidate];
+            console.log(
+              'Updated candidates after restoration:',
+              updatedCandidates
+            );
+            return updatedCandidates;
           }
-          return prevCandidates
-        })
+          return prevCandidates;
+        });
 
         // Close modal and reset states
-        setShowDeleteModal(false)
-        setDeletingSlot(null)
-        setActionLoading(false)
+        setShowDeleteModal(false);
+        setDeletingSlot(null);
+        setActionLoading(false);
 
         // Show success message
-        setActionSuccess("Schedule slot deleted successfully! Company moved back to available list. 🗑️")
+        setActionSuccess(
+          'Schedule slot deleted successfully! Company moved back to available list. 🗑️'
+        );
 
-        console.log("Delete operation completed successfully")
+        console.log('Delete operation completed successfully');
       } else {
-        setActionError(data.message || "Failed to delete schedule slot")
-        setActionLoading(false)
+        setActionError(data.message || 'Failed to delete schedule slot');
+        setActionLoading(false);
       }
     } catch (error) {
-      console.error("Error deleting schedule slot:", error)
-      setActionError("Network error occurred while deleting the schedule slot")
-      setActionLoading(false)
+      console.error('Error deleting schedule slot:', error);
+      setActionError('Network error occurred while deleting the schedule slot');
+      setActionLoading(false);
     }
-  }
+  };
 
   const handleRefresh = () => {
-    console.log("Manual refresh triggered")
-    fetchData()
-  }
+    console.log('Manual refresh triggered');
+    fetchData();
+  };
 
-  const formatTime = (timeString) => {
-    if (!timeString) return ""
-    return timeString.substring(0, 5) // Remove seconds
-  }
+  const formatTime = timeString => {
+    if (!timeString) return '';
+    return timeString.substring(0, 5); // Remove seconds
+  };
 
   // Enhanced Loading Component
   if (loading) {
@@ -472,7 +502,10 @@ const BrandingDay = () => {
             {/* Stats skeleton */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               {[...Array(4)].map((_, i) => (
-                <div key={i} className="bg-white rounded-lg p-6 space-y-4 shimmer-effect border border-gray-200">
+                <div
+                  key={i}
+                  className="bg-white rounded-lg p-6 space-y-4 shimmer-effect border border-gray-200"
+                >
                   <div className="h-6 bg-gray-300 border border-gray-200 rounded w-3/4"></div>
                   <div className="h-8 bg-gray-300 border border-gray-200 rounded w-1/2"></div>
                 </div>
@@ -487,7 +520,10 @@ const BrandingDay = () => {
             {/* Cards skeleton */}
             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="bg-white rounded-lg p-6 space-y-4 shimmer-effect border border-gray-200">
+                <div
+                  key={i}
+                  className="bg-white rounded-lg p-6 space-y-4 shimmer-effect border border-gray-200"
+                >
                   <div className="h-4 bg-gray-300 border border-gray-200 rounded w-3/4"></div>
                   <div className="h-3 bg-gray-300 border border-gray-200 rounded w-1/2"></div>
                   <div className="h-20 bg-gray-300 border border-gray-200 rounded"></div>
@@ -497,7 +533,7 @@ const BrandingDay = () => {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Enhanced Error Component
@@ -510,7 +546,9 @@ const BrandingDay = () => {
               <div className="text-red-500 mb-6 animate-bounce">
                 <AlertCircle className="w-16 h-16 mx-auto" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Error Loading Branding Day</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                Error Loading Branding Day
+              </h3>
               <p className="text-gray-600 mb-6">{error}</p>
               <button
                 onClick={() => window.location.reload()}
@@ -522,7 +560,7 @@ const BrandingDay = () => {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   // Enhanced Access Denied Component
@@ -535,12 +573,15 @@ const BrandingDay = () => {
               <div className="text-red-500 mb-6">
                 <AlertCircle className="w-16 h-16 mx-auto" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-3">Access Denied</h3>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                Access Denied
+              </h3>
               <p className="text-gray-600 mb-6">
-                You don't have permission to access this page. Admin access required.
+                You don't have permission to access this page. Admin access
+                required.
               </p>
               <button
-                onClick={() => (window.location.href = "/login")}
+                onClick={() => (window.location.href = '/login')}
                 className="bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
               >
                 Go to Login
@@ -549,7 +590,7 @@ const BrandingDay = () => {
           </div>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -584,7 +625,9 @@ const BrandingDay = () => {
               <p className="text-lg text-gray-600 font-medium">
                 Schedule branding day slots for approved companies with speakers
               </p>
-              <p className="text-sm text-gray-500 mt-1">Last updated: {lastUpdated.toLocaleTimeString()}</p>
+              <p className="text-sm text-gray-500 mt-1">
+                Last updated: {lastUpdated.toLocaleTimeString()}
+              </p>
             </div>
             <button
               onClick={handleRefresh}
@@ -598,7 +641,7 @@ const BrandingDay = () => {
                 ) : (
                   <RefreshCw className="w-5 h-5 group-hover:rotate-180 transition-transform duration-500" />
                 )}
-                <span>{loading ? "Loading..." : "Refresh"}</span>
+                <span>{loading ? 'Loading...' : 'Refresh'}</span>
               </div>
             </button>
           </div>
@@ -614,8 +657,12 @@ const BrandingDay = () => {
                   <Building2 className="w-6 h-6 text-white" />
                 </div>
               </div>
-              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Available Companies</p>
-              <p className="text-3xl font-black text-primary animate-pulse">{unscheduledCandidates.length}</p>
+              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                Available Companies
+              </p>
+              <p className="text-3xl font-black text-primary animate-pulse">
+                {unscheduledCandidates.length}
+              </p>
             </div>
           </div>
 
@@ -631,8 +678,12 @@ const BrandingDay = () => {
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full animate-pulse"></div>
                 </div>
               </div>
-              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Scheduled</p>
-              <p className="text-3xl font-black text-green-600 animate-pulse">{schedule.length}</p>
+              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                Scheduled
+              </p>
+              <p className="text-3xl font-black text-green-600 animate-pulse">
+                {schedule.length}
+              </p>
             </div>
           </div>
 
@@ -644,8 +695,12 @@ const BrandingDay = () => {
                   <Users className="w-6 h-6 text-white" />
                 </div>
               </div>
-              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Total Speakers</p>
-              <p className="text-3xl font-black text-purple-600">{candidates.length}</p>
+              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                Total Speakers
+              </p>
+              <p className="text-3xl font-black text-purple-600">
+                {candidates.length}
+              </p>
             </div>
           </div>
 
@@ -657,9 +712,14 @@ const BrandingDay = () => {
                   <TrendingUp className="w-6 h-6 text-white" />
                 </div>
               </div>
-              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Completion</p>
+              <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">
+                Completion
+              </p>
               <p className="text-3xl font-black text-[#901b20]">
-                {candidates.length > 0 ? Math.round((schedule.length / candidates.length) * 100) : 0}%
+                {candidates.length > 0
+                  ? Math.round((schedule.length / candidates.length) * 100)
+                  : 0}
+                %
               </p>
             </div>
           </div>
@@ -675,7 +735,7 @@ const BrandingDay = () => {
                   type="text"
                   placeholder="Search companies by name, speaker, or position..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={e => setSearchTerm(e.target.value)}
                   className="w-full pl-12 pr-6 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 text-lg font-medium placeholder-gray-400 bg-white"
                 />
               </div>
@@ -706,7 +766,7 @@ const BrandingDay = () => {
                 <div className="h-48 bg-gradient-to-br from-[#901b20] via-[#ad565a] to-[#cc9598] relative overflow-hidden">
                   {candidate.speaker?.photo ? (
                     <img
-                      src={candidate.speaker.photo || "/placeholder.svg"}
+                      src={candidate.speaker.photo || '/placeholder.svg'}
                       alt={candidate.speaker.speaker_name}
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                     />
@@ -727,12 +787,19 @@ const BrandingDay = () => {
                   <div className="absolute top-6 left-6">
                     <input
                       type="checkbox"
-                      checked={selectedCompanies.some((c) => c.id === candidate.id)}
-                      onChange={(e) => {
+                      checked={selectedCompanies.some(
+                        c => c.id === candidate.id
+                      )}
+                      onChange={e => {
                         if (e.target.checked) {
-                          setSelectedCompanies([...selectedCompanies, candidate])
+                          setSelectedCompanies([
+                            ...selectedCompanies,
+                            candidate,
+                          ]);
                         } else {
-                          setSelectedCompanies(selectedCompanies.filter((c) => c.id !== candidate.id))
+                          setSelectedCompanies(
+                            selectedCompanies.filter(c => c.id !== candidate.id)
+                          );
                         }
                       }}
                       className="w-5 h-5 rounded border-white/30 text-[#901b20] focus:ring-white/50 bg-white/20"
@@ -753,26 +820,34 @@ const BrandingDay = () => {
                       <div className="w-10 h-10 bg-[#901b20]/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0">
                         <User className="w-5 h-5 text-[#901b20]" />
                       </div>
-                      <span className="font-medium truncate">{candidate.speaker?.speaker_name}</span>
+                      <span className="font-medium truncate">
+                        {candidate.speaker?.speaker_name}
+                      </span>
                     </div>
 
                     <div className="flex items-center text-gray-600 group-hover:text-gray-800 transition-colors duration-300">
                       <div className="w-10 h-10 bg-[#203947]/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0">
                         <Building2 className="w-5 h-5 text-[#203947]" />
                       </div>
-                      <span className="font-medium truncate">{candidate.speaker?.position}</span>
+                      <span className="font-medium truncate">
+                        {candidate.speaker?.position}
+                      </span>
                     </div>
 
                     <div className="flex items-center text-gray-600 group-hover:text-gray-800 transition-colors duration-300">
                       <div className="w-10 h-10 bg-[#ad565a]/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0">
                         <Phone className="w-5 h-5 text-[#ad565a]" />
                       </div>
-                      <span className="font-medium">{candidate.speaker?.mobile}</span>
+                      <span className="font-medium">
+                        {candidate.speaker?.mobile}
+                      </span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between pt-6 border-t border-gray-100 mt-auto">
-                    <div className="text-sm text-gray-500 font-medium">Ready to schedule</div>
+                    <div className="text-sm text-gray-500 font-medium">
+                      Ready to schedule
+                    </div>
 
                     <button
                       onClick={() => handleScheduleCompany(candidate)}
@@ -794,8 +869,12 @@ const BrandingDay = () => {
             <div className="text-gray-300 mb-8 animate-float">
               <CheckCircle className="w-24 h-24 mx-auto" />
             </div>
-            <h3 className="text-3xl font-bold text-gray-900 mb-4">All companies scheduled!</h3>
-            <p className="text-xl text-gray-600 mb-8">All available companies have been scheduled for branding day</p>
+            <h3 className="text-3xl font-bold text-gray-900 mb-4">
+              All companies scheduled!
+            </h3>
+            <p className="text-xl text-gray-600 mb-8">
+              All available companies have been scheduled for branding day
+            </p>
             <button
               onClick={handleRefresh}
               className="bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] text-white px-10 py-4 rounded-2xl font-bold text-lg transition-all duration-300 transform hover:scale-105 hover:shadow-xl"
@@ -832,7 +911,7 @@ const BrandingDay = () => {
                       <div className="h-48 bg-gradient-to-br from-[#901b20] via-[#ad565a] to-[#cc9598] relative overflow-hidden">
                         {slot.speaker?.photo ? (
                           <img
-                            src={slot.speaker.photo || "/placeholder.svg"}
+                            src={slot.speaker.photo || '/placeholder.svg'}
                             alt={slot.speaker.speaker_name}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                           />
@@ -853,11 +932,14 @@ const BrandingDay = () => {
                         <div className="absolute top-6 left-6 flex gap-2 z-10">
                           <button
                             type="button"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              console.log("Edit button clicked for slot:", slot)
-                              handleEditSlot(slot)
+                            onClick={e => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log(
+                                'Edit button clicked for slot:',
+                                slot
+                              );
+                              handleEditSlot(slot);
                             }}
                             className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 backdrop-blur-sm border border-white/20 hover:border-white/40"
                             title="Edit slot"
@@ -866,11 +948,14 @@ const BrandingDay = () => {
                           </button>
                           <button
                             type="button"
-                            onClick={(e) => {
-                              e.preventDefault()
-                              e.stopPropagation()
-                              console.log("Delete button clicked for slot:", slot)
-                              handleDeleteClick(slot)
+                            onClick={e => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              console.log(
+                                'Delete button clicked for slot:',
+                                slot
+                              );
+                              handleDeleteClick(slot);
                             }}
                             className="w-10 h-10 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 backdrop-blur-sm border border-white/20 hover:border-white/40"
                             title="Delete slot"
@@ -893,7 +978,9 @@ const BrandingDay = () => {
                             <div className="w-10 h-10 bg-[#901b20]/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0">
                               <User className="w-5 h-5 text-[#901b20]" />
                             </div>
-                            <span className="font-medium truncate">{slot.speaker?.speaker_name || "Speaker TBD"}</span>
+                            <span className="font-medium truncate">
+                              {slot.speaker?.speaker_name || 'Speaker TBD'}
+                            </span>
                           </div>
 
                           <div className="flex items-center text-gray-600 group-hover:text-gray-800 transition-colors duration-300">
@@ -901,7 +988,8 @@ const BrandingDay = () => {
                               <Clock className="w-5 h-5 text-[#203947]" />
                             </div>
                             <span className="font-medium font-mono">
-                              {formatTime(slot.start_time)} - {formatTime(slot.end_time)}
+                              {formatTime(slot.start_time)} -{' '}
+                              {formatTime(slot.end_time)}
                             </span>
                           </div>
 
@@ -909,17 +997,21 @@ const BrandingDay = () => {
                             <div className="w-10 h-10 bg-[#ad565a]/10 rounded-xl flex items-center justify-center mr-3 flex-shrink-0">
                               <Calendar className="w-5 h-5 text-[#ad565a]" />
                             </div>
-                            <span className="font-medium">{slot.branding_day_date}</span>
+                            <span className="font-medium">
+                              {slot.branding_day_date}
+                            </span>
                           </div>
                         </div>
 
                         <div className="flex items-center justify-between pt-6 border-t border-gray-100 mt-auto">
                           <div className="text-sm text-gray-500 font-medium">
-                            {slot.speaker?.position || "Position TBD"}
+                            {slot.speaker?.position || 'Position TBD'}
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                            <span className="text-sm font-medium text-green-600">Scheduled</span>
+                            <span className="text-sm font-medium text-green-600">
+                              Scheduled
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -938,10 +1030,15 @@ const BrandingDay = () => {
                 <div className="flex items-center justify-center w-16 h-16 mx-auto mb-6 bg-red-100 rounded-full">
                   <Trash2 className="w-8 h-8 text-red-600" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">Delete Schedule Slot</h3>
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                  Delete Schedule Slot
+                </h3>
                 <p className="text-gray-600 mb-8 text-lg">
-                  Are you sure you want to delete the schedule slot for{" "}
-                  <span className="font-bold text-[#901b20]">{deletingSlot.company_name}</span>?
+                  Are you sure you want to delete the schedule slot for{' '}
+                  <span className="font-bold text-[#901b20]">
+                    {deletingSlot.company_name}
+                  </span>
+                  ?
                   <br />
                   <span className="text-sm text-gray-500 mt-2 block">
                     The company will be moved back to the available list.
@@ -950,11 +1047,11 @@ const BrandingDay = () => {
                 <div className="flex items-center gap-4">
                   <button
                     onClick={() => {
-                      console.log("Cancel delete clicked")
-                      setShowDeleteModal(false)
-                      setDeletingSlot(null)
-                      setActionError("")
-                      setActionSuccess("")
+                      console.log('Cancel delete clicked');
+                      setShowDeleteModal(false);
+                      setDeletingSlot(null);
+                      setActionError('');
+                      setActionSuccess('');
                     }}
                     disabled={actionLoading}
                     className="flex-1 px-6 py-4 border-2 border-gray-200 text-gray-700 rounded-2xl hover:border-[#901b20] hover:bg-[#901b20] hover:text-white transition-all duration-300 font-bold text-lg disabled:opacity-50 disabled:cursor-not-allowed"
@@ -963,8 +1060,8 @@ const BrandingDay = () => {
                   </button>
                   <button
                     onClick={() => {
-                      console.log("Confirm delete clicked")
-                      handleConfirmDelete()
+                      console.log('Confirm delete clicked');
+                      handleConfirmDelete();
                     }}
                     disabled={actionLoading}
                     className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 disabled:from-red-400 disabled:to-red-500 text-white rounded-2xl transition-all duration-300 transform hover:scale-105 hover:shadow-xl disabled:scale-100 disabled:shadow-none font-bold text-lg"
@@ -992,7 +1089,9 @@ const BrandingDay = () => {
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-lg flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-white w-full max-w-6xl max-h-[95vh] rounded-3xl shadow-2xl overflow-hidden animate-scale-up flex flex-col">
               <div className="flex items-center justify-between p-8 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white flex-shrink-0">
-                <h2 className="text-2xl font-bold text-gray-900">Schedule Branding Day Slots</h2>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Schedule Branding Day Slots
+                </h2>
                 <button
                   onClick={() => setShowScheduleForm(false)}
                   className="w-12 h-12 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
@@ -1001,22 +1100,34 @@ const BrandingDay = () => {
                 </button>
               </div>
 
-              <form onSubmit={handleSubmitSchedule} className="flex-1 overflow-y-auto custom-scrollbar">
+              <form
+                onSubmit={handleSubmitSchedule}
+                className="flex-1 overflow-y-auto custom-scrollbar"
+              >
                 <div className="p-8">
                   <div className="space-y-8">
                     <div>
-                      <label className="block text-lg font-bold text-gray-700 mb-3">Branding Day Date</label>
+                      <label className="block text-lg font-bold text-gray-700 mb-3">
+                        Branding Day Date
+                      </label>
                       <input
                         type="date"
                         value={scheduleData.branding_day_date}
-                        onChange={(e) => setScheduleData({ ...scheduleData, branding_day_date: e.target.value })}
+                        onChange={e =>
+                          setScheduleData({
+                            ...scheduleData,
+                            branding_day_date: e.target.value,
+                          })
+                        }
                         className="px-6 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 text-lg font-medium w-full"
                         required
                       />
                     </div>
 
                     <div>
-                      <h3 className="text-2xl font-bold text-gray-900 mb-6">Time Slots</h3>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-6">
+                        Time Slots
+                      </h3>
                       <div className="space-y-6">
                         {scheduleData.slots.map((slot, index) => (
                           <div
@@ -1025,44 +1136,74 @@ const BrandingDay = () => {
                           >
                             <div className="flex items-start gap-6">
                               <img
-                                src={slot.speaker?.photo || "/placeholder.svg?height=60&width=60"}
+                                src={
+                                  slot.speaker?.photo ||
+                                  '/placeholder.svg?height=60&width=60'
+                                }
                                 alt={slot.speaker?.speaker_name}
                                 className="w-16 h-16 rounded-2xl object-cover shadow-lg"
                               />
                               <div className="flex-1 space-y-6">
                                 <div>
-                                  <h4 className="text-xl font-bold text-gray-900">{slot.company_name}</h4>
+                                  <h4 className="text-xl font-bold text-gray-900">
+                                    {slot.company_name}
+                                  </h4>
                                   <p className="text-lg text-gray-600">
-                                    {slot.speaker?.speaker_name} - {slot.speaker?.position}
+                                    {slot.speaker?.speaker_name} -{' '}
+                                    {slot.speaker?.position}
                                   </p>
                                 </div>
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                                   <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Start Time</label>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                                      Start Time
+                                    </label>
                                     <input
                                       type="time"
                                       value={slot.start_time}
-                                      onChange={(e) => updateSlotTime(index, "start_time", e.target.value)}
+                                      onChange={e =>
+                                        updateSlotTime(
+                                          index,
+                                          'start_time',
+                                          e.target.value
+                                        )
+                                      }
                                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#901b20] focus:border-[#901b20] transition-all duration-300 text-lg font-medium"
                                       required
                                     />
                                   </div>
                                   <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">End Time</label>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                                      End Time
+                                    </label>
                                     <input
                                       type="time"
                                       value={slot.end_time}
-                                      onChange={(e) => updateSlotTime(index, "end_time", e.target.value)}
+                                      onChange={e =>
+                                        updateSlotTime(
+                                          index,
+                                          'end_time',
+                                          e.target.value
+                                        )
+                                      }
                                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#901b20] focus:border-[#901b20] transition-all duration-300 text-lg font-medium"
                                       required
                                     />
                                   </div>
                                   <div>
-                                    <label className="block text-sm font-bold text-gray-700 mb-2">Order</label>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">
+                                      Order
+                                    </label>
                                     <input
                                       type="number"
                                       value={slot.order}
-                                      onChange={(e) => updateSlotTime(index, "order", Number.parseInt(e.target.value))}
+                                      onChange={e =>
+                                        updateSlotTime(
+                                          index,
+                                          'order',
+                                          Number.parseInt(e.target.value)
+                                        )
+                                      }
                                       className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-[#901b20] focus:border-[#901b20] transition-all duration-300 text-lg font-medium"
                                       min="1"
                                       required
@@ -1103,8 +1244,12 @@ const BrandingDay = () => {
                     >
                       <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                       <div className="relative flex items-center gap-3">
-                        {actionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                        {actionLoading ? "Saving..." : "Save Schedule"}
+                        {actionLoading ? (
+                          <Loader2 className="w-5 h-5 animate-spin" />
+                        ) : (
+                          <Save className="w-5 h-5" />
+                        )}
+                        {actionLoading ? 'Saving...' : 'Save Schedule'}
                       </div>
                     </button>
                   </div>
@@ -1119,7 +1264,9 @@ const BrandingDay = () => {
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-lg flex items-center justify-center p-4 animate-fade-in">
             <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden animate-scale-up">
               <div className="flex items-center justify-between p-8 border-b border-gray-200 bg-gradient-to-r from-gray-50 to-white">
-                <h2 className="text-2xl font-bold text-gray-900">Edit Schedule Slot</h2>
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Edit Schedule Slot
+                </h2>
                 <button
                   onClick={() => setShowEditModal(false)}
                   className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110"
@@ -1131,27 +1278,45 @@ const BrandingDay = () => {
               <form onSubmit={handleUpdateSlot} className="p-8">
                 <div className="space-y-6">
                   <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold text-gray-900">{editingSlot.company_name}</h3>
-                    <p className="text-lg text-gray-600">{editingSlot.branding_day_date}</p>
+                    <h3 className="text-xl font-bold text-gray-900">
+                      {editingSlot.company_name}
+                    </h3>
+                    <p className="text-lg text-gray-600">
+                      {editingSlot.branding_day_date}
+                    </p>
                   </div>
 
                   <div>
-                    <label className="block text-lg font-bold text-gray-700 mb-3">Start Time</label>
+                    <label className="block text-lg font-bold text-gray-700 mb-3">
+                      Start Time
+                    </label>
                     <input
                       type="time"
                       value={editingSlot.start_time}
-                      onChange={(e) => setEditingSlot({ ...editingSlot, start_time: e.target.value })}
+                      onChange={e =>
+                        setEditingSlot({
+                          ...editingSlot,
+                          start_time: e.target.value,
+                        })
+                      }
                       className="w-full px-6 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 text-lg font-medium"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-lg font-bold text-gray-700 mb-3">End Time</label>
+                    <label className="block text-lg font-bold text-gray-700 mb-3">
+                      End Time
+                    </label>
                     <input
                       type="time"
                       value={editingSlot.end_time}
-                      onChange={(e) => setEditingSlot({ ...editingSlot, end_time: e.target.value })}
+                      onChange={e =>
+                        setEditingSlot({
+                          ...editingSlot,
+                          end_time: e.target.value,
+                        })
+                      }
                       className="w-full px-6 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 text-lg font-medium"
                       required
                     />
@@ -1173,8 +1338,12 @@ const BrandingDay = () => {
                   >
                     <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
                     <div className="relative flex items-center gap-3">
-                      {actionLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
-                      {actionLoading ? "Updating..." : "Update Slot"}
+                      {actionLoading ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Save className="w-5 h-5" />
+                      )}
+                      {actionLoading ? 'Updating...' : 'Update Slot'}
                     </div>
                   </button>
                 </div>
@@ -1196,7 +1365,12 @@ const BrandingDay = () => {
         }
 
         .shimmer-effect {
-          background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+          background: linear-gradient(
+            90deg,
+            #f0f0f0 25%,
+            #e0e0e0 50%,
+            #f0f0f0 75%
+          );
           background-size: 200px 100%;
           animation: shimmer 1.5s infinite;
         }
@@ -1318,7 +1492,7 @@ const BrandingDay = () => {
         }
       `}</style>
     </div>
-  )
-}
+  );
+};
 
-export default BrandingDay
+export default BrandingDay;
