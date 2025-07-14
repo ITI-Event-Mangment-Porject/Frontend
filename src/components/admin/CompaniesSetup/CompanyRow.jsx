@@ -49,12 +49,13 @@ const CompanyRow = ({ company, onView, onApproveReject, actionLoading }) => {
       <tr className="hover:bg-gray-50 transition-colors duration-200">
         <td className="px-6 py-4 whitespace-nowrap">
           <div className="flex items-center">
+           
             {company.logo_path && (
               <img
-                src={`${company.logo_path}`}
-                alt={company.name}
-                className="w-24 h-24 object-cover rounded-full"
-              />
+              src={company.logo_path}
+              alt={company.name}
+              className="w-24 h-24 object-cover rounded-full"
+            />
             )}
 
             <div className="ml-4">
@@ -75,7 +76,9 @@ const CompanyRow = ({ company, onView, onApproveReject, actionLoading }) => {
           <div className="text-sm text-gray-600 font-medium">
             {company.contact_phone}
           </div>
+         <div>
          
+         </div>
         </td>
         <td className="px-6 py-4">
           <span className="px-3 py-1 bg-[#203947]/10 text-[#203947] rounded-full text-sm font-semibold">
