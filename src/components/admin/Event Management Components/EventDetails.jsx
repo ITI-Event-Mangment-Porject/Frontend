@@ -16,8 +16,30 @@ import {
   FaLock,
   FaFileAlt,
   FaSearch,
+  FaPlay,
+  FaStop,
 } from "react-icons/fa"
-import { MessageSquare, Plus, Brain, Star, User, Calendar, X, Loader2, AlertCircle, CheckCircle, Zap, BarChart3, UsersIcon, Lightbulb, Clock, MapPin, Activity, Trash2, ChevronDown } from 'lucide-react'
+import {
+  MessageSquare,
+  Plus,
+  Brain,
+  Star,
+  User,
+  Calendar,
+  X,
+  Loader2,
+  AlertCircle,
+  CheckCircle,
+  Zap,
+  BarChart3,
+  UsersIcon,
+  Lightbulb,
+  Clock,
+  MapPin,
+  Activity,
+  Trash2,
+  ChevronDown,
+} from "lucide-react"
 import { toast } from "react-toastify"
 import { eventAPI, attendanceAPI } from "../../../services/api"
 import { ClipLoader } from "react-spinners"
@@ -66,6 +88,11 @@ const EventDetails = () => {
   const [editImagePreview, setEditImagePreview] = useState(null)
   const [editError, setEditError] = useState("")
   const [editLoading, setEditLoading] = useState(false)
+
+  // Confirmation Modal States
+  const [showStartConfirmModal, setShowStartConfirmModal] = useState(false)
+  const [showEndConfirmModal, setShowEndConfirmModal] = useState(false)
+  const [showPublishConfirmModal, setShowPublishConfirmModal] = useState(false)
 
   const ADMIN_TOKEN = localStorage.getItem("token")
 
@@ -262,6 +289,38 @@ const EventDetails = () => {
     }
   }
 
+  const handleStartEvent = async () => {
+    try {
+      setActionLoading(true)
+      const response = await eventAPI.startEvent(event.id)
+      if (response && response.data) {
+        toast.success(`Event "${event.title}" started successfully!`)
+        fetchEventDetails() // Refresh event details
+      }
+    } catch (error) {
+      console.error("Error starting event:", error)
+      toast.error(`Failed to start event: ${error.message || "Unknown error"}`)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
+  const handleEndEvent = async () => {
+    try {
+      setActionLoading(true)
+      const response = await eventAPI.endEvent(event.id)
+      if (response && response.data) {
+        toast.success(`Event "${event.title}" ended successfully!`)
+        fetchEventDetails() // Refresh event details
+      }
+    } catch (error) {
+      console.error("Error ending event:", error)
+      toast.error(`Failed to end event: ${error.message || "Unknown error"}`)
+    } finally {
+      setActionLoading(false)
+    }
+  }
+
   const handleTabChange = (tab) => {
     const newSearchParams = new URLSearchParams(searchParams)
     newSearchParams.set("tab", tab)
@@ -377,13 +436,13 @@ const EventDetails = () => {
     }
   }
   const formatTimeWithoutSeconds = (timeStr) => {
-    if (!timeStr) return "";
-    return timeStr.slice(0, 5); // "09:00:00" → "09:00"
-  };
+    if (!timeStr) return ""
+    return timeStr.slice(0, 5) // "09:00:00" → "09:00"
+  }
 
   const handleEditClick = () => {
-    console.log("Raw start_time:", event.start_time);
-    console.log("Formatted start_time:", formatTime(event.start_time));
+    console.log("Raw start_time:", event.start_time)
+    console.log("Formatted start_time:", formatTime(event.start_time))
     setEditEvent({
       title: event.title || "",
       description: event.description || "",
@@ -521,14 +580,14 @@ const EventDetails = () => {
     return (
       <div className="min-h-screen bg-white p-6 flex items-center justify-center">
         <div className="max-w-md w-full bg-white rounded-xl sm:rounded-2xl p-6 sm:p-8 text-center shadow-2xl animate-shake">
-          <div className="text-red-500 mb-4 sm:mb-6 animate-bounce">
-            <AlertCircle className="w-12 h-12 sm:w-16 sm:h-16 mx-auto" />
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+            <AlertCircle className="w-8 h-8 text-red-500" />
           </div>
-          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Error Loading Event</h3>
-          <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">{error}</p>
+          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">Error Loading Event</h3>
+          <p className="text-gray-600 mb-6 text-sm sm:text-base leading-relaxed">{error}</p>
           <button
             onClick={() => navigate("/admin/events")}
-            className="bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] text-white px-6 py-3 sm:px-8 sm:py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg text-sm sm:text-base"
+            className="bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] text-white px-8 py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg text-sm sm:text-base"
           >
             Back to Events
           </button>
@@ -591,7 +650,7 @@ const EventDetails = () => {
 
               {event.status?.toLowerCase() === "draft" && (
                 <button
-                  onClick={handlePublish}
+                  onClick={() => setShowPublishConfirmModal(true)}
                   disabled={actionLoading}
                   className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-4 py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:scale-100 disabled:shadow-none text-sm flex items-center gap-2"
                 >
@@ -602,6 +661,38 @@ const EventDetails = () => {
                     <FaCalendarPlus className="w-4 h-4 relative" />
                   )}
                   <span className="hidden sm:inline relative">Publish</span>
+                </button>
+              )}
+
+              {event.status?.toLowerCase() === "published" && (
+                <button
+                  onClick={() => setShowStartConfirmModal(true)}
+                  disabled={actionLoading}
+                  className="group relative overflow-hidden bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-4 py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:scale-100 disabled:shadow-none text-sm flex items-center gap-2"
+                >
+                  <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                  {actionLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin relative" />
+                  ) : (
+                    <FaPlay className="w-4 h-4 relative" />
+                  )}
+                  <span className="hidden sm:inline relative">Start</span>
+                </button>
+              )}
+
+              {event.status?.toLowerCase() === "ongoing" && (
+                <button
+                  onClick={() => setShowEndConfirmModal(true)}
+                  disabled={actionLoading}
+                  className="group relative overflow-hidden bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-4 py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:scale-100 disabled:shadow-none text-sm flex items-center gap-2"
+                >
+                  <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                  {actionLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin relative" />
+                  ) : (
+                    <FaStop className="w-4 h-4 relative" />
+                  )}
+                  <span className="hidden sm:inline relative">End</span>
                 </button>
               )}
 
@@ -642,6 +733,19 @@ const EventDetails = () => {
               </button>
             </div>
           </div>
+          {error && (
+            <div className="bg-gradient-to-r from-red-50 to-red-100 border-2 border-red-200 rounded-2xl p-6 mb-8 animate-fade-in shadow-lg">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 bg-red-500 rounded-full flex items-center justify-center mx-auto mb-6 animate-bounce">
+                  <AlertCircle className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-bold text-red-800 mb-2">Error Loading Data</h3>
+                  <p className="text-red-700 font-medium leading-relaxed">{error}</p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Enhanced Tab Navigation */}
@@ -804,6 +908,121 @@ const EventDetails = () => {
                     isEdit={true}
                   />
                 </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Start Event Confirmation Modal */}
+        {showStartConfirmModal && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-up">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                  <FaPlay className="w-6 h-6 text-green-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Start Event</h3>
+              </div>
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                Are you sure you want to start the event <strong>"{event.title}"</strong>? This will change its status
+                to ongoing and participants will be able to join.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowStartConfirmModal(false)}
+                  className="px-6 py-2 text-gray-600 border border-gray-300 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowStartConfirmModal(false)
+                    handleStartEvent()
+                  }}
+                  disabled={actionLoading}
+                  className="px-6 py-2 bg-green-600 text-white rounded-xl font-semibold hover:bg-green-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-2"
+                >
+                  {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FaPlay className="w-4 h-4" />}
+                  Start Event
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* End Event Confirmation Modal */}
+        {showEndConfirmModal && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-up">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                  <FaStop className="w-6 h-6 text-orange-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">End Event</h3>
+              </div>
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                Are you sure you want to end the event <strong>"{event.title}"</strong>? This will change its status to
+                completed and no new participants can join.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowEndConfirmModal(false)}
+                  className="px-6 py-2 text-gray-600 border border-gray-300 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowEndConfirmModal(false)
+                    handleEndEvent()
+                  }}
+                  disabled={actionLoading}
+                  className="px-6 py-2 bg-orange-600 text-white rounded-xl font-semibold hover:bg-orange-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-2"
+                >
+                  {actionLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FaStop className="w-4 h-4" />}
+                  End Event
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Publish Event Confirmation Modal */}
+        {showPublishConfirmModal && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-scale-up">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                  <FaCalendarPlus className="w-6 h-6 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900">Publish Event</h3>
+              </div>
+              <p className="text-gray-600 mb-6 leading-relaxed">
+                Are you sure you want to publish the event <strong>"{event.title}"</strong>? This will make it visible
+                to participants and allow registrations.
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowPublishConfirmModal(false)}
+                  className="px-6 py-2 text-gray-600 border border-gray-300 rounded-xl font-semibold hover:bg-gray-50 transition-all duration-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    setShowPublishConfirmModal(false)
+                    handlePublish()
+                  }}
+                  disabled={actionLoading}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 disabled:opacity-50 transition-all duration-200 flex items-center gap-2"
+                >
+                  {actionLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <FaCalendarPlus className="w-4 h-4" />
+                  )}
+                  Publish Event
+                </button>
               </div>
             </div>
           </div>
@@ -1744,7 +1963,7 @@ const CreateFeedbackModal = ({ onClose, onSubmit, loading }) => {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError("")
-    
+
     if (!validateForm()) return
 
     const success = await onSubmit(formData)
@@ -1961,7 +2180,9 @@ const AIAnalyticsModal = ({ analytics, onClose }) => {
                   <Brain className="w-7 h-7 text-[#901b20]" />
                   Executive Summary
                 </h2>
-                <p className="text-gray-700 leading-relaxed text-lg">{analytics.insights.analysis.summary || "No summary available"}</p>
+                <p className="text-gray-700 leading-relaxed text-lg">
+                  {analytics.insights.analysis.summary || "No summary available"}
+                </p>
               </div>
 
               {/* Sentiment Analysis */}
