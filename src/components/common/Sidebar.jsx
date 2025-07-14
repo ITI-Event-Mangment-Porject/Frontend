@@ -39,8 +39,6 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, setIsCollapsed }) => {
           },
           { path: '/admin/users', icon: Users, label: 'User Management' },
           { path: '/admin/events', icon: Calendar, label: 'Manage Events' },
-          
-         
           {
             path: '/admin/FeedbackAnalytics',
             icon: BarChart3,
@@ -51,19 +49,7 @@ const Sidebar = ({ isOpen, onClose, isCollapsed, setIsCollapsed }) => {
             icon: Building2,
             label: 'Companies Setup',
           },
-          { path: '/admin/liveevents', icon: Eye, label: 'Events Monitoring' },
-          { path: '/admin/brandingDay', icon: Zap, label: 'Branding Day' },
-          { path: '/admin/notifications', icon: Bell, label: 'Notifications' },
-          {
-            path: '/admin/LiveQueue',
-            icon: UserCheck,
-            label: 'Live Interview Queues',
-          },
-          {
-            path: '/admin/createFeedbackForm',
-            icon: FormInput,
-            label: 'Create Feedback Form',
-          },
+          { path: '/admin/notifications', icon: Bell, label: 'Bulk Messages' },
         ];
       case 'student':
         return [
