@@ -696,7 +696,7 @@ const handleNext = async () => {
         );
 
         if (response.status === 200 || response.status === 201) {
-          setSuccessMsg("Participation request submitted successfully!");
+          setSuccessMsg("Thank you for submitting your participation form. Your participation is confirmed. Please wait while we activate your profile for the Job fair");
           setHasParticipated(true);
           setCompletedSteps(prev => new Set([...prev, 1]));
 
@@ -729,7 +729,9 @@ const handleNext = async () => {
             setErrorMsg(error.response.data?.message || "Validation failed");
           }
         } else {
-          setErrorMsg(error.response?.data?.message || "Failed to submit participation request");
+          // setErrorMsg(error.response?.data?.message || "Failed to submit participation request");
+                  setErrorMsg("Your company already participated. Please wait while we activate your profile for the Job fair");
+
         }
       } finally {
         setIsLoading(false);
@@ -739,7 +741,7 @@ const handleNext = async () => {
       if (isApproved) {
         setCurrentStep(2);
       } else {
-        setErrorMsg("Your participation request is pending approval. Please wait.");
+        setErrorMsg("Your company already participated. Please wait while we activate your profile for the Job fair");
       }
     }
   } else if (currentStep === 2) {
