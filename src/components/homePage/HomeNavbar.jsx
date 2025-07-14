@@ -5,6 +5,8 @@ import {
   FaSignOutAlt,
   FaTachometerAlt,
   FaBell,
+  FaBuilding,
+  FaClock,
 } from 'react-icons/fa';
 import axios from 'axios';
 
@@ -134,14 +136,14 @@ const HomeNavbar = () => {
     setIsProfileMenuOpen(false);
   };
 
-  // Navigate to dashboard based on user role
-  const navigateToDashboard = () => {
+  // Navigate to profile/dashboard based on user role
+  const navigateToUserArea = () => {
     switch (role) {
       case 'admin':
         navigate('/admin/dashboard');
         break;
       case 'student':
-        navigate('/student/CompanyDirectory');
+        navigate('/student/profile');
         break;
       case 'company_representative':
         navigate('/company/dashboard');
@@ -213,6 +215,33 @@ const HomeNavbar = () => {
           >
             Events
           </CustomLink>
+
+          {/* Student-only navigation items */}
+          {user && role === 'student' && (
+            <>
+              <CustomLink
+                to="/student/CompanyDirectory"
+                className={`flex items-center gap-2 hover:text-[var(--gray-300)] font-medium transition-colors ${
+                  isScrolled
+                    ? 'text-gray-700 hover:text-[var(--primary-500)]'
+                    : 'text-white'
+                }`}
+              >
+                Job Fair Companies
+              </CustomLink>
+              <CustomLink
+                to="/student/interview-queue"
+                className={`flex items-center gap-2 hover:text-[var(--gray-300)] font-medium transition-colors ${
+                  isScrolled
+                    ? 'text-gray-700 hover:text-[var(--primary-500)]'
+                    : 'text-white'
+                }`}
+              >
+                Interview Queue
+              </CustomLink>
+            </>
+          )}
+
           <CustomLink
             to="/about-us"
             className={`hover:text-[var(--gray-300)] font-medium transition-colors ${
@@ -365,11 +394,11 @@ const HomeNavbar = () => {
                     </div>
 
                     <button
-                      onClick={navigateToDashboard}
+                      onClick={navigateToUserArea}
                       className="flex w-full items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
-                      <FaTachometerAlt className="mr-3 h-4 w-4 text-gray-400" />
-                      Dashboard
+                      <FaUserCircle className="mr-3 h-4 w-4 text-gray-400" />
+                      {role === 'student' ? 'Profile' : 'Dashboard'}
                     </button>
 
                     <button
@@ -419,24 +448,51 @@ const HomeNavbar = () => {
             <CustomLink
               to="/"
               className="block py-2 text-gray-700 hover:text-[var(--primary-500)]"
+              onClick={() => setMobileMenuOpen(false)}
             >
               Home
             </CustomLink>
             <CustomLink
               to="/events"
               className="block py-2 text-gray-700 hover:text-[var(--primary-500)]"
+              onClick={() => setMobileMenuOpen(false)}
             >
               Events
             </CustomLink>
+
+            {/* Student-only mobile navigation items */}
+            {user && role === 'student' && (
+              <>
+                <CustomLink
+                  to="/student/CompanyDirectory"
+                  className="flex items-center gap-3 py-2 text-gray-700 hover:text-[var(--primary-500)] pl-4 border-l-2 border-blue-200 bg-blue-50/30 rounded-r-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <FaBuilding className="w-4 h-4 text-blue-500" />
+                  Job Fair Companies
+                </CustomLink>
+                <CustomLink
+                  to="/student/interview-queue"
+                  className="flex items-center gap-3 py-2 text-gray-700 hover:text-[var(--primary-500)] pl-4 border-l-2 border-green-200 bg-green-50/30 rounded-r-md"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <FaClock className="w-4 h-4 text-green-500" />
+                  Interview Queue
+                </CustomLink>
+              </>
+            )}
+
             <CustomLink
               to="/about"
               className="block py-2 text-gray-700 hover:text-[var(--primary-500)]"
+              onClick={() => setMobileMenuOpen(false)}
             >
               About Us
             </CustomLink>
             <CustomLink
               to="/contact"
               className="block py-2 text-gray-700 hover:text-[var(--primary-500)]"
+              onClick={() => setMobileMenuOpen(false)}
             >
               Contact Us
             </CustomLink>
@@ -537,11 +593,11 @@ const HomeNavbar = () => {
                   </div>
 
                   <button
-                    onClick={navigateToDashboard}
+                    onClick={navigateToUserArea}
                     className="flex items-center py-2 px-3 text-gray-700 hover:bg-gray-100 rounded-md"
                   >
-                    <FaTachometerAlt className="mr-3 h-4 w-4 text-gray-400" />
-                    Dashboard
+                    <FaUserCircle className="mr-3 h-4 w-4 text-gray-400" />
+                    {role === 'student' ? 'Profile' : 'Dashboard'}
                   </button>
 
                   <button
