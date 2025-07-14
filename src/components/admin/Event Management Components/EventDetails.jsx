@@ -15,7 +15,6 @@ import {
   FaGlobe,
   FaLock,
   FaFileAlt,
-  FaSearch,
   FaPlay,
   FaStop,
 } from "react-icons/fa"
@@ -44,6 +43,9 @@ import { toast } from "react-toastify"
 import { eventAPI, attendanceAPI } from "../../../services/api"
 import { ClipLoader } from "react-spinners"
 import EventForm from "./EventForm.jsx"
+import AttendanceTable from "./AttendanceTable"
+import ParticipatingCompaniesTab from "./ParticipationCompaniesTab"
+import RegistrationsTab from "./RegistrationsTab"
 
 const EventDetails = () => {
   const { id } = useParams()
@@ -103,10 +105,15 @@ const EventDetails = () => {
   useEffect(() => {
     if (activeTab === "attendance") {
       fetchAttendanceData()
-    } else if (activeTab === "feedbacks") {
+    }
+  }, [activeTab, id])
+
+  // Add useEffect for feedback data fetching
+  useEffect(() => {
+    if (activeTab === "feedbacks" && event) {
       fetchFeedbackData(feedbackCurrentPage)
     }
-  }, [activeTab, id, feedbackCurrentPage])
+  }, [activeTab, event, id])
 
   const fetchEventDetails = async () => {
     try {
@@ -130,17 +137,17 @@ const EventDetails = () => {
   const fetchAttendanceData = async () => {
     try {
       setAttendanceLoading(true)
-      const response = await attendanceAPI.getEventAttendance(id)
+      const response = await attendanceAPI.getReports()
 
       if (response?.data?.success) {
-        setAttendanceData(response.data.data.result || [])
+        setAttendanceData(response.data.data.result)
       } else {
-        console.error("Failed to fetch attendance data:", response?.data?.message)
-        setAttendanceData([])
+        console.error("Failed to fetch attendance data:", response?.data?.message || "Unknown error")
+        toast.error("Failed to load attendance data")
       }
     } catch (error) {
       console.error("Error fetching attendance data:", error)
-      setAttendanceData([])
+      toast.error("Error loading attendance data")
     } finally {
       setAttendanceLoading(false)
     }
@@ -224,7 +231,6 @@ const EventDetails = () => {
 
   const checkAIAnalytics = async () => {
     const hasAnalytics = await fetchAIAnalytics()
-    // The state will be updated by fetchAIAnalytics setting aiAnalytics
     return hasAnalytics
   }
 
@@ -331,11 +337,14 @@ const EventDetails = () => {
       setCurrentPage(1)
       setSearchTerm("")
     }
+    if (tab === "feedbacks") {
+      setFeedbackCurrentPage(1)
+    }
   }
 
   const handleExportAttendance = async () => {
     try {
-      const response = await attendanceAPI.exportAttendance("xlsx", id)
+      const response = await attendanceAPI.exportAttendance("xlsx")
 
       if (response?.data) {
         const blob = new Blob([response.data], {
@@ -344,7 +353,7 @@ const EventDetails = () => {
         const url = window.URL.createObjectURL(blob)
         const a = document.createElement("a")
         a.href = url
-        a.download = `${event?.title || "event"}_attendance_report.xlsx`
+        a.download = "attendance_report.xlsx"
         document.body.appendChild(a)
         a.click()
         window.URL.revokeObjectURL(url)
@@ -435,6 +444,7 @@ const EventDetails = () => {
       setEditLoading(false)
     }
   }
+
   const formatTimeWithoutSeconds = (timeStr) => {
     if (!timeStr) return ""
     return timeStr.slice(0, 5) // "09:00:00" → "09:00"
@@ -461,7 +471,7 @@ const EventDetails = () => {
   }
 
   const handleEdit = () => {
-    handleEditClick()
+    navigate("/admin/events", { state: { editEventId: event.id } })
   }
 
   const handleDelete = async () => {
@@ -489,13 +499,6 @@ const EventDetails = () => {
       attendee.phone?.toLowerCase().includes(searchLower)
     )
   })
-
-  // Pagination calculations
-  const totalPages = Math.ceil(filteredAttendees.length / attendeesPerPage)
-  const paginatedAttendees = filteredAttendees.slice(
-    (currentPage - 1) * attendeesPerPage,
-    currentPage * attendeesPerPage,
-  )
 
   // Reset pagination when search changes
   useEffect(() => {
@@ -794,59 +797,73 @@ const EventDetails = () => {
                 </span>
               )}
             </button>
-            {(event.status?.toLowerCase() === "completed" || event.status?.toLowerCase() === "draft") && (
-              <button
-                onClick={() => handleTabChange("feedbacks")}
-                className={`group py-3 px-1 border-b-2 font-bold text-sm whitespace-nowrap transition-all duration-300 flex items-center gap-2 ${
+            {/* Show feedback tab for all events, not just completed ones */}
+            <button
+              onClick={() => handleTabChange("feedbacks")}
+              className={`group py-3 px-1 border-b-2 font-bold text-sm whitespace-nowrap transition-all duration-300 flex items-center gap-2 ${
+                activeTab === "feedbacks"
+                  ? "border-[#901b20] text-[#901b20]"
+                  : "border-transparent text-gray-500 hover:text-[#901b20] hover:border-[#901b20]/50"
+              }`}
+            >
+              <div
+                className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
                   activeTab === "feedbacks"
-                    ? "border-[#901b20] text-[#901b20]"
-                    : "border-transparent text-gray-500 hover:text-[#901b20] hover:border-[#901b20]/50"
+                    ? "bg-[#901b20] text-white"
+                    : "bg-gray-200 text-gray-500 group-hover:bg-[#901b20]/10 group-hover:text-[#901b20]"
                 }`}
               >
-                <div
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                    activeTab === "feedbacks"
-                      ? "bg-[#901b20] text-white"
-                      : "bg-gray-200 text-gray-500 group-hover:bg-[#901b20]/10 group-hover:text-[#901b20]"
-                  }`}
-                >
-                  <MessageSquare className="w-4 h-4" />
-                </div>
-                Feedbacks
-                {feedbackData?.responses?.length > 0 && (
-                  <span className="ml-1 bg-[#901b20] text-white px-2 py-1 rounded-full text-xs font-bold">
-                    {feedbackData.responses.length}
-                  </span>
-                )}
+                <MessageSquare className="w-4 h-4" />
+              </div>
+              Feedbacks
+              {feedbackData?.responses?.data?.length > 0 && (
+                <span className="ml-1 bg-[#901b20] text-white px-2 py-1 rounded-full text-xs font-bold">
+                  {feedbackData.responses.data.length}
+                </span>
+              )}
+            </button>
+            <button
+              onClick={() => handleTabChange("registrations")}
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                activeTab === "registrations"
+                  ? "border-blue-500 text-blue-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+              }`}
+            >
+              Registrations
+            </button>
+            {event.type === "Job Fair" && (
+              <button
+                onClick={() => handleTabChange("companies")}
+                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                  activeTab === "companies"
+                    ? "border-blue-500 text-blue-600"
+                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                }`}
+              >
+                Participating Companies
               </button>
             )}
           </nav>
         </div>
 
-        {/* Tab Content */}
-        {activeTab === "details" ? (
+        {activeTab === "details" && (
           <EventDetailsTab
             event={event}
             formatDate={formatDate}
             formatTime={formatTime}
             getStatusColor={getStatusColor}
           />
-        ) : activeTab === "attendance" ? (
-          <AttendanceTab
-            event={event}
-            attendanceData={attendanceData}
-            attendanceLoading={attendanceLoading}
-            searchTerm={searchTerm}
-            setSearchTerm={setSearchTerm}
-            filteredAttendees={filteredAttendees}
-            paginatedAttendees={paginatedAttendees}
-            currentPage={currentPage}
-            setCurrentPage={setCurrentPage}
-            totalPages={totalPages}
-            attendeesPerPage={attendeesPerPage}
-            formatDate={formatDate}
-          />
-        ) : (
+        )}
+
+        {activeTab === "attendance" && <AttendanceTab event={event} formatDate={formatDate} />}
+
+        {activeTab === "companies" && <ParticipatingCompaniesTab event={event} />}
+
+        {activeTab === "registrations" && <RegistrationsTab event={event} />}
+
+        {/* Add the FeedbacksTab rendering */}
+        {activeTab === "feedbacks" && (
           <FeedbacksTab
             event={event}
             feedbackData={feedbackData}
@@ -1281,269 +1298,87 @@ const EventDetailsTab = ({ event, formatDate, formatTime, getStatusColor }) => (
   </div>
 )
 
-// Enhanced Attendance Tab Component
-const AttendanceTab = ({
-  event,
-  attendanceData,
-  attendanceLoading,
-  searchTerm,
-  setSearchTerm,
-  filteredAttendees,
-  paginatedAttendees,
-  currentPage,
-  setCurrentPage,
-  totalPages,
-  attendeesPerPage,
-  formatDate,
-}) => {
-  if (attendanceLoading) {
+const AttendanceTab = ({ event, formatDate }) => {
+  const [attendanceData, setAttendanceData] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [searchTerm, setSearchTerm] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const attendeesPerPage = 10
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true)
+        const response = await attendanceAPI.getReports()
+        const allEvents = response?.data?.data?.result || []
+
+        const normalize = (str) => str?.trim().toLowerCase().replace(/\s+/g, " ")
+        const matchedEvent = allEvents.find((e) => normalize(e.event) === normalize(event.title))
+
+        if (matchedEvent) {
+          const attendees = matchedEvent.attendees.map((a) => ({
+            ...a,
+            date: new Date(matchedEvent.event_date).toLocaleDateString(),
+          }))
+          setAttendanceData(attendees)
+        } else {
+          setAttendanceData([])
+          console.warn("No matched event found for:", event.title)
+        }
+      } catch (err) {
+        console.error("Failed to load attendance data", err)
+        toast.error("Failed to load attendance data")
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [event.title])
+
+  // Filtering
+  const filteredAttendees = attendanceData.filter((attendee) => {
+    const search = searchTerm.toLowerCase()
+    return (
+      attendee.name?.toLowerCase().includes(search) ||
+      attendee.email?.toLowerCase().includes(search) ||
+      attendee.phone?.toLowerCase().includes(search)
+    )
+  })
+
+  const totalPages = Math.ceil(filteredAttendees.length / attendeesPerPage)
+  const paginatedAttendees = filteredAttendees.slice(
+    (currentPage - 1) * attendeesPerPage,
+    currentPage * attendeesPerPage,
+  )
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm])
+
+  if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <div className="text-center">
-          <ClipLoader size={40} color="#901b20" />
-          <p className="mt-4 text-gray-600 font-medium">Loading attendance data...</p>
-        </div>
+        <ClipLoader size={40} color="#3B82F6" />
+        <p className="mt-4 text-gray-600">Loading attendance data...</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6 sm:space-y-8 lg:space-y-12 animate-fade-in">
-      {/* Enhanced Event Summary */}
-      <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 hover:shadow-2xl transition-all duration-500">
-        <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-[#901b20] to-[#ad565a] rounded-2xl flex items-center justify-center">
-            <BarChart3 className="w-5 h-5 text-white" />
-          </div>
-          Event Summary
-        </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="group relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-blue-200">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform duration-500">
-                <FaCalendarAlt className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-blue-600 uppercase tracking-wider">Event Date</p>
-                <p className="text-lg font-black text-blue-900">{formatDate(event.start_date)}</p>
-              </div>
-            </div>
-          </div>
-          <div className="group relative bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-green-200">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform duration-500">
-                <FaUsers className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-green-600 uppercase tracking-wider">Total Attendees</p>
-                <p className="text-lg font-black text-green-900">{attendanceData.length}</p>
-              </div>
-            </div>
-          </div>
-          <div className="group relative bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-purple-200">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform duration-500">
-                <FaMapMarkerAlt className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-purple-600 uppercase tracking-wider">Location</p>
-                <p className="text-lg font-black text-purple-900 truncate">{event.location || "N/A"}</p>
-              </div>
-            </div>
-          </div>
-          <div className="group relative bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-orange-200">
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform duration-500">
-                <FaClock className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-orange-600 uppercase tracking-wider">Status</p>
-                <p className="text-lg font-black text-orange-900 capitalize">{event.status || "Draft"}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Enhanced Search and Filters */}
-      <div className="bg-gradient-to-r from-gray-50 to-white rounded-2xl p-8 shadow-lg border border-gray-100">
-        <div className="flex flex-col sm:flex-row gap-6 items-end">
-          <div className="flex-1">
-            <label className="block text-sm font-bold text-gray-700 mb-3">Search Attendees</label>
-            <div className="relative group">
-              <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#901b20] transition-colors duration-300" />
-              <input
-                type="text"
-                placeholder="Search by name, email, or phone..."
-                className="w-full pl-12 pr-6 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 text-lg font-medium placeholder-gray-400 bg-white"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-          </div>
-          <button
-            className="group relative overflow-hidden bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-8 py-4 rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
-            onClick={() => {
-              setSearchTerm("")
-              setCurrentPage(1)
-            }}
-          >
-            <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
-            <span className="relative">Clear</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Enhanced Attendees Table */}
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-500">
-        <div className="px-8 py-6 border-b bg-gradient-to-r from-[#901b20] to-[#ad565a] text-white">
-          <h2 className="text-xl font-bold flex items-center gap-3">
-            <UsersIcon className="w-6 h-6" />
-            Attendees ({filteredAttendees.length})
-          </h2>
-        </div>
-
-        {filteredAttendees.length === 0 ? (
-          <div className="text-center py-16">
-            <div className="text-gray-300 mb-8 animate-float">
-              <FaUsers className="w-24 h-24 mx-auto" />
-            </div>
-            <h3 className="text-2xl font-bold text-gray-900 mb-4">No Attendees Found</h3>
-            <p className="text-gray-600 text-lg leading-relaxed">
-              {searchTerm
-                ? "No attendees match your search criteria."
-                : "No attendees have registered for this event yet."}
-            </p>
-          </div>
-        ) : (
-          <>
-            {/* Desktop Table */}
-            <div className="hidden md:block overflow-x-auto">
-              <table className="w-full">
-                <thead className="border-b bg-gray-50">
-                  <tr>
-                    <th className="text-left py-6 px-8 text-sm font-bold text-gray-500 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="text-left py-6 px-8 text-sm font-bold text-gray-500 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th className="text-left py-6 px-8 text-sm font-bold text-gray-500 uppercase tracking-wider">
-                      Phone
-                    </th>
-                    <th className="text-left py-6 px-8 text-sm font-bold text-gray-500 uppercase tracking-wider">
-                      Registration Date
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {paginatedAttendees.map((attendee, index) => (
-                    <tr key={`${attendee.id}-${index}`} className="hover:bg-gray-50 transition-colors duration-300">
-                      <td className="py-6 px-8 text-sm font-bold text-gray-900">{attendee.name}</td>
-                      <td className="py-6 px-8 text-sm text-gray-600 font-medium">{attendee.email}</td>
-                      <td className="py-6 px-8 text-sm text-gray-600 font-medium">{attendee.phone}</td>
-                      <td className="py-6 px-8 text-sm text-gray-600 font-medium">
-                        {attendee.date || formatDate(event.start_date)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Mobile Cards */}
-            <div className="md:hidden divide-y divide-gray-200">
-              {paginatedAttendees.map((attendee, index) => (
-                <div key={`${attendee.id}-${index}`} className="p-6 hover:bg-gray-50 transition-colors duration-300">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <h3 className="font-bold text-gray-900 text-lg">{attendee.name}</h3>
-                      <p className="text-sm text-gray-600 mt-2 font-medium">{attendee.email}</p>
-                      <p className="text-sm text-gray-600 font-medium">{attendee.phone}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Registered</p>
-                      <p className="text-sm font-bold text-gray-900">{attendee.date || formatDate(event.start_date)}</p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Enhanced Pagination */}
-            {totalPages > 1 && (
-              <div className="bg-gradient-to-r from-gray-50 to-white rounded-b-2xl p-8 border-t border-gray-200">
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
-                  <div className="text-lg text-gray-600 font-medium text-center sm:text-left">
-                    Showing <span className="font-bold text-[#901b20]">{(currentPage - 1) * attendeesPerPage + 1}</span>{" "}
-                    to{" "}
-                    <span className="font-bold text-[#901b20]">
-                      {Math.min(currentPage * attendeesPerPage, filteredAttendees.length)}
-                    </span>{" "}
-                    of <span className="font-bold text-[#901b20]">{filteredAttendees.length}</span> attendees
-                  </div>
-
-                  <div className="flex items-center space-x-3">
-                    <button
-                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                      disabled={currentPage === 1}
-                      className={`px-6 py-3 rounded-xl border-2 text-sm font-bold transition-all duration-300 ${
-                        currentPage === 1
-                          ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200"
-                          : "bg-white text-gray-700 hover:bg-[#901b20] hover:text-white border-gray-200 hover:border-[#901b20] transform hover:scale-105"
-                      }`}
-                    >
-                      Previous
-                    </button>
-
-                    <div className="flex space-x-2">
-                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                        let pageNum
-                        if (totalPages <= 5) {
-                          pageNum = i + 1
-                        } else if (currentPage <= 3) {
-                          pageNum = i + 1
-                        } else if (currentPage >= totalPages - 2) {
-                          pageNum = totalPages - 4 + i
-                        } else {
-                          pageNum = currentPage - 2 + i
-                        }
-
-                        return (
-                          <button
-                            key={pageNum}
-                            onClick={() => setCurrentPage(pageNum)}
-                            className={`px-4 py-3 rounded-xl border-2 text-sm font-bold transition-all duration-300 ${
-                              currentPage === pageNum
-                                ? "bg-gradient-to-r from-[#901b20] to-[#ad565a] text-white border-[#901b20] shadow-lg transform scale-110"
-                                : "bg-white text-gray-700 hover:bg-[#901b20] hover:text-white border-gray-200 hover:border-[#901b20] transform hover:scale-105"
-                            }`}
-                          >
-                            {pageNum}
-                          </button>
-                        )
-                      })}
-                    </div>
-
-                    <button
-                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                      disabled={currentPage === totalPages}
-                      className={`px-6 py-3 rounded-xl border-2 text-sm font-bold transition-all duration-300 ${
-                        currentPage === totalPages
-                          ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200"
-                          : "bg-white text-gray-700 hover:bg-[#901b20] hover:text-white border-gray-200 hover:border-[#901b20] transform hover:scale-105"
-                      }`}
-                    >
-                      Next
-                    </button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </div>
-    </div>
+    <AttendanceTable
+      event={event}
+      attendanceData={attendanceData}
+      filteredAttendees={filteredAttendees}
+      paginatedAttendees={paginatedAttendees}
+      searchTerm={searchTerm}
+      setSearchTerm={setSearchTerm}
+      currentPage={currentPage}
+      setCurrentPage={setCurrentPage}
+      totalPages={totalPages}
+      attendeesPerPage={attendeesPerPage}
+      formatDate={formatDate}
+    />
   )
 }
 
@@ -2146,7 +1981,7 @@ const AIAnalyticsModal = ({ analytics, onClose }) => {
           <div className="absolute inset-0 bg-black/10"></div>
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 sm:top-4 sm:right-4 lg:top-8 lg:right-8 w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:w-14 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 backdrop-blur-sm z-10"
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 lg:top-8 lg:right-8 w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 backdrop-blur-sm z-10"
             style={{ minHeight: "44px", minWidth: "44px" }}
           >
             <X className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />

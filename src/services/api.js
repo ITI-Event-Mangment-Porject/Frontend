@@ -141,9 +141,19 @@ export const eventAPI = {
 
 // Company API endpoints
 export const companyAPI = {
-  getAll: (params) => api.get("/companies", { params }),
-  getById: (id) => api.get(`/companies/${id}`),
-  create: (companyData) => api.post("/companies", companyData),
+  getAll: params => api.get('/companies', { params }),
+  getById: id => api.get(`/companies/${id}`),
+  create: async (formData) => {
+    const token = localStorage.getItem('token');
+    return api.post('/companies', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  }
+  
+ ,
   update: (id, companyData) => api.put(`/companies/${id}`, companyData),
   delete: (id) => api.delete(`/companies/${id}`),
   // Custom actions for companies

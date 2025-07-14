@@ -4,6 +4,7 @@ import { Shield, Building, Mail, Phone, Globe, MapPin, Users, Briefcase, Linkedi
 const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
   const [form, setForm] = useState({
     name: '',
+    logo_path: '',
     description: '',
     website: '',
     industry: '',
@@ -12,7 +13,7 @@ const CompanyRegistrationModal = ({ show, onClose, onSuccess }) => {
     contact_email: '',
     contact_phone: '',
     linkedin_url: '',
-    logo_path: null,
+
     
   });
 
