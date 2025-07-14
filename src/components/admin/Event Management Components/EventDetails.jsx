@@ -26,6 +26,8 @@ import AttendanceTable from './AttendanceTable';
 import ParticipatingCompaniesTab from './ParticipationCompaniesTab';
 import RegistrationsTab from './RegistrationsTab';
 
+const APP_URL = import.meta.env.VITE_API_BASE_URL;
+
 const EventDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -461,7 +463,7 @@ const EventDetailsTab = ({ event, formatDate, formatTime, getStatusColor }) => (
               src={
                 event.banner_image.startsWith('http')
                   ? event.banner_image
-                  : `http://127.0.0.1:8000${event.banner_image}`
+                  : `${APP_URL}${event.banner_image}`
               }
               alt={event.title}
               className="w-full h-64 object-cover rounded-lg"

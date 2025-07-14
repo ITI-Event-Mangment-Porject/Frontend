@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Layout from '../../components/student/Layout';
 import Footer from '../../components/student/Footer';
 
-const API_BASE_URL = 'http://127.0.0.1:8000';
+const APP_URL = import.meta.env.VITE_API_BASE_URL;
 
 const FeedbackForm = () => {
   const { id } = useParams();
@@ -25,7 +25,7 @@ const FeedbackForm = () => {
 
         const token = localStorage.getItem('token');
         const response = await fetch(
-          `${API_BASE_URL}/api/feedback/events/${id}/forms`,
+          `${APP_URL}/api/feedback/events/${id}/forms`,
           {
             method: 'GET',
             headers: {
@@ -113,7 +113,7 @@ const FeedbackForm = () => {
       const formId = form.id || form.form_id || 1;
 
       const res = await fetch(
-        `${API_BASE_URL}/api/feedback/forms/${formId}/responses`,
+        `${APP_URL}/api/feedback/forms/${formId}/responses`,
         {
           method: 'POST',
           headers: {

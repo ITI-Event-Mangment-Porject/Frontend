@@ -20,8 +20,7 @@ import {
   Mic,
 } from 'lucide-react';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+const APP_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 const EventDetails = () => {
   const { id } = useParams();
@@ -92,11 +91,11 @@ const EventDetails = () => {
 
     try {
       const [eventRes, statusRes, sessionsRes] = await Promise.all([
-        apiCall(`${API_BASE_URL}/api/events/${id}`),
-        apiCall(`${API_BASE_URL}/api/events/${id}/registration-status`).catch(
+        apiCall(`${APP_URL}/api/events/${id}`),
+        apiCall(`${APP_URL}/api/events/${id}/registration-status`).catch(
           () => null
         ),
-        apiCall(`${API_BASE_URL}/api/events/${id}/sessions`),
+        apiCall(`${APP_URL}/api/events/${id}/sessions`),
       ]);
 
       if (!eventRes.ok) throw new Error('Event not found');
@@ -125,7 +124,7 @@ const EventDetails = () => {
     if (registerLoading || isRegistered) return;
     setRegisterLoading(true);
     try {
-      const res = await apiCall(`${API_BASE_URL}/api/events/${id}/register`, {
+      const res = await apiCall(`${APP_URL}/api/events/${id}/register`, {
         method: 'POST',
       });
       if (res.status === 409) {
@@ -139,7 +138,7 @@ const EventDetails = () => {
     } catch {
       try {
         const statusRes = await apiCall(
-          `${API_BASE_URL}/api/events/${id}/registration-status`
+          `${APP_URL}/api/events/${id}/registration-status`
         );
         if (statusRes.ok) {
           const statusData = await statusRes.json();
@@ -186,7 +185,7 @@ const EventDetails = () => {
     setCancelLoading(true);
     try {
       const res = await apiCall(
-        `${API_BASE_URL}/api/events/${id}/cancel-registration`,
+        `${APP_URL}/api/events/${id}/cancel-registration`,
         {
           method: 'PATCH',
           body: JSON.stringify({
@@ -230,9 +229,7 @@ const EventDetails = () => {
   const handleFeedback = async () => {
     setFeedbackLoading(true);
     try {
-      const res = await apiCall(
-        `${API_BASE_URL}/api/feedback/events/${id}/forms`
-      );
+      const res = await apiCall(`${APP_URL}/api/feedback/events/${id}/forms`);
       if (!res.ok) {
         showMessage(
           res.status === 404
