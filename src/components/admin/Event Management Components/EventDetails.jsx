@@ -38,16 +38,19 @@ import {
   Activity,
   Trash2,
   ChevronDown,
+  Building2,
+  UserCheck,
 } from "lucide-react"
 import { toast } from "react-toastify"
 import { eventAPI, attendanceAPI } from "../../../services/api"
 import { ClipLoader } from "react-spinners"
 import EventForm from "./EventForm.jsx"
-import AttendanceTable from "./AttendanceTable"
-import ParticipatingCompaniesTab from "./ParticipationCompaniesTab"
-import RegistrationsTab from "./RegistrationsTab"
+import RegistrationsTabEnhanced from "./RegistrationsTab.jsx"
+import AttendanceTableEnhanced from "./AttendanceTable.jsx"
+import ParticipatingCompaniesTabEnhanced from "./ParticipationCompaniesTab.jsx"
+import JobFairLiveQueue from "./job-fair-live-queue"
 
-const EventDetails = () => {
+const EventDetailsEnhanced = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -824,24 +827,65 @@ const EventDetails = () => {
             </button>
             <button
               onClick={() => handleTabChange("registrations")}
-              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+              className={`group py-3 px-1 border-b-2 font-bold text-sm whitespace-nowrap transition-all duration-300 flex items-center gap-2 ${
                 activeTab === "registrations"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  ? "border-[#901b20] text-[#901b20]"
+                  : "border-transparent text-gray-500 hover:text-[#901b20] hover:border-[#901b20]/50"
               }`}
             >
+              <div
+                className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                  activeTab === "registrations"
+                    ? "bg-[#901b20] text-white"
+                    : "bg-gray-200 text-gray-500 group-hover:bg-[#901b20]/10 group-hover:text-[#901b20]"
+                }`}
+              >
+                <UserCheck className="w-4 h-4" />
+              </div>
               Registrations
             </button>
             {event.type === "Job Fair" && (
               <button
                 onClick={() => handleTabChange("companies")}
-                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                className={`group py-3 px-1 border-b-2 font-bold text-sm whitespace-nowrap transition-all duration-300 flex items-center gap-2 ${
                   activeTab === "companies"
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "border-[#901b20] text-[#901b20]"
+                    : "border-transparent text-gray-500 hover:text-[#901b20] hover:border-[#901b20]/50"
                 }`}
               >
+                <div
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                    activeTab === "companies"
+                      ? "bg-[#901b20] text-white"
+                      : "bg-gray-200 text-gray-500 group-hover:bg-[#901b20]/10 group-hover:text-[#901b20]"
+                  }`}
+                >
+                  <Building2 className="w-4 h-4" />
+                </div>
                 Participating Companies
+              </button>
+            )}
+            {/* Add Live Queue tab for Job Fair events only */}
+            {event.type === "Job Fair" && (
+              <button
+                onClick={() => handleTabChange("live-queue")}
+                className={`group py-3 px-1 border-b-2 font-bold text-sm whitespace-nowrap transition-all duration-300 flex items-center gap-2 ${
+                  activeTab === "live-queue"
+                    ? "border-[#901b20] text-[#901b20]"
+                    : "border-transparent text-gray-500 hover:text-[#901b20] hover:border-[#901b20]/50"
+                }`}
+              >
+                <div
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                    activeTab === "live-queue"
+                      ? "bg-[#901b20] text-white"
+                      : "bg-gray-200 text-gray-500 group-hover:bg-[#901b20]/10 group-hover:text-[#901b20]"
+                  }`}
+                >
+                  <Activity className="w-4 h-4" />
+                </div>
+                Live Queue
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
               </button>
             )}
           </nav>
@@ -858,9 +902,12 @@ const EventDetails = () => {
 
         {activeTab === "attendance" && <AttendanceTab event={event} formatDate={formatDate} />}
 
-        {activeTab === "companies" && <ParticipatingCompaniesTab event={event} />}
+        {activeTab === "companies" && <ParticipatingCompaniesTabEnhanced event={event} />}
 
-        {activeTab === "registrations" && <RegistrationsTab event={event} />}
+        {activeTab === "registrations" && <RegistrationsTabEnhanced event={event} />}
+
+        {/* Add Live Queue Tab Content */}
+        {activeTab === "live-queue" && event.type === "Job Fair" && <JobFairLiveQueue event={event} />}
 
         {/* Add the FeedbacksTab rendering */}
         {activeTab === "feedbacks" && (
@@ -1366,7 +1413,7 @@ const AttendanceTab = ({ event, formatDate }) => {
   }
 
   return (
-    <AttendanceTable
+    <AttendanceTableEnhanced
       event={event}
       attendanceData={attendanceData}
       filteredAttendees={filteredAttendees}
@@ -2211,4 +2258,4 @@ const AIAnalyticsModal = ({ analytics, onClose }) => {
   )
 }
 
-export default EventDetails
+export default EventDetailsEnhanced
