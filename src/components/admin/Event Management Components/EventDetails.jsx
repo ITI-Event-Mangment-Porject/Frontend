@@ -17,24 +17,7 @@ import {
   FaFileAlt,
   FaSearch,
 } from "react-icons/fa"
-import {
-  MessageSquare,
-  Plus,
-  Brain,
-  Star,
-  User,
-  Calendar,
-  X,
-  Loader2,
-  AlertCircle,
-  CheckCircle,
-  Zap,
-  BarChart3,
-  UsersIcon,
-  Lightbulb,
-  Trash2,
-  ChevronDown,
-} from "lucide-react"
+import { MessageSquare, Plus, Brain, Star, User, Calendar, X, Loader2, AlertCircle, CheckCircle, Zap, BarChart3, UsersIcon, Lightbulb, Clock, MapPin, Activity, Trash2, ChevronDown } from 'lucide-react'
 import { toast } from "react-toastify"
 import { eventAPI, attendanceAPI } from "../../../services/api"
 import { ClipLoader } from "react-spinners"
@@ -161,6 +144,11 @@ const EventDetails = () => {
               to: data.data.responses.to || 0,
             })
           }
+
+          // Check for AI analytics after feedback data is loaded
+          if (data.data.responses?.data?.length > 0) {
+            checkAIAnalytics()
+          }
         } else {
           setFeedbackData(null)
         }
@@ -193,16 +181,24 @@ const EventDetails = () => {
 
       if (response.ok) {
         const data = await response.json()
-        if (data.success) {
+        if (data.success && data.data) {
           setAiAnalytics(data.data)
           return true
         }
       }
+      setAiAnalytics(null)
       return false
     } catch (error) {
       console.error("Error fetching AI analytics:", error)
+      setAiAnalytics(null)
       return false
     }
+  }
+
+  const checkAIAnalytics = async () => {
+    const hasAnalytics = await fetchAIAnalytics()
+    // The state will be updated by fetchAIAnalytics setting aiAnalytics
+    return hasAnalytics
   }
 
   const createFeedbackForm = async (formData) => {
@@ -380,15 +376,21 @@ const EventDetails = () => {
       setEditLoading(false)
     }
   }
+  const formatTimeWithoutSeconds = (timeStr) => {
+    if (!timeStr) return "";
+    return timeStr.slice(0, 5); // "09:00:00" → "09:00"
+  };
 
   const handleEditClick = () => {
+    console.log("Raw start_time:", event.start_time);
+    console.log("Formatted start_time:", formatTime(event.start_time));
     setEditEvent({
       title: event.title || "",
       description: event.description || "",
       start_date: event.start_date || "",
       end_date: event.end_date || "",
-      start_time: event.start_time || "",
-      end_time: event.end_time || "",
+      start_time: formatTimeWithoutSeconds(event.start_time) || "",
+      end_time: formatTimeWithoutSeconds(event.end_time) || "",
       location: event.location || "",
       capacity: event.capacity || "",
       type: event.type || "Job Fair",
@@ -485,10 +487,31 @@ const EventDetails = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <ClipLoader size={50} color="#3B82F6" />
-          <p className="mt-4 text-gray-600">Loading event details...</p>
+      <div className="min-h-screen bg-white p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="animate-pulse">
+            <div className="h-6 sm:h-8 bg-gray-300 rounded w-1/2 sm:w-1/4 mb-4 sm:mb-6 shimmer-effect"></div>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-6 sm:mb-8">
+              {[...Array(4)].map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shimmer-effect h-24 sm:h-32"
+                ></div>
+              ))}
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 space-y-3 sm:space-y-4 shimmer-effect"
+                >
+                  <div className="h-3 sm:h-4 bg-gray-300 rounded w-3/4"></div>
+                  <div className="h-2 sm:h-3 bg-gray-300 rounded w-1/2"></div>
+                  <div className="h-16 sm:h-20 bg-gray-300 rounded"></div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -496,14 +519,16 @@ const EventDetails = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-500 text-6xl mb-4">⚠️</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Error Loading Event</h2>
-          <p className="text-gray-600 mb-4">{error}</p>
+      <div className="min-h-screen bg-white p-6 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white rounded-xl sm:rounded-2xl p-6 sm:p-8 text-center shadow-2xl animate-shake">
+          <div className="text-red-500 mb-4 sm:mb-6 animate-bounce">
+            <AlertCircle className="w-12 h-12 sm:w-16 sm:h-16 mx-auto" />
+          </div>
+          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Error Loading Event</h3>
+          <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">{error}</p>
           <button
             onClick={() => navigate("/admin/events")}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+            className="bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] text-white px-6 py-3 sm:px-8 sm:py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg text-sm sm:text-base"
           >
             Back to Events
           </button>
@@ -514,14 +539,14 @@ const EventDetails = () => {
 
   if (!event) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen bg-white p-6 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white rounded-xl sm:rounded-2xl p-6 sm:p-8 text-center shadow-2xl">
           <div className="text-gray-400 text-6xl mb-4">📅</div>
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Event Not Found</h2>
-          <p className="text-gray-600 mb-4">The event you're looking for doesn't exist.</p>
+          <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2 sm:mb-3">Event Not Found</h3>
+          <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">The event you're looking for doesn't exist.</p>
           <button
             onClick={() => navigate("/admin/events")}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+            className="bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] text-white px-6 py-3 sm:px-8 sm:py-3 rounded-xl font-semibold transition-all duration-300 transform hover:scale-105 hover:shadow-lg text-sm sm:text-base"
           >
             Back to Events
           </button>
@@ -531,21 +556,24 @@ const EventDetails = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 gap-4">
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+      <div className="p-6">
+        {/* Enhanced Header */}
+        <div className="mb-8 animate-fade-in">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-4 gap-4">
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => navigate("/admin/events")}
-                className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+                className="group flex items-center text-gray-600 hover:text-[#901b20] transition-all duration-300 transform hover:scale-105"
               >
-                <FaArrowLeft className="w-4 h-4 mr-2" />
+                <FaArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform duration-300" />
                 Back to Events
               </button>
               <div className="h-6 border-l border-gray-300 hidden sm:block"></div>
-              <h1 className="text-xl sm:text-2xl font-bold text-gray-900">{event.title}</h1>
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-black text-[#901b20] mb-2">{event.title}</h1>
+                <p className="text-lg text-gray-600 font-medium">Event Details & Management</p>
+              </div>
             </div>
 
             {/* Action Buttons */}
@@ -553,10 +581,11 @@ const EventDetails = () => {
               {activeTab === "attendance" && (
                 <button
                   onClick={handleExportAttendance}
-                  className="flex items-center px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 text-sm"
+                  className="group relative overflow-hidden bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-4 py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 hover:shadow-lg text-sm flex items-center gap-2"
                 >
-                  <FaFileAlt className="w-4 h-4 mr-2" />
-                  <span className="hidden sm:inline">Export</span>
+                  <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                  <FaFileAlt className="w-4 h-4 relative" />
+                  <span className="hidden sm:inline relative">Export</span>
                 </button>
               )}
 
@@ -564,10 +593,15 @@ const EventDetails = () => {
                 <button
                   onClick={handlePublish}
                   disabled={actionLoading}
-                  className="flex items-center px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 text-sm"
+                  className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-4 py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:scale-100 disabled:shadow-none text-sm flex items-center gap-2"
                 >
-                  <FaCalendarPlus className="w-4 h-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Publish</span>
+                  <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                  {actionLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin relative" />
+                  ) : (
+                    <FaCalendarPlus className="w-4 h-4 relative" />
+                  )}
+                  <span className="hidden sm:inline relative">Publish</span>
                 </button>
               )}
 
@@ -575,88 +609,117 @@ const EventDetails = () => {
                 <button
                   onClick={handleArchive}
                   disabled={actionLoading}
-                  className="flex items-center px-3 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600 disabled:opacity-50 text-sm"
+                  className="group relative overflow-hidden bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-4 py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:scale-100 disabled:shadow-none text-sm flex items-center gap-2"
                 >
-                  <FaArchive className="w-4 h-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Archive</span>
+                  <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                  {actionLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin relative" />
+                  ) : (
+                    <FaArchive className="w-4 h-4 relative" />
+                  )}
+                  <span className="hidden sm:inline relative">Archive</span>
                 </button>
               )}
 
               <button
                 onClick={handleEdit}
                 disabled={actionLoading}
-                className="flex items-center px-3 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 disabled:opacity-50 text-sm"
+                className="group relative overflow-hidden bg-gradient-to-r from-[#ad565a] to-[#cc9598] hover:from-[#8a4548] hover:to-[#ad565a] disabled:from-gray-400 disabled:to-gray-500 text-white px-4 py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:scale-100 disabled:shadow-none text-sm flex items-center gap-2"
               >
-                <FaEdit className="w-4 h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Edit</span>
+                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                <FaEdit className="w-4 h-4 relative" />
+                <span className="hidden sm:inline relative">Edit</span>
               </button>
 
               <button
                 onClick={handleDelete}
                 disabled={actionLoading}
-                className="flex items-center px-3 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:opacity-50 text-sm"
+                className="group relative overflow-hidden bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-4 py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:scale-100 disabled:shadow-none text-sm flex items-center gap-2"
               >
-                <FaTrash className="w-4 h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Delete</span>
+                <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                <FaTrash className="w-4 h-4 relative" />
+                <span className="hidden sm:inline relative">Delete</span>
               </button>
             </div>
           </div>
+        </div>
 
-          {/* Tab Navigation */}
-          <div className="border-b border-gray-200">
-            <nav className="flex space-x-8 overflow-x-auto">
-              <button
-                onClick={() => handleTabChange("details")}
-                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+        {/* Enhanced Tab Navigation */}
+        <div className="bg-gradient-to-r from-gray-50 to-white rounded-2xl p-6 mb-8 shadow-lg border border-gray-100">
+          <nav className="flex space-x-8 overflow-x-auto">
+            <button
+              onClick={() => handleTabChange("details")}
+              className={`group py-3 px-1 border-b-2 font-bold text-sm whitespace-nowrap transition-all duration-300 flex items-center gap-2 ${
+                activeTab === "details"
+                  ? "border-[#901b20] text-[#901b20]"
+                  : "border-transparent text-gray-500 hover:text-[#901b20] hover:border-[#901b20]/50"
+              }`}
+            >
+              <div
+                className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
                   activeTab === "details"
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "bg-[#901b20] text-white"
+                    : "bg-gray-200 text-gray-500 group-hover:bg-[#901b20]/10 group-hover:text-[#901b20]"
                 }`}
               >
-                <FaCalendarAlt className="inline w-4 h-4 mr-2" />
-                Event Details
-              </button>
-              <button
-                onClick={() => handleTabChange("attendance")}
-                className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                <FaCalendarAlt className="w-4 h-4" />
+              </div>
+              Event Details
+            </button>
+            <button
+              onClick={() => handleTabChange("attendance")}
+              className={`group py-3 px-1 border-b-2 font-bold text-sm whitespace-nowrap transition-all duration-300 flex items-center gap-2 ${
+                activeTab === "attendance"
+                  ? "border-[#901b20] text-[#901b20]"
+                  : "border-transparent text-gray-500 hover:text-[#901b20] hover:border-[#901b20]/50"
+              }`}
+            >
+              <div
+                className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
                   activeTab === "attendance"
-                    ? "border-blue-500 text-blue-600"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? "bg-[#901b20] text-white"
+                    : "bg-gray-200 text-gray-500 group-hover:bg-[#901b20]/10 group-hover:text-[#901b20]"
                 }`}
               >
-                <FaUsers className="inline w-4 h-4 mr-2" />
-                Attendance & Reports
-                {attendanceData.length > 0 && (
-                  <span className="ml-1 bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs">
-                    {attendanceData.length}
+                <FaUsers className="w-4 h-4" />
+              </div>
+              Attendance & Reports
+              {attendanceData.length > 0 && (
+                <span className="ml-1 bg-[#901b20] text-white px-2 py-1 rounded-full text-xs font-bold">
+                  {attendanceData.length}
+                </span>
+              )}
+            </button>
+            {(event.status?.toLowerCase() === "completed" || event.status?.toLowerCase() === "draft") && (
+              <button
+                onClick={() => handleTabChange("feedbacks")}
+                className={`group py-3 px-1 border-b-2 font-bold text-sm whitespace-nowrap transition-all duration-300 flex items-center gap-2 ${
+                  activeTab === "feedbacks"
+                    ? "border-[#901b20] text-[#901b20]"
+                    : "border-transparent text-gray-500 hover:text-[#901b20] hover:border-[#901b20]/50"
+                }`}
+              >
+                <div
+                  className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                    activeTab === "feedbacks"
+                      ? "bg-[#901b20] text-white"
+                      : "bg-gray-200 text-gray-500 group-hover:bg-[#901b20]/10 group-hover:text-[#901b20]"
+                  }`}
+                >
+                  <MessageSquare className="w-4 h-4" />
+                </div>
+                Feedbacks
+                {feedbackData?.responses?.length > 0 && (
+                  <span className="ml-1 bg-[#901b20] text-white px-2 py-1 rounded-full text-xs font-bold">
+                    {feedbackData.responses.length}
                   </span>
                 )}
               </button>
-              {(event.status?.toLowerCase() === "completed" || event.status?.toLowerCase() === "draft") && (
-                <button
-                  onClick={() => handleTabChange("feedbacks")}
-                  className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
-                    activeTab === "feedbacks"
-                      ? "border-blue-500 text-blue-600"
-                      : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  }`}
-                >
-                  <MessageSquare className="inline w-4 h-4 mr-2" />
-                  Feedbacks
-                  {feedbackData?.responses?.length > 0 && (
-                    <span className="ml-1 bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs">
-                      {feedbackData.responses.length}
-                    </span>
-                  )}
-                </button>
-              )}
-            </nav>
-          </div>
+            )}
+          </nav>
         </div>
-      </div>
 
-      {/* Tab Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Tab Content */}
         {activeTab === "details" ? (
           <EventDetailsTab
             event={event}
@@ -700,18 +763,13 @@ const EventDetails = () => {
             formatDate={formatDate}
           />
         )}
-      </div>
 
-      {/* Edit Event Modal */}
-      {showEditModal && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="p-6 border-b bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold">Edit Event</h2>
-                  <p className="text-blue-100">{event.title}</p>
-                </div>
+        {/* Enhanced Edit Event Modal */}
+        {showEditModal && (
+          <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-lg flex items-center justify-center p-2 sm:p-4 animate-fade-in">
+            <div className="bg-white w-full max-w-6xl max-h-[98vh] sm:max-h-[95vh] rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-2xl overflow-hidden animate-scale-up flex flex-col">
+              <div className="relative bg-gradient-to-br from-[#901b20] via-[#ad565a] to-[#cc9598] p-4 sm:p-6 lg:p-10 text-white overflow-hidden flex-shrink-0">
+                <div className="absolute inset-0 bg-black/10"></div>
                 <button
                   onClick={() => {
                     setShowEditModal(false)
@@ -719,201 +777,292 @@ const EventDetails = () => {
                     setEditImagePreview(null)
                     setEditError("")
                   }}
-                  className="text-white/80 hover:text-white transition-colors"
+                  className="absolute top-3 right-3 sm:top-4 sm:right-4 lg:top-8 lg:right-8 w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 backdrop-blur-sm z-10"
+                  style={{ minHeight: "44px", minWidth: "44px" }}
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
                 </button>
+
+                <div className="relative max-w-4xl pr-12 sm:pr-16 lg:pr-20">
+                  <h1 className="text-xl sm:text-2xl lg:text-5xl font-black mb-1 sm:mb-2 lg:mb-3 leading-tight">
+                    Edit Event
+                  </h1>
+                  <p className="text-white/90 text-sm sm:text-base lg:text-xl font-medium">{event.title}</p>
+                </div>
+              </div>
+
+              <div className="flex-1 overflow-y-auto custom-scrollbar">
+                <div className="p-4 sm:p-6 lg:p-10">
+                  <EventForm
+                    event={editEvent}
+                    setEvent={setEditEvent}
+                    onSubmit={handleEditEvent}
+                    submitLoading={editLoading}
+                    error={editError}
+                    imagePreview={editImagePreview}
+                    setImagePreview={setEditImagePreview}
+                    isEdit={true}
+                  />
+                </div>
               </div>
             </div>
-
-            <div className="p-6">
-              <EventForm
-                event={editEvent}
-                setEvent={setEditEvent}
-                onSubmit={handleEditEvent}
-                submitLoading={editLoading}
-                error={editError}
-                imagePreview={editImagePreview}
-                setImagePreview={setEditImagePreview}
-                isEdit={true}
-              />
-            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
 
-// Event Details Tab Component
+// Enhanced Event Details Tab Component
 const EventDetailsTab = ({ event, formatDate, formatTime, getStatusColor }) => (
-  <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-    {/* Main Content */}
-    <div className="lg:col-span-2 space-y-6">
-      {/* Event Header */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        {event.banner_image && (
-          <div className="mb-6">
-            <img
-              src={
-                event.banner_image.startsWith("http")
-                  ? event.banner_image
-                  : `http://127.0.0.1:8000${event.banner_image}`
-              }
-              alt={event.title}
-              className="w-full h-64 object-cover rounded-lg"
-            />
-          </div>
-        )}
-
-        <div className="flex flex-col sm:flex-row items-start justify-between mb-4 gap-4">
-          <div className="flex-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">{event.title}</h1>
-            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-              <span className="flex items-center">
-                <FaCalendarAlt className="w-4 h-4 mr-1" />
-                {event.type}
-              </span>
-              <span className="flex items-center">
-                <FaUsers className="w-4 h-4 mr-1" />
-                Created by User #{event.created_by}
-              </span>
+  <div className="space-y-6 sm:space-y-8 lg:space-y-12 animate-fade-in">
+    {/* Enhanced Stats Cards */}
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="group relative bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden border border-gray-100">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#901b20]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div className="relative">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#901b20] to-[#ad565a] rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-500">
+              <Calendar className="w-6 h-6 text-white" />
             </div>
           </div>
-
-          <div className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(event.status)}`}>
-            {event.status || "Draft"}
-          </div>
-        </div>
-
-        <div className="prose max-w-none">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Description</h3>
-          <div className="text-gray-700 whitespace-pre-wrap">{event.description}</div>
+          <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Event Type</p>
+          <p className="text-3xl font-black text-[#901b20]">{event.type}</p>
         </div>
       </div>
 
-      {/* Additional Details */}
-      {(event.slido_qr_code || event.slido_embed_url) && (
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Interactive Features</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {event.slido_qr_code && (
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Slido QR Code</h4>
-                <img
-                  src={event.slido_qr_code || "/placeholder.svg"}
-                  alt="Slido QR Code"
-                  className="w-32 h-32 border rounded-lg"
-                />
-              </div>
-            )}
-            {event.slido_embed_url && (
-              <div>
-                <h4 className="font-medium text-gray-900 mb-2">Slido Embed URL</h4>
-                <a
-                  href={event.slido_embed_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-500 hover:text-blue-700 underline break-all"
-                >
-                  {event.slido_embed_url}
-                </a>
-              </div>
-            )}
+      <div className="group relative bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden border border-gray-100">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#203947]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div className="relative">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#203947] to-[#ad565a] rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-500">
+              <Activity className="w-6 h-6 text-white" />
+            </div>
           </div>
+          <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Status</p>
+          <p className="text-3xl font-black text-[#203947] capitalize">{event.status || "Draft"}</p>
         </div>
-      )}
+      </div>
+
+      <div className="group relative bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden border border-gray-100">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#ad565a]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div className="relative">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#ad565a] to-[#cc9598] rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-500">
+              <MapPin className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Location</p>
+          <p className="text-lg font-black text-[#ad565a] truncate">{event.location}</p>
+        </div>
+      </div>
+
+      <div className="group relative bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 overflow-hidden border border-gray-100">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#cc9598]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+        <div className="relative">
+          <div className="flex items-center justify-between mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-[#cc9598] to-[#901b20] rounded-xl flex items-center justify-center group-hover:rotate-12 transition-transform duration-500">
+              <User className="w-6 h-6 text-white" />
+            </div>
+          </div>
+          <p className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-2">Created By</p>
+          <p className="text-lg font-black text-[#cc9598]">User #{event.created_by}</p>
+        </div>
+      </div>
     </div>
 
-    {/* Sidebar */}
-    <div className="space-y-6">
-      {/* Event Info */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Event Information</h3>
-        <div className="space-y-4">
-          <div className="flex items-start space-x-3">
-            <FaCalendarAlt className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="font-medium text-gray-900">Start Date</p>
-              <p className="text-gray-600">{formatDate(event.start_date)}</p>
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      {/* Main Content */}
+      <div className="lg:col-span-2 space-y-6">
+        {/* Enhanced Event Header */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 hover:shadow-2xl transition-all duration-500">
+          {event.banner_image && (
+            <div className="mb-8">
+              <img
+                src={
+                  event.banner_image.startsWith("http")
+                    ? event.banner_image
+                    : `http://127.0.0.1:8000${event.banner_image}`
+                }
+                alt={event.title}
+                className="w-full h-64 object-cover rounded-2xl shadow-lg"
+              />
             </div>
-          </div>
+          )}
 
-          <div className="flex items-start space-x-3">
-            <FaCalendarAlt className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="font-medium text-gray-900">End Date</p>
-              <p className="text-gray-600">{formatDate(event.end_date)}</p>
-            </div>
-          </div>
-
-          <div className="flex items-start space-x-3">
-            <FaClock className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="font-medium text-gray-900">Time</p>
-              <p className="text-gray-600">
-                {formatTime(event.start_time)} - {formatTime(event.end_time)}
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start space-x-3">
-            <FaMapMarkerAlt className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="font-medium text-gray-900">Location</p>
-              <p className="text-gray-600">{event.location}</p>
-            </div>
-          </div>
-
-          <div className="flex items-start space-x-3">
-            {event.visibility_type === "all" ? (
-              <FaGlobe className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-            ) : (
-              <FaLock className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-            )}
-            <div>
-              <p className="font-medium text-gray-900">Visibility</p>
-              <p className="text-gray-600">{event.visibility_type === "all" ? "Public" : "Restricted"}</p>
-            </div>
-          </div>
-
-          {event.registration_deadline && (
-            <div className="flex items-start space-x-3">
-              <FaClock className="w-5 h-5 text-gray-400 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-medium text-gray-900">Registration Deadline</p>
-                <p className="text-gray-600">{formatDate(event.registration_deadline)}</p>
+          <div className="flex flex-col sm:flex-row items-start justify-between mb-6 gap-4">
+            <div className="flex-1">
+              <h1 className="text-3xl sm:text-4xl font-black text-[#203947] mb-4 leading-tight">{event.title}</h1>
+              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                <span className="flex items-center bg-[#901b20]/10 px-3 py-2 rounded-xl">
+                  <FaCalendarAlt className="w-4 h-4 mr-2 text-[#901b20]" />
+                  {event.type}
+                </span>
+                <span className="flex items-center bg-[#203947]/10 px-3 py-2 rounded-xl">
+                  <FaUsers className="w-4 h-4 mr-2 text-[#203947]" />
+                  Created by User #{event.created_by}
+                </span>
               </div>
             </div>
-          )}
+
+            <div
+              className={`px-6 py-3 rounded-2xl text-lg font-bold border-2 shadow-lg ${getStatusColor(event.status)}`}
+            >
+              {event.status || "Draft"}
+            </div>
+          </div>
+
+          <div className="bg-gray-50 rounded-2xl p-6">
+            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+              <div className="w-8 h-8 bg-[#901b20] rounded-xl flex items-center justify-center">
+                <MessageSquare className="w-4 h-4 text-white" />
+              </div>
+              Description
+            </h3>
+            <div className="text-gray-700 whitespace-pre-wrap leading-relaxed text-lg">{event.description}</div>
+          </div>
         </div>
+
+        {/* Enhanced Additional Details */}
+        {event.slido_embed_url && (
+          <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 hover:shadow-2xl transition-all duration-500">
+            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-[#ad565a] to-[#cc9598] rounded-xl flex items-center justify-center">
+                <Zap className="w-4 h-4 text-white" />
+              </div>
+              Interactive Features
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {event.slido_embed_url && (
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 border border-blue-200">
+                  <h4 className="font-bold text-gray-900 mb-4 text-lg">Slido Embed URL</h4>
+                  <a
+                    href={event.slido_embed_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:text-blue-800 underline break-all font-medium transition-colors duration-300"
+                  >
+                    {event.slido_embed_url}
+                  </a>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Timestamps */}
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Timestamps</h3>
-        <div className="space-y-3 text-sm">
-          <div>
-            <p className="font-medium text-gray-900">Created</p>
-            <p className="text-gray-600">{new Date(event.created_at).toLocaleString()}</p>
-          </div>
-          <div>
-            <p className="font-medium text-gray-900">Last Updated</p>
-            <p className="text-gray-600">{new Date(event.updated_at).toLocaleString()}</p>
-          </div>
-          {event.archived_at && (
-            <div>
-              <p className="font-medium text-gray-900">Archived</p>
-              <p className="text-gray-600">{new Date(event.archived_at).toLocaleString()}</p>
+      {/* Enhanced Sidebar */}
+      <div className="space-y-6">
+        {/* Enhanced Event Info */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 hover:shadow-2xl transition-all duration-500">
+          <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-[#901b20] to-[#ad565a] rounded-xl flex items-center justify-center">
+              <FaCalendarAlt className="w-4 h-4 text-white" />
             </div>
-          )}
+            Event Information
+          </h3>
+          <div className="space-y-6">
+            <div className="flex items-start space-x-4">
+              <div className="w-12 h-12 bg-[#901b20]/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+                <FaCalendarAlt className="w-5 h-5 text-[#901b20]" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 text-lg">Start Date</p>
+                <p className="text-gray-600 font-medium">{formatDate(event.start_date)}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="w-12 h-12 bg-[#203947]/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+                <FaCalendarAlt className="w-5 h-5 text-[#203947]" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 text-lg">End Date</p>
+                <p className="text-gray-600 font-medium">{formatDate(event.end_date)}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="w-12 h-12 bg-[#ad565a]/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+                <FaClock className="w-5 h-5 text-[#ad565a]" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 text-lg">Time</p>
+                <p className="text-gray-600 font-medium">
+                  {formatTime(event.start_time)} - {formatTime(event.end_time)}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="w-12 h-12 bg-[#cc9598]/10 rounded-2xl flex items-center justify-center flex-shrink-0">
+                <FaMapMarkerAlt className="w-5 h-5 text-[#cc9598]" />
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 text-lg">Location</p>
+                <p className="text-gray-600 font-medium">{event.location}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="w-12 h-12 bg-gray-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                {event.visibility_type === "all" ? (
+                  <FaGlobe className="w-5 h-5 text-gray-600" />
+                ) : (
+                  <FaLock className="w-5 h-5 text-gray-600" />
+                )}
+              </div>
+              <div>
+                <p className="font-bold text-gray-900 text-lg">Visibility</p>
+                <p className="text-gray-600 font-medium">{event.visibility_type === "all" ? "Public" : "Restricted"}</p>
+              </div>
+            </div>
+
+            {event.registration_deadline && (
+              <div className="flex items-start space-x-4">
+                <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                  <FaClock className="w-5 h-5 text-orange-600" />
+                </div>
+                <div>
+                  <p className="font-bold text-gray-900 text-lg">Registration Deadline</p>
+                  <p className="text-gray-600 font-medium">{formatDate(event.registration_deadline)}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Enhanced Timestamps */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 hover:shadow-2xl transition-all duration-500">
+          <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-[#203947] to-[#ad565a] rounded-xl flex items-center justify-center">
+              <Clock className="w-4 h-4 text-white" />
+            </div>
+            Timestamps
+          </h3>
+          <div className="space-y-4 text-sm">
+            <div className="bg-green-50 rounded-xl p-4 border border-green-200">
+              <p className="font-bold text-green-800 text-base">Created</p>
+              <p className="text-green-600 font-medium">{new Date(event.created_at).toLocaleString()}</p>
+            </div>
+            <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
+              <p className="font-bold text-blue-800 text-base">Last Updated</p>
+              <p className="text-blue-600 font-medium">{new Date(event.updated_at).toLocaleString()}</p>
+            </div>
+            {event.archived_at && (
+              <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <p className="font-bold text-gray-800 text-base">Archived</p>
+                <p className="text-gray-600 font-medium">{new Date(event.archived_at).toLocaleString()}</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>
   </div>
 )
 
-// Attendance Tab Component
+// Enhanced Attendance Tab Component
 const AttendanceTab = ({
   event,
   attendanceData,
@@ -932,97 +1081,116 @@ const AttendanceTab = ({
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <ClipLoader size={40} color="#3B82F6" />
-          <p className="mt-4 text-gray-600">Loading attendance data...</p>
+          <ClipLoader size={40} color="#901b20" />
+          <p className="mt-4 text-gray-600 font-medium">Loading attendance data...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Event Summary */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Event Summary</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-blue-50 p-4 rounded-lg">
+    <div className="space-y-6 sm:space-y-8 lg:space-y-12 animate-fade-in">
+      {/* Enhanced Event Summary */}
+      <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 hover:shadow-2xl transition-all duration-500">
+        <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-[#901b20] to-[#ad565a] rounded-2xl flex items-center justify-center">
+            <BarChart3 className="w-5 h-5 text-white" />
+          </div>
+          Event Summary
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="group relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-blue-200">
             <div className="flex items-center">
-              <FaCalendarAlt className="w-8 h-8 text-blue-500 mr-3" />
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform duration-500">
+                <FaCalendarAlt className="w-6 h-6 text-white" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-blue-600">Event Date</p>
-                <p className="text-lg font-bold text-blue-900">{formatDate(event.start_date)}</p>
+                <p className="text-sm font-bold text-blue-600 uppercase tracking-wider">Event Date</p>
+                <p className="text-lg font-black text-blue-900">{formatDate(event.start_date)}</p>
               </div>
             </div>
           </div>
-          <div className="bg-green-50 p-4 rounded-lg">
+          <div className="group relative bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-green-200">
             <div className="flex items-center">
-              <FaUsers className="w-8 h-8 text-green-500 mr-3" />
+              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform duration-500">
+                <FaUsers className="w-6 h-6 text-white" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-green-600">Total Attendees</p>
-                <p className="text-lg font-bold text-green-900">{attendanceData.length}</p>
+                <p className="text-sm font-bold text-green-600 uppercase tracking-wider">Total Attendees</p>
+                <p className="text-lg font-black text-green-900">{attendanceData.length}</p>
               </div>
             </div>
           </div>
-          <div className="bg-purple-50 p-4 rounded-lg">
+          <div className="group relative bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-purple-200">
             <div className="flex items-center">
-              <FaMapMarkerAlt className="w-8 h-8 text-purple-500 mr-3" />
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform duration-500">
+                <FaMapMarkerAlt className="w-6 h-6 text-white" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-purple-600">Location</p>
-                <p className="text-lg font-bold text-purple-900">{event.location || "N/A"}</p>
+                <p className="text-sm font-bold text-purple-600 uppercase tracking-wider">Location</p>
+                <p className="text-lg font-black text-purple-900 truncate">{event.location || "N/A"}</p>
               </div>
             </div>
           </div>
-          <div className="bg-orange-50 p-4 rounded-lg">
+          <div className="group relative bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-orange-200">
             <div className="flex items-center">
-              <FaClock className="w-8 h-8 text-orange-500 mr-3" />
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform duration-500">
+                <FaClock className="w-6 h-6 text-white" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-orange-600">Status</p>
-                <p className="text-lg font-bold text-orange-900 capitalize">{event.status || "Draft"}</p>
+                <p className="text-sm font-bold text-orange-600 uppercase tracking-wider">Status</p>
+                <p className="text-lg font-black text-orange-900 capitalize">{event.status || "Draft"}</p>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Search and Filters */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border">
-        <div className="flex flex-col sm:flex-row gap-4 items-end">
+      {/* Enhanced Search and Filters */}
+      <div className="bg-gradient-to-r from-gray-50 to-white rounded-2xl p-8 shadow-lg border border-gray-100">
+        <div className="flex flex-col sm:flex-row gap-6 items-end">
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Search Attendees</label>
-            <div className="relative">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <label className="block text-sm font-bold text-gray-700 mb-3">Search Attendees</label>
+            <div className="relative group">
+              <FaSearch className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 group-focus-within:text-[#901b20] transition-colors duration-300" />
               <input
                 type="text"
                 placeholder="Search by name, email, or phone..."
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full pl-12 pr-6 py-4 border-2 border-gray-200 rounded-2xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 text-lg font-medium placeholder-gray-400 bg-white"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
           </div>
           <button
-            className="px-6 py-3 bg-gray-500 hover:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+            className="group relative overflow-hidden bg-gradient-to-r from-gray-500 to-gray-600 hover:from-gray-600 hover:to-gray-700 text-white px-8 py-4 rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 hover:shadow-lg"
             onClick={() => {
               setSearchTerm("")
               setCurrentPage(1)
             }}
           >
-            Clear
+            <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+            <span className="relative">Clear</span>
           </button>
         </div>
       </div>
 
-      {/* Attendees Table */}
-      <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <div className="px-6 py-4 border-b bg-gray-50">
-          <h2 className="text-lg font-semibold text-gray-900">Attendees ({filteredAttendees.length})</h2>
+      {/* Enhanced Attendees Table */}
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-500">
+        <div className="px-8 py-6 border-b bg-gradient-to-r from-[#901b20] to-[#ad565a] text-white">
+          <h2 className="text-xl font-bold flex items-center gap-3">
+            <UsersIcon className="w-6 h-6" />
+            Attendees ({filteredAttendees.length})
+          </h2>
         </div>
 
         {filteredAttendees.length === 0 ? (
-          <div className="text-center py-12">
-            <FaUsers className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Attendees Found</h3>
-            <p className="text-gray-600">
+          <div className="text-center py-16">
+            <div className="text-gray-300 mb-8 animate-float">
+              <FaUsers className="w-24 h-24 mx-auto" />
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-4">No Attendees Found</h3>
+            <p className="text-gray-600 text-lg leading-relaxed">
               {searchTerm
                 ? "No attendees match your search criteria."
                 : "No attendees have registered for this event yet."}
@@ -1035,19 +1203,27 @@ const AttendanceTab = ({
               <table className="w-full">
                 <thead className="border-b bg-gray-50">
                   <tr>
-                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Name</th>
-                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Email</th>
-                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Phone</th>
-                    <th className="text-left py-4 px-6 text-sm font-medium text-gray-500">Registration Date</th>
+                    <th className="text-left py-6 px-8 text-sm font-bold text-gray-500 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="text-left py-6 px-8 text-sm font-bold text-gray-500 uppercase tracking-wider">
+                      Email
+                    </th>
+                    <th className="text-left py-6 px-8 text-sm font-bold text-gray-500 uppercase tracking-wider">
+                      Phone
+                    </th>
+                    <th className="text-left py-6 px-8 text-sm font-bold text-gray-500 uppercase tracking-wider">
+                      Registration Date
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {paginatedAttendees.map((attendee, index) => (
-                    <tr key={`${attendee.id}-${index}`} className="hover:bg-gray-50">
-                      <td className="py-4 px-6 text-sm font-medium text-gray-900">{attendee.name}</td>
-                      <td className="py-4 px-6 text-sm text-gray-600">{attendee.email}</td>
-                      <td className="py-4 px-6 text-sm text-gray-600">{attendee.phone}</td>
-                      <td className="py-4 px-6 text-sm text-gray-600">
+                    <tr key={`${attendee.id}-${index}`} className="hover:bg-gray-50 transition-colors duration-300">
+                      <td className="py-6 px-8 text-sm font-bold text-gray-900">{attendee.name}</td>
+                      <td className="py-6 px-8 text-sm text-gray-600 font-medium">{attendee.email}</td>
+                      <td className="py-6 px-8 text-sm text-gray-600 font-medium">{attendee.phone}</td>
+                      <td className="py-6 px-8 text-sm text-gray-600 font-medium">
                         {attendee.date || formatDate(event.start_date)}
                       </td>
                     </tr>
@@ -1059,86 +1235,89 @@ const AttendanceTab = ({
             {/* Mobile Cards */}
             <div className="md:hidden divide-y divide-gray-200">
               {paginatedAttendees.map((attendee, index) => (
-                <div key={`${attendee.id}-${index}`} className="p-4">
+                <div key={`${attendee.id}-${index}`} className="p-6 hover:bg-gray-50 transition-colors duration-300">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="font-medium text-gray-900">{attendee.name}</h3>
-                      <p className="text-sm text-gray-600 mt-1">{attendee.email}</p>
-                      <p className="text-sm text-gray-600">{attendee.phone}</p>
+                      <h3 className="font-bold text-gray-900 text-lg">{attendee.name}</h3>
+                      <p className="text-sm text-gray-600 mt-2 font-medium">{attendee.email}</p>
+                      <p className="text-sm text-gray-600 font-medium">{attendee.phone}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xs text-gray-500">Registered</p>
-                      <p className="text-sm font-medium text-gray-900">
-                        {attendee.date || formatDate(event.start_date)}
-                      </p>
+                      <p className="text-xs text-gray-500 font-bold uppercase tracking-wider">Registered</p>
+                      <p className="text-sm font-bold text-gray-900">{attendee.date || formatDate(event.start_date)}</p>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
 
-            {/* Pagination */}
+            {/* Enhanced Pagination */}
             {totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-t bg-gray-50 gap-4">
-                <div className="text-sm text-gray-600">
-                  Showing {(currentPage - 1) * attendeesPerPage + 1} to{" "}
-                  {Math.min(currentPage * attendeesPerPage, filteredAttendees.length)} of {filteredAttendees.length}{" "}
-                  attendees
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
-                    disabled={currentPage === 1}
-                    className={`px-3 py-1 rounded border text-sm ${
-                      currentPage === 1
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    Previous
-                  </button>
-
-                  <div className="flex space-x-1">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum
-                      if (totalPages <= 5) {
-                        pageNum = i + 1
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i
-                      } else {
-                        pageNum = currentPage - 2 + i
-                      }
-
-                      return (
-                        <button
-                          key={pageNum}
-                          onClick={() => setCurrentPage(pageNum)}
-                          className={`px-3 py-1 rounded border text-sm ${
-                            currentPage === pageNum
-                              ? "bg-blue-500 text-white"
-                              : "bg-white text-gray-700 hover:bg-gray-100"
-                          }`}
-                        >
-                          {pageNum}
-                        </button>
-                      )
-                    })}
+              <div className="bg-gradient-to-r from-gray-50 to-white rounded-b-2xl p-8 border-t border-gray-200">
+                <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
+                  <div className="text-lg text-gray-600 font-medium text-center sm:text-left">
+                    Showing <span className="font-bold text-[#901b20]">{(currentPage - 1) * attendeesPerPage + 1}</span>{" "}
+                    to{" "}
+                    <span className="font-bold text-[#901b20]">
+                      {Math.min(currentPage * attendeesPerPage, filteredAttendees.length)}
+                    </span>{" "}
+                    of <span className="font-bold text-[#901b20]">{filteredAttendees.length}</span> attendees
                   </div>
 
-                  <button
-                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
-                    disabled={currentPage === totalPages}
-                    className={`px-3 py-1 rounded border text-sm ${
-                      currentPage === totalPages
-                        ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                        : "bg-white text-gray-700 hover:bg-gray-100"
-                    }`}
-                  >
-                    Next
-                  </button>
+                  <div className="flex items-center space-x-3">
+                    <button
+                      onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                      disabled={currentPage === 1}
+                      className={`px-6 py-3 rounded-xl border-2 text-sm font-bold transition-all duration-300 ${
+                        currentPage === 1
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200"
+                          : "bg-white text-gray-700 hover:bg-[#901b20] hover:text-white border-gray-200 hover:border-[#901b20] transform hover:scale-105"
+                      }`}
+                    >
+                      Previous
+                    </button>
+
+                    <div className="flex space-x-2">
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum
+                        if (totalPages <= 5) {
+                          pageNum = i + 1
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i
+                        } else {
+                          pageNum = currentPage - 2 + i
+                        }
+
+                        return (
+                          <button
+                            key={pageNum}
+                            onClick={() => setCurrentPage(pageNum)}
+                            className={`px-4 py-3 rounded-xl border-2 text-sm font-bold transition-all duration-300 ${
+                              currentPage === pageNum
+                                ? "bg-gradient-to-r from-[#901b20] to-[#ad565a] text-white border-[#901b20] shadow-lg transform scale-110"
+                                : "bg-white text-gray-700 hover:bg-[#901b20] hover:text-white border-gray-200 hover:border-[#901b20] transform hover:scale-105"
+                            }`}
+                          >
+                            {pageNum}
+                          </button>
+                        )
+                      })}
+                    </div>
+
+                    <button
+                      onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                      disabled={currentPage === totalPages}
+                      className={`px-6 py-3 rounded-xl border-2 text-sm font-bold transition-all duration-300 ${
+                        currentPage === totalPages
+                          ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200"
+                          : "bg-white text-gray-700 hover:bg-[#901b20] hover:text-white border-gray-200 hover:border-[#901b20] transform hover:scale-105"
+                      }`}
+                    >
+                      Next
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
@@ -1149,7 +1328,7 @@ const AttendanceTab = ({
   )
 }
 
-// Feedbacks Tab Component
+// Enhanced Feedbacks Tab Component
 const FeedbacksTab = ({
   event,
   feedbackData,
@@ -1169,19 +1348,6 @@ const FeedbacksTab = ({
   generatingAnalytics,
   formatDate,
 }) => {
-  const [hasAIAnalytics, setHasAIAnalytics] = useState(false)
-
-  useEffect(() => {
-    if (feedbackData?.responses?.length > 0) {
-      checkAIAnalytics()
-    }
-  }, [feedbackData])
-
-  const checkAIAnalytics = async () => {
-    const hasAnalytics = await fetchAIAnalytics()
-    setHasAIAnalytics(hasAnalytics)
-  }
-
   const handleShowAIAnalytics = async () => {
     await fetchAIAnalytics()
     setShowAIAnalyticsModal(true)
@@ -1189,63 +1355,74 @@ const FeedbacksTab = ({
 
   const handleGenerateAIAnalytics = async () => {
     const success = await generateAIAnalytics()
-    if (success) {
-      setHasAIAnalytics(true)
-    }
+    // aiAnalytics state will be updated by generateAIAnalytics calling fetchAIAnalytics
   }
 
   if (feedbackLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <div className="text-center">
-          <ClipLoader size={40} color="#3B82F6" />
-          <p className="mt-4 text-gray-600">Loading feedback data...</p>
+          <ClipLoader size={40} color="#901b20" />
+          <p className="mt-4 text-gray-600 font-medium">Loading feedback data...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="space-y-6">
-      {/* Event Summary */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">Feedback Summary</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-blue-50 p-4 rounded-lg">
+    <div className="space-y-6 sm:space-y-8 lg:space-y-12 animate-fade-in">
+      {/* Enhanced Event Summary */}
+      <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 hover:shadow-2xl transition-all duration-500">
+        <h3 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-[#901b20] to-[#ad565a] rounded-2xl flex items-center justify-center">
+            <Brain className="w-5 h-5 text-white" />
+          </div>
+          Feedback Summary
+        </h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="group relative bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-blue-200">
             <div className="flex items-center">
-              <MessageSquare className="w-8 h-8 text-blue-500 mr-3" />
+              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform duration-500">
+                <MessageSquare className="w-6 h-6 text-white" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-blue-600">Total Responses</p>
-                <p className="text-lg font-bold text-blue-900">{feedbackData?.total_responses || 0}</p>
+                <p className="text-sm font-bold text-blue-600 uppercase tracking-wider">Total Responses</p>
+                <p className="text-lg font-black text-blue-900">{feedbackData?.total_responses || 0}</p>
               </div>
             </div>
           </div>
-          <div className="bg-green-50 p-4 rounded-lg">
+          <div className="group relative bg-gradient-to-br from-green-50 to-green-100 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-green-200">
             <div className="flex items-center">
-              <Star className="w-8 h-8 text-green-500 mr-3" />
+              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform duration-500">
+                <Star className="w-6 h-6 text-white" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-green-600">Average Rating</p>
-                <p className="text-lg font-bold text-green-900">
+                <p className="text-sm font-bold text-green-600 uppercase tracking-wider">Average Rating</p>
+                <p className="text-lg font-black text-green-900">
                   {feedbackData?.average_rating ? Number(feedbackData.average_rating).toFixed(1) : "N/A"}
                 </p>
               </div>
             </div>
           </div>
-          <div className="bg-purple-50 p-4 rounded-lg">
+          <div className="group relative bg-gradient-to-br from-purple-50 to-purple-100 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-purple-200">
             <div className="flex items-center">
-              <Calendar className="w-8 h-8 text-purple-500 mr-3" />
+              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform duration-500">
+                <Calendar className="w-6 h-6 text-white" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-purple-600">Event Date</p>
-                <p className="text-lg font-bold text-purple-900">{formatDate(event.start_date)}</p>
+                <p className="text-sm font-bold text-purple-600 uppercase tracking-wider">Event Date</p>
+                <p className="text-lg font-black text-purple-900">{formatDate(event.start_date)}</p>
               </div>
             </div>
           </div>
-          <div className="bg-orange-50 p-4 rounded-lg">
+          <div className="group relative bg-gradient-to-br from-orange-50 to-orange-100 rounded-2xl p-6 shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2 border border-orange-200">
             <div className="flex items-center">
-              <Brain className="w-8 h-8 text-orange-500 mr-3" />
+              <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mr-4 group-hover:rotate-12 transition-transform duration-500">
+                <Brain className="w-6 h-6 text-white" />
+              </div>
               <div>
-                <p className="text-sm font-medium text-orange-600">AI Analytics</p>
-                <p className="text-lg font-bold text-orange-900">{hasAIAnalytics ? "Available" : "Not Generated"}</p>
+                <p className="text-sm font-bold text-orange-600 uppercase tracking-wider">AI Analytics</p>
+                <p className="text-lg font-black text-orange-900">{aiAnalytics ? "Available" : "Not Generated"}</p>
               </div>
             </div>
           </div>
@@ -1254,19 +1431,22 @@ const FeedbacksTab = ({
 
       {/* No Feedback Form */}
       {!feedbackData && (
-        <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-          <div className="text-center py-16">
-            <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">No Feedback Form Available</h3>
-            <p className="text-gray-600 mb-6">
+        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-500">
+          <div className="text-center py-20">
+            <div className="text-gray-300 mb-8 animate-float">
+              <MessageSquare className="w-24 h-24 mx-auto" />
+            </div>
+            <h3 className="text-3xl font-bold text-gray-900 mb-4">No Feedback Form Available</h3>
+            <p className="text-gray-600 mb-8 text-lg leading-relaxed max-w-md mx-auto">
               Create a feedback form to collect participant responses for this event.
             </p>
             <button
               onClick={() => setShowCreateFeedbackModal(true)}
-              className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2 mx-auto"
+              className="group relative overflow-hidden bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] text-white px-8 py-4 rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center gap-3 mx-auto"
             >
-              <Plus className="w-5 h-5" />
-              Create Feedback Form
+              <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+              <Plus className="w-6 h-6 relative" />
+              <span className="relative">Create Feedback Form</span>
             </button>
           </div>
         </div>
@@ -1275,54 +1455,70 @@ const FeedbacksTab = ({
       {/* Feedback Responses */}
       {feedbackData && (
         <>
-          {/* Action Buttons */}
+          {/* Enhanced Action Buttons - Fixed Logic */}
           <div className="flex flex-wrap gap-4 justify-end">
-            {feedbackData.responses?.length > 0 && (
+            {feedbackData.responses?.data?.length > 0 && (
               <>
-                {hasAIAnalytics ? (
+                {aiAnalytics ? (
                   <button
                     onClick={handleShowAIAnalytics}
-                    className="bg-green-500 hover:bg-green-600 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                    className="group relative overflow-hidden bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-8 py-4 rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 hover:shadow-lg flex items-center gap-3"
                   >
-                    <BarChart3 className="w-5 h-5" />
-                    Show AI Analytics
+                    <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                    <BarChart3 className="w-5 h-5 relative" />
+                    <span className="relative">Show AI Analytics</span>
                   </button>
                 ) : (
                   <button
                     onClick={handleGenerateAIAnalytics}
                     disabled={generatingAnalytics}
-                    className="bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center gap-2"
+                    className="group relative overflow-hidden bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-8 py-4 rounded-2xl font-bold transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:scale-100 disabled:shadow-none flex items-center gap-3"
                   >
-                    {generatingAnalytics ? <Loader2 className="w-5 h-5 animate-spin" /> : <Brain className="w-5 h-5" />}
-                    {generatingAnalytics ? "Generating..." : "AI Analysis"}
+                    <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                    {generatingAnalytics ? (
+                      <Loader2 className="w-5 h-5 animate-spin relative" />
+                    ) : (
+                      <Brain className="w-5 h-5 relative" />
+                    )}
+                    <span className="relative">{generatingAnalytics ? "Generating..." : "Generate AI Analytics"}</span>
                   </button>
                 )}
               </>
             )}
           </div>
 
-          {/* Feedback Form Info */}
-          <div className="bg-white rounded-xl shadow-sm border p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">{feedbackData.form?.title}</h3>
-            {feedbackData.form?.description && <p className="text-gray-600 mb-4">{feedbackData.form.description}</p>}
-            <div className="text-sm text-gray-500">
+          {/* Enhanced Feedback Form Info */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-8 hover:shadow-2xl transition-all duration-500">
+            <h3 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-[#203947] to-[#ad565a] rounded-xl flex items-center justify-center">
+                <MessageSquare className="w-4 h-4 text-white" />
+              </div>
+              {feedbackData.form?.title}
+            </h3>
+            {feedbackData.form?.description && (
+              <p className="text-gray-600 mb-6 text-lg leading-relaxed">{feedbackData.form.description}</p>
+            )}
+            <div className="text-sm text-gray-500 bg-gray-50 rounded-xl p-4 font-medium">
               Form created: {new Date(feedbackData.form?.created_at).toLocaleDateString()}
             </div>
           </div>
 
-          {/* Responses List */}
-          <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-            <div className="px-6 py-4 border-b bg-gray-50">
-              <h2 className="text-lg font-semibold text-gray-900">
+          {/* Enhanced Responses List */}
+          <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-2xl transition-all duration-500">
+            <div className="px-8 py-6 border-b bg-gradient-to-r from-[#901b20] to-[#ad565a] text-white">
+              <h2 className="text-xl font-bold flex items-center gap-3">
+                <MessageSquare className="w-6 h-6" />
                 Feedback Responses ({feedbackData.responses?.data?.length || 0} of {feedbackPagination.total})
               </h2>
             </div>
 
             {!feedbackData.responses?.data?.length ? (
-              <div className="text-center py-12">
-                <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No Responses Yet</h3>
-                <p className="text-gray-600">Participants haven't submitted feedback responses yet.</p>
+              <div className="text-center py-20">
+                <div className="text-gray-300 mb-8 animate-float">
+                  <MessageSquare className="w-24 h-24 mx-auto" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">No Responses Yet</h3>
+                <p className="text-gray-600 text-lg">Participants haven't submitted feedback responses yet.</p>
               </div>
             ) : (
               <>
@@ -1330,25 +1526,25 @@ const FeedbacksTab = ({
                   {feedbackData.responses.data.map((response, index) => {
                     const responses = JSON.parse(response.responses)
                     return (
-                      <div key={response.id} className="p-6 hover:bg-gray-50">
-                        <div className="flex items-start justify-between mb-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                              <User className="w-5 h-5 text-blue-600" />
+                      <div key={response.id} className="p-8 hover:bg-gray-50 transition-colors duration-300">
+                        <div className="flex items-start justify-between mb-6">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center">
+                              <User className="w-6 h-6 text-white" />
                             </div>
                             <div>
-                              <h4 className="font-medium text-gray-900">
+                              <h4 className="font-bold text-gray-900 text-lg">
                                 {response.user?.first_name} {response.user?.last_name}
                               </h4>
-                              <p className="text-sm text-gray-600">{response.user?.email}</p>
+                              <p className="text-sm text-gray-600 font-medium">{response.user?.email}</p>
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className="flex items-center gap-1 mb-1">
-                              <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                              <span className="text-sm font-medium">{response.overall_rating}/5</span>
+                            <div className="flex items-center gap-2 mb-2">
+                              <Star className="w-5 h-5 text-yellow-400 fill-current" />
+                              <span className="text-lg font-bold text-gray-900">{response.overall_rating}/5</span>
                             </div>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-gray-500 font-medium">
                               {new Date(response.submitted_at).toLocaleDateString()}
                             </p>
                           </div>
@@ -1356,11 +1552,14 @@ const FeedbacksTab = ({
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {Object.entries(responses).map(([key, value]) => (
-                            <div key={key} className="bg-gray-50 rounded-lg p-3">
-                              <p className="text-sm font-medium text-gray-700 mb-1 capitalize">
+                            <div
+                              key={key}
+                              className="bg-gray-50 rounded-xl p-4 border border-gray-200 hover:shadow-lg transition-all duration-300"
+                            >
+                              <p className="text-sm font-bold text-gray-700 mb-2 capitalize">
                                 {key.replace(/_/g, " ")}
                               </p>
-                              <p className="text-sm text-gray-900">
+                              <p className="text-sm text-gray-900 font-medium">
                                 {typeof value === "number" && key.includes("rating") ? `${value}/5` : value}
                               </p>
                             </div>
@@ -1371,67 +1570,70 @@ const FeedbacksTab = ({
                   })}
                 </div>
 
-                {/* Pagination */}
+                {/* Enhanced Pagination */}
                 {feedbackPagination.last_page > 1 && (
-                  <div className="flex flex-col sm:flex-row justify-between items-center px-6 py-4 border-t bg-gray-50 gap-4">
-                    <div className="text-sm text-gray-600">
-                      Showing {feedbackPagination.from} to {feedbackPagination.to} of {feedbackPagination.total}{" "}
-                      responses
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <button
-                        onClick={() => handleFeedbackPageChange(feedbackCurrentPage - 1)}
-                        disabled={feedbackCurrentPage === 1}
-                        className={`px-3 py-1 rounded border text-sm ${
-                          feedbackCurrentPage === 1
-                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                            : "bg-white text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        Previous
-                      </button>
-
-                      <div className="flex space-x-1">
-                        {Array.from({ length: Math.min(5, feedbackPagination.last_page) }, (_, i) => {
-                          let pageNum
-                          if (feedbackPagination.last_page <= 5) {
-                            pageNum = i + 1
-                          } else if (feedbackCurrentPage <= 3) {
-                            pageNum = i + 1
-                          } else if (feedbackCurrentPage >= feedbackPagination.last_page - 2) {
-                            pageNum = feedbackPagination.last_page - 4 + i
-                          } else {
-                            pageNum = feedbackCurrentPage - 2 + i
-                          }
-
-                          return (
-                            <button
-                              key={pageNum}
-                              onClick={() => handleFeedbackPageChange(pageNum)}
-                              className={`px-3 py-1 rounded border text-sm ${
-                                feedbackCurrentPage === pageNum
-                                  ? "bg-blue-500 text-white"
-                                  : "bg-white text-gray-700 hover:bg-gray-100"
-                              }`}
-                            >
-                              {pageNum}
-                            </button>
-                          )
-                        })}
+                  <div className="bg-gradient-to-r from-gray-50 to-white rounded-b-2xl p-8 border-t border-gray-200">
+                    <div className="flex flex-col sm:flex-row justify-between items-center gap-6">
+                      <div className="text-lg text-gray-600 font-medium text-center sm:text-left">
+                        Showing <span className="font-bold text-[#901b20]">{feedbackPagination.from}</span> to{" "}
+                        <span className="font-bold text-[#901b20]">{feedbackPagination.to}</span> of{" "}
+                        <span className="font-bold text-[#901b20]">{feedbackPagination.total}</span> responses
                       </div>
 
-                      <button
-                        onClick={() => handleFeedbackPageChange(feedbackCurrentPage + 1)}
-                        disabled={feedbackCurrentPage === feedbackPagination.last_page}
-                        className={`px-3 py-1 rounded border text-sm ${
-                          feedbackCurrentPage === feedbackPagination.last_page
-                            ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                            : "bg-white text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        Next
-                      </button>
+                      <div className="flex items-center space-x-3">
+                        <button
+                          onClick={() => handleFeedbackPageChange(feedbackCurrentPage - 1)}
+                          disabled={feedbackCurrentPage === 1}
+                          className={`px-6 py-3 rounded-xl border-2 text-sm font-bold transition-all duration-300 ${
+                            feedbackCurrentPage === 1
+                              ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200"
+                              : "bg-white text-gray-700 hover:bg-[#901b20] hover:text-white border-gray-200 hover:border-[#901b20] transform hover:scale-105"
+                          }`}
+                        >
+                          Previous
+                        </button>
+
+                        <div className="flex space-x-2">
+                          {Array.from({ length: Math.min(5, feedbackPagination.last_page) }, (_, i) => {
+                            let pageNum
+                            if (feedbackPagination.last_page <= 5) {
+                              pageNum = i + 1
+                            } else if (feedbackCurrentPage <= 3) {
+                              pageNum = i + 1
+                            } else if (feedbackCurrentPage >= feedbackPagination.last_page - 2) {
+                              pageNum = feedbackPagination.last_page - 4 + i
+                            } else {
+                              pageNum = feedbackCurrentPage - 2 + i
+                            }
+
+                            return (
+                              <button
+                                key={pageNum}
+                                onClick={() => handleFeedbackPageChange(pageNum)}
+                                className={`px-4 py-3 rounded-xl border-2 text-sm font-bold transition-all duration-300 ${
+                                  feedbackCurrentPage === pageNum
+                                    ? "bg-gradient-to-r from-[#901b20] to-[#ad565a] text-white border-[#901b20] shadow-lg transform scale-110"
+                                    : "bg-white text-gray-700 hover:bg-[#901b20] hover:text-white border-gray-200 hover:border-[#901b20] transform hover:scale-105"
+                                }`}
+                              >
+                                {pageNum}
+                              </button>
+                            )
+                          })}
+                        </div>
+
+                        <button
+                          onClick={() => handleFeedbackPageChange(feedbackCurrentPage + 1)}
+                          disabled={feedbackCurrentPage === feedbackPagination.last_page}
+                          className={`px-6 py-3 rounded-xl border-2 text-sm font-bold transition-all duration-300 ${
+                            feedbackCurrentPage === feedbackPagination.last_page
+                              ? "bg-gray-100 text-gray-400 cursor-not-allowed border-gray-200"
+                              : "bg-white text-gray-700 hover:bg-[#901b20] hover:text-white border-gray-200 hover:border-[#901b20] transform hover:scale-105"
+                          }`}
+                        >
+                          Next
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -1441,28 +1643,27 @@ const FeedbacksTab = ({
         </>
       )}
 
-      {/* Create Feedback Form Modal */}
+      {/* Enhanced Create Feedback Modal */}
       {showCreateFeedbackModal && (
-        <CreateFeedbackFormModal
-          event={event}
+        <CreateFeedbackModal
           onClose={() => setShowCreateFeedbackModal(false)}
           onSubmit={createFeedbackForm}
-          isSubmitting={creatingFeedbackForm}
+          loading={creatingFeedbackForm}
         />
       )}
 
-      {/* AI Analytics Modal */}
+      {/* Enhanced AI Analytics Modal */}
       {showAIAnalyticsModal && aiAnalytics && (
-        <AIAnalyticsModal event={event} analytics={aiAnalytics} onClose={() => setShowAIAnalyticsModal(false)} />
+        <AIAnalyticsModal analytics={aiAnalytics} onClose={() => setShowAIAnalyticsModal(false)} />
       )}
     </div>
   )
 }
 
-// Create Feedback Form Modal Component
-const CreateFeedbackFormModal = ({ event, onClose, onSubmit, isSubmitting }) => {
+// Enhanced Create Feedback Modal Component
+const CreateFeedbackModal = ({ onClose, onSubmit, loading }) => {
   const [formData, setFormData] = useState({
-    title: `${event.title} - Feedback Form`,
+    title: "Event Feedback",
     description: "We'd love your thoughts to help improve future events.",
     form_config: [
       {
@@ -1483,6 +1684,8 @@ const CreateFeedbackFormModal = ({ event, onClose, onSubmit, isSubmitting }) => 
       },
     ],
   })
+
+  const [error, setError] = useState("")
 
   const questionTypes = [
     { value: "text", label: "Text Answer" },
@@ -1519,30 +1722,30 @@ const CreateFeedbackFormModal = ({ event, onClose, onSubmit, isSubmitting }) => 
 
   const validateForm = () => {
     if (!formData.title.trim()) {
-      return "Form title is required"
+      setError("Form title is required")
+      return false
     }
     if (!formData.description.trim()) {
-      return "Form description is required"
+      setError("Form description is required")
+      return false
     }
 
     // Validate all questions have content
     for (let i = 0; i < formData.form_config.length; i++) {
       if (!formData.form_config[i].question.trim()) {
-        return `Question ${i + 1} cannot be empty`
+        setError(`Question ${i + 1} cannot be empty`)
+        return false
       }
     }
 
-    return null
+    return true
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-
-    const validationError = validateForm()
-    if (validationError) {
-      toast.error(validationError)
-      return
-    }
+    setError("")
+    
+    if (!validateForm()) return
 
     const success = await onSubmit(formData)
     if (success) {
@@ -1551,318 +1754,401 @@ const CreateFeedbackFormModal = ({ event, onClose, onSubmit, isSubmitting }) => 
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="p-6 border-b bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold">Create Feedback Form</h2>
-              <p className="text-blue-100">for {event.title}</p>
-            </div>
-            <button onClick={onClose} className="text-white/80 hover:text-white transition-colors">
-              <X className="w-6 h-6" />
-            </button>
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-lg flex items-center justify-center p-2 sm:p-4 animate-fade-in">
+      <div className="bg-white w-full max-w-4xl max-h-[95vh] rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-2xl overflow-hidden animate-scale-up flex flex-col">
+        <div className="relative bg-gradient-to-br from-[#901b20] via-[#ad565a] to-[#cc9598] p-4 sm:p-6 lg:p-10 text-white overflow-hidden flex-shrink-0">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <button
+            onClick={onClose}
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 lg:top-8 lg:right-8 w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 backdrop-blur-sm z-10"
+            style={{ minHeight: "44px", minWidth: "44px" }}
+          >
+            <X className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
+          </button>
+
+          <div className="relative max-w-4xl pr-12 sm:pr-16 lg:pr-20">
+            <h1 className="text-xl sm:text-2xl lg:text-5xl font-black mb-1 sm:mb-2 lg:mb-3 leading-tight">
+              Create Feedback Form
+            </h1>
+            <p className="text-white/90 text-sm sm:text-base lg:text-xl font-medium">
+              Design a feedback form to collect participant responses
+            </p>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          {/* Form Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Form Title *</label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300"
-                placeholder="Enter form title"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">Form Description *</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
-                rows={3}
-                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 resize-none"
-                placeholder="Enter form description"
-                required
-              />
-            </div>
-          </div>
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          <div className="p-4 sm:p-6 lg:p-10">
+            {error && (
+              <div className="bg-red-50 border-2 border-red-200 rounded-xl p-4 mb-6 animate-fade-in">
+                <div className="flex items-center gap-3">
+                  <AlertCircle className="w-6 h-6 text-red-500 flex-shrink-0" />
+                  <p className="text-red-700 font-medium">{error}</p>
+                </div>
+              </div>
+            )}
 
-          {/* Questions Section */}
-          <div>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold text-gray-900">Questions</h3>
-              <button
-                type="button"
-                onClick={handleAddQuestion}
-                className="bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 transform hover:scale-105"
-              >
-                <Plus className="w-5 h-5" />
-                Add Question
-              </button>
-            </div>
+            <form onSubmit={handleSubmit} className="space-y-8">
+              {/* Form Details */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-3">Form Title *</label>
+                  <input
+                    type="text"
+                    value={formData.title}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 text-lg font-medium"
+                    placeholder="Enter form title"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-3">Form Description *</label>
+                  <textarea
+                    value={formData.description}
+                    onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+                    rows={3}
+                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 resize-none text-lg font-medium"
+                    placeholder="Enter form description"
+                    required
+                  />
+                </div>
+              </div>
 
-            <div className="space-y-6">
-              {formData.form_config.map((question, index) => (
-                <div
-                  key={index}
-                  className="border-2 border-gray-200 rounded-xl p-6 hover:border-blue-500/30 transition-colors duration-300"
-                >
-                  <div className="flex items-start gap-4">
-                    <div className="flex-1 space-y-4">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-gray-500">
-                          Question {index + 1}
-                          {index < 4 && <span className="text-blue-500"> (Required)</span>}
-                        </span>
-                      </div>
+              {/* Questions */}
+              <div>
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-xl font-bold text-gray-900">Questions</h3>
+                  <button
+                    type="button"
+                    onClick={handleAddQuestion}
+                    className="bg-[#901b20] hover:bg-[#7a1619] text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center gap-2 transform hover:scale-105"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Add Question
+                  </button>
+                </div>
 
-                      <input
-                        type="text"
-                        value={question.question}
-                        onChange={(e) => handleQuestionChange(index, "question", e.target.value)}
-                        disabled={index < 4} // Static questions can't be edited
-                        className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 ${
-                          index < 4 ? "bg-gray-50 cursor-not-allowed" : ""
-                        }`}
-                        placeholder="Enter question"
-                        required
-                      />
+                <div className="space-y-6">
+                  {formData.form_config.map((question, index) => (
+                    <div
+                      key={index}
+                      className="border-2 border-gray-200 rounded-xl p-6 hover:border-[#901b20]/30 transition-colors duration-300"
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1 space-y-4">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-semibold text-gray-500">
+                              Question {index + 1}
+                              {index < 4 && <span className="text-[#901b20]"> (Required)</span>}
+                            </span>
+                          </div>
 
-                      <div className="relative">
-                        <select
-                          value={question.type}
-                          onChange={(e) => handleQuestionChange(index, "type", e.target.value)}
-                          disabled={index < 4} // Static question types can't be changed
-                          className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-300 appearance-none ${
-                            index < 4 ? "bg-gray-50 cursor-not-allowed" : ""
-                          }`}
-                        >
-                          {questionTypes.map((type) => (
-                            <option key={type.value} value={type.value}>
-                              {type.label}
-                            </option>
-                          ))}
-                        </select>
-                        <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                          <input
+                            type="text"
+                            value={question.question}
+                            onChange={(e) => handleQuestionChange(index, "question", e.target.value)}
+                            disabled={index < 4} // Static questions can't be edited
+                            className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 text-lg font-medium ${
+                              index < 4 ? "bg-gray-50 cursor-not-allowed" : ""
+                            }`}
+                            placeholder="Enter question"
+                          />
+
+                          <div className="relative">
+                            <select
+                              value={question.type}
+                              onChange={(e) => handleQuestionChange(index, "type", e.target.value)}
+                              disabled={index < 4} // Static question types can't be changed
+                              className={`w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-4 focus:ring-[#901b20]/20 focus:border-[#901b20] transition-all duration-300 appearance-none text-lg font-medium ${
+                                index < 4 ? "bg-gray-50 cursor-not-allowed" : ""
+                              }`}
+                            >
+                              {questionTypes.map((type) => (
+                                <option key={type.value} value={type.value}>
+                                  {type.label}
+                                </option>
+                              ))}
+                            </select>
+                            <ChevronDown className="absolute right-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+                          </div>
+                        </div>
+
+                        {index >= 4 && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveQuestion(index)}
+                            className="text-red-500 hover:text-red-700 p-3 hover:bg-red-50 rounded-xl transition-all duration-300"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </button>
+                        )}
                       </div>
                     </div>
-
-                    {index >= 4 && (
-                      <button
-                        type="button"
-                        onClick={() => handleRemoveQuestion(index)}
-                        className="text-red-500 hover:text-red-700 p-3 hover:bg-red-50 rounded-xl transition-all duration-300"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    )}
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          </div>
+              </div>
 
-          <div className="flex gap-4 pt-6 border-t">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 px-6 py-3 border-2 border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex-1 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-gray-400 disabled:to-gray-500 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin" />
-                  Creating...
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="w-5 h-5" />
-                  Create Form
-                </>
-              )}
-            </button>
+              <div className="flex justify-end space-x-4">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-8 py-3 border-2 border-gray-300 rounded-xl text-gray-700 font-bold hover:bg-gray-50 transition-all duration-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="group relative overflow-hidden bg-gradient-to-r from-[#901b20] to-[#ad565a] hover:from-[#7a1619] hover:to-[#8a4548] disabled:from-gray-400 disabled:to-gray-500 text-white px-8 py-3 rounded-xl font-bold transition-all duration-300 transform hover:scale-105 hover:shadow-lg disabled:scale-100 disabled:shadow-none flex items-center gap-3"
+                >
+                  <div className="absolute inset-0 bg-white opacity-0 group-hover:opacity-20 transition-opacity duration-300"></div>
+                  {loading ? (
+                    <Loader2 className="w-5 h-5 animate-spin relative" />
+                  ) : (
+                    <CheckCircle className="w-5 h-5 relative" />
+                  )}
+                  <span className="relative">{loading ? "Creating..." : "Create Form"}</span>
+                </button>
+              </div>
+            </form>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   )
 }
 
-// AI Analytics Modal Component
-const AIAnalyticsModal = ({ event, analytics, onClose }) => {
+// Enhanced AI Analytics Modal Component
+const AIAnalyticsModal = ({ analytics, onClose }) => {
   return (
-    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-        <div className="p-6 border-b bg-gradient-to-r from-blue-500 to-purple-600 text-white">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-bold">{event.title}</h2>
-              <p className="text-blue-100">AI Analytics Report</p>
-            </div>
-            <button onClick={onClose} className="text-white/80 hover:text-white transition-colors">
-              <X className="w-6 h-6" />
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6 space-y-8">
-          {/* Summary */}
-          <div className="bg-gray-50 rounded-xl p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-              <Brain className="w-6 h-6 text-blue-500" />
-              Executive Summary
-            </h3>
-            <p className="text-gray-700 leading-relaxed">
-              {analytics.insights?.analysis?.summary || "No summary available"}
-            </p>
-          </div>
-
-          {/* Key Strengths */}
-          {analytics.insights?.analysis?.key_strengths && (
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <CheckCircle className="w-6 h-6 text-green-500" />
-                Key Strengths
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {analytics.insights.analysis.key_strengths.map((strength, index) => (
-                  <div key={index} className="bg-green-50 border border-green-200 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <CheckCircle className="w-5 h-5 text-green-500 mt-0.5 flex-shrink-0" />
-                      <p className="text-green-800 font-medium">{strength}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Areas for Improvement */}
-          {analytics.insights?.analysis?.areas_for_improvement && (
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <AlertCircle className="w-6 h-6 text-yellow-500" />
-                Areas for Improvement
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {analytics.insights.analysis.areas_for_improvement.map((area, index) => (
-                  <div key={index} className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <AlertCircle className="w-5 h-5 text-yellow-500 mt-0.5 flex-shrink-0" />
-                      <p className="text-yellow-800 font-medium">{area}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Recommendations */}
-          {analytics.insights?.analysis?.recommendations && (
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <Lightbulb className="w-6 h-6 text-purple-500" />
-                AI Recommendations
-              </h3>
-              <div className="space-y-4">
-                {analytics.insights.analysis.recommendations.map((rec, index) => (
-                  <div
-                    key={index}
-                    className={`border-2 rounded-lg p-4 ${
-                      rec.priority === "high"
-                        ? "bg-red-50 border-red-200"
-                        : rec.priority === "medium"
-                          ? "bg-blue-50 border-blue-200"
-                          : "bg-gray-50 border-gray-200"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
-                          rec.priority === "high"
-                            ? "bg-red-500 text-white"
-                            : rec.priority === "medium"
-                              ? "bg-blue-500 text-white"
-                              : "bg-gray-500 text-white"
-                        }`}
-                      >
-                        {rec.priority}
-                      </span>
-                      <div className="flex-1">
-                        <h4 className="font-bold text-gray-900 mb-1">{rec.action}</h4>
-                        <p className="text-gray-600">{rec.impact}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Common Themes */}
-          {analytics.insights?.analysis?.common_themes && (
-            <div>
-              <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <MessageSquare className="w-6 h-6 text-indigo-500" />
-                Common Themes
-              </h3>
-              <div className="grid grid-cols-1 gap-4">
-                {analytics.insights.analysis.common_themes.map((theme, index) => (
-                  <div key={index} className="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
-                    <div className="flex items-start gap-3">
-                      <MessageSquare className="w-5 h-5 text-indigo-500 mt-0.5 flex-shrink-0" />
-                      <p className="text-indigo-800 font-medium">{theme}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Additional Insights */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Attendance Insights */}
-            {analytics.insights?.analysis?.attendance_insights && (
-              <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <UsersIcon className="w-5 h-5 text-green-500" />
-                  Attendance Insights
-                </h3>
-                <p className="text-gray-700">{analytics.insights.analysis.attendance_insights}</p>
-              </div>
-            )}
-
-            {/* Technical Feedback */}
-            {analytics.insights?.analysis?.technical_feedback && (
-              <div className="bg-white border border-gray-200 rounded-xl p-6">
-                <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
-                  <Zap className="w-5 h-5 text-orange-500" />
-                  Technical Feedback
-                </h3>
-                <p className="text-gray-700">{analytics.insights.analysis.technical_feedback}</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="p-6 border-t bg-gray-50">
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-lg flex items-center justify-center p-2 sm:p-4 animate-fade-in">
+      <div className="bg-white w-full max-w-6xl max-h-[95vh] rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-2xl overflow-hidden animate-scale-up flex flex-col">
+        <div className="relative bg-gradient-to-br from-[#901b20] via-[#ad565a] to-[#cc9598] p-4 sm:p-6 lg:p-10 text-white overflow-hidden flex-shrink-0">
+          <div className="absolute inset-0 bg-black/10"></div>
           <button
             onClick={onClose}
-            className="w-full bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+            className="absolute top-3 right-3 sm:top-4 sm:right-4 lg:top-8 lg:right-8 w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:w-14 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 backdrop-blur-sm z-10"
+            style={{ minHeight: "44px", minWidth: "44px" }}
           >
-            Close Analytics
+            <X className="w-5 h-5 sm:w-6 sm:h-6 lg:w-7 lg:h-7" />
           </button>
+
+          <div className="relative max-w-4xl pr-12 sm:pr-16 lg:pr-20">
+            <div className="flex flex-wrap items-center gap-4 mb-6">
+              <span className="px-6 py-3 bg-white/20 rounded-full text-lg font-bold backdrop-blur-sm flex items-center gap-3">
+                <Star className="w-5 h-5" />
+                {analytics.insights.satisfaction_score}/5
+              </span>
+              <span className="px-6 py-3 bg-white/20 rounded-full text-lg font-bold backdrop-blur-sm">
+                {analytics.feedback_count} responses
+              </span>
+            </div>
+            <h1 className="text-xl sm:text-2xl lg:text-5xl font-black mb-1 sm:mb-2 lg:mb-3 leading-tight">
+              AI Analytics Report
+            </h1>
+            <p className="text-white/90 text-sm sm:text-base lg:text-xl font-medium">
+              Generated {new Date(analytics.generated_at).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto custom-scrollbar">
+          <div className="p-4 sm:p-6 lg:p-10">
+            <div className="space-y-8">
+              {/* Executive Summary */}
+              <div className="bg-gray-50 rounded-2xl p-8">
+                <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  <Brain className="w-7 h-7 text-[#901b20]" />
+                  Executive Summary
+                </h2>
+                <p className="text-gray-700 leading-relaxed text-lg">{analytics.insights.analysis.summary || "No summary available"}</p>
+              </div>
+
+              {/* Sentiment Analysis */}
+              <div className="bg-white rounded-2xl p-8 border border-gray-100 shadow-lg">
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                  <Activity className="w-6 h-6 text-[#203947]" />
+                  Sentiment Analysis
+                </h3>
+                <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+                  <p className="text-blue-800 font-medium text-lg leading-relaxed">
+                    {analytics.insights.analysis.sentiment_analysis || "Sentiment analysis not available"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Detailed Insights - Check if insights exist and have analysis */}
+              {analytics.insights && analytics.insights.analysis && (
+                <div className="space-y-6">
+                  {/* Key Strengths */}
+                  {analytics.insights.analysis.key_strengths &&
+                    analytics.insights.analysis.key_strengths.length > 0 && (
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                          <CheckCircle className="w-6 h-6 text-green-600" />
+                          Key Strengths
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {analytics.insights.analysis.key_strengths.map((strength, index) => (
+                            <div
+                              key={index}
+                              className="bg-green-50 border-2 border-green-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300"
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <CheckCircle className="w-5 h-5 text-white" />
+                                </div>
+                                <p className="text-green-800 font-medium text-base leading-relaxed">{strength}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Areas for Improvement */}
+                  {analytics.insights.analysis.areas_for_improvement &&
+                    analytics.insights.analysis.areas_for_improvement.length > 0 && (
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                          <AlertCircle className="w-6 h-6 text-yellow-600" />
+                          Areas for Improvement
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {analytics.insights.analysis.areas_for_improvement.map((area, index) => (
+                            <div
+                              key={index}
+                              className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300"
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <AlertCircle className="w-5 h-5 text-white" />
+                                </div>
+                                <p className="text-yellow-800 font-medium text-base leading-relaxed">{area}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Recommendations */}
+                  {analytics.insights.analysis.recommendations &&
+                    analytics.insights.analysis.recommendations.length > 0 && (
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                          <Lightbulb className="w-6 h-6 text-[#901b20]" />
+                          AI Recommendations
+                        </h3>
+                        <div className="space-y-4">
+                          {analytics.insights.analysis.recommendations.map((rec, index) => (
+                            <div
+                              key={index}
+                              className={`border-2 rounded-xl p-6 hover:shadow-lg transition-all duration-300 ${
+                                rec.priority === "high"
+                                  ? "bg-red-50 border-red-200"
+                                  : rec.priority === "medium"
+                                    ? "bg-blue-50 border-blue-200"
+                                    : "bg-gray-50 border-gray-200"
+                              }`}
+                            >
+                              <div className="flex items-start gap-4">
+                                <div
+                                  className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex-shrink-0 ${
+                                    rec.priority === "high"
+                                      ? "bg-red-500 text-white"
+                                      : rec.priority === "medium"
+                                        ? "bg-blue-500 text-white"
+                                        : "bg-gray-500 text-white"
+                                  }`}
+                                >
+                                  {rec.priority}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="font-bold text-gray-900 mb-2 text-lg leading-tight">{rec.action}</h4>
+                                  <p className="text-gray-600 text-base leading-relaxed">{rec.impact}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Common Themes */}
+                  {analytics.insights.analysis.common_themes &&
+                    analytics.insights.analysis.common_themes.length > 0 && (
+                      <div>
+                        <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                          <MessageSquare className="w-6 h-6 text-[#203947]" />
+                          Common Themes
+                        </h3>
+                        <div className="grid grid-cols-1 gap-4">
+                          {analytics.insights.analysis.common_themes.map((theme, index) => (
+                            <div
+                              key={index}
+                              className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 hover:shadow-lg transition-all duration-300"
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 bg-[#203947] rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                                  <MessageSquare className="w-5 h-5 text-white" />
+                                </div>
+                                <p className="text-[#203947] font-medium text-base leading-relaxed">{theme}</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                </div>
+              )}
+
+              {/* Additional Insights */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
+                {/* Attendance Insights */}
+                {analytics.insights &&
+                  analytics.insights.analysis &&
+                  analytics.insights.analysis.attendance_insights && (
+                    <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl lg:rounded-3xl p-4 sm:p-6 lg:p-8 hover:shadow-lg transition-all duration-300">
+                      <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-3 sm:mb-4 lg:mb-6 flex items-center gap-2 sm:gap-3">
+                        <UsersIcon className="w-5 h-5 sm:w-6 sm:h-6 text-[#ad565a] flex-shrink-0" />
+                        <span className="leading-tight">Attendance Insights</span>
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed text-xs sm:text-sm lg:text-base">
+                        {analytics.insights.analysis.attendance_insights}
+                      </p>
+                    </div>
+                  )}
+
+                {/* Technical Feedback */}
+                {analytics.insights &&
+                  analytics.insights.analysis &&
+                  analytics.insights.analysis.technical_feedback && (
+                    <div className="bg-white border-2 border-gray-100 rounded-xl sm:rounded-2xl lg:rounded-3xl p-4 sm:p-6 lg:p-8 hover:shadow-lg transition-all duration-300">
+                      <h3 className="text-base sm:text-lg lg:text-xl font-bold text-gray-900 mb-3 sm:mb-4 lg:mb-6 flex items-center gap-2 sm:gap-3">
+                        <Zap className="w-5 h-5 sm:w-6 sm:h-6 text-[#cc9598] flex-shrink-0" />
+                        <span className="leading-tight">Technical Feedback</span>
+                      </h3>
+                      <p className="text-gray-700 leading-relaxed text-xs sm:text-sm lg:text-base">
+                        {analytics.insights.analysis.technical_feedback}
+                      </p>
+                    </div>
+                  )}
+              </div>
+
+              {/* Fallback message if no detailed insights are available */}
+              {(!analytics.insights || !analytics.insights.analysis) && (
+                <div className="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-8 text-center">
+                  <AlertCircle className="w-12 h-12 text-yellow-600 mx-auto mb-4" />
+                  <h3 className="text-xl font-bold text-yellow-800 mb-2">Limited Analytics Available</h3>
+                  <p className="text-yellow-700 leading-relaxed">
+                    Some detailed insights may not be available for this event. The AI analysis is based on the
+                    available feedback data.
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>
