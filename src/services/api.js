@@ -44,7 +44,7 @@ api.interceptors.request.use(
 
     // Add authentication header for protected routes
     if (requiresAuth(config.url)) {
-      const token = localStorage.getItem("token")
+      const token = localStorage.getItem("token");
       if (token) {
         config.headers["Authorization"] = `Bearer ${token}`
       }
@@ -137,13 +137,13 @@ export const eventAPI = {
     console.log("eventAPI.endEvent - Event ID:", id)
     return api.post(`/test/live/events/${id}/end`)
   },
+  getMyRegistrations: params => api.get('/events/my-registrations', { params }),
 }
-
 // Company API endpoints
 export const companyAPI = {
   getAll: params => api.get('/companies', { params }),
   getById: id => api.get(`/companies/${id}`),
-  create: async (formData) => {
+  create: async formData => {
     const token = localStorage.getItem('token');
     return api.post('/companies', formData, {
       headers: {
@@ -151,9 +151,8 @@ export const companyAPI = {
         Authorization: `Bearer ${token}`,
       },
     });
-  }
-  
- ,
+  },
+
   update: (id, companyData) => api.put(`/companies/${id}`, companyData),
   delete: (id) => api.delete(`/companies/${id}`),
   // Custom actions for companies
@@ -475,25 +474,29 @@ export const jobFairAPI = {
       })
   },
 
-  createJobFair: (jobFairData) => {
-    const token = localStorage.getItem("token")
+  createJobFair: jobFairData => {
+    const token = localStorage.getItem('token');
     if (!token) {
       console.error("No token found in localStorage")
       return Promise.reject(new Error("Authentication token missing"))
     }
 
     return api
-      .post("/job-fairs", jobFairData, {
+      .post('/job-fairs', jobFairData, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       })
-      .catch((error) => {
-        console.error("Error creating job fair:", error.response?.status, error.response?.data)
-        return Promise.reject(error)
-      })
+      .catch(error => {
+        console.error(
+          'Error creating job fair:',
+          error.response?.status,
+          error.response?.data
+        );
+        return Promise.reject(error);
+      });
   },
-}
+};
 
 // Attendance API endpoints
 export const attendanceAPI = {

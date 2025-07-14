@@ -91,26 +91,61 @@ const EventDetails = () => {
     setError(null);
 
     try {
-      const [eventRes, statusRes, sessionsRes] = await Promise.all([
-        apiCall(`${API_BASE_URL}/api/events/${id}`),
-        apiCall(`${API_BASE_URL}/api/events/${id}/registration-status`).catch(
-          () => null
-        ),
-        apiCall(`${API_BASE_URL}/api/events/${id}/sessions`),
-      ]);
-
+      // Get event details
+      const eventRes = await apiCall(`${API_BASE_URL}/api/events/${id}`);
       if (!eventRes.ok) throw new Error('Event not found');
       const eventData = await eventRes.json();
       setEvent(eventData?.data?.result || null);
 
-      if (statusRes?.ok) {
-        const statusData = await statusRes.json();
-        setIsRegistered(!!statusData?.isRegistered);
-      }
+      // Check registration status
+      try {
+        // First try with the registration status endpoint
+        const statusRes = await apiCall(
+          `${API_BASE_URL}/api/events/${id}/registration-status`
+        );
+        if (statusRes.ok) {
+          const statusData = await statusRes.json();
+          if (statusData?.isRegistered) {
+            setIsRegistered(true);
+            // Get sessions if registered
+            const sessionsRes = await apiCall(
+              `${API_BASE_URL}/api/events/${id}/sessions`
+            );
+            if (sessionsRes.ok) {
+              const sessionsData = await sessionsRes.json();
+              setSessions(sessionsData?.data?.result || []);
+            }
+            return; // Exit if registration is confirmed with this endpoint
+          }
+        }
 
-      if (sessionsRes.ok) {
-        const sessionsData = await sessionsRes.json();
-        setSessions(sessionsData?.data?.result || []);
+        // If first method doesn't confirm registration, try with my-registrations endpoint
+        const myRegistrationsRes = await apiCall(
+          `${API_BASE_URL}/api/events/my-registrations`
+        );
+        if (myRegistrationsRes.ok) {
+          const myRegistrationsData = await myRegistrationsRes.json();
+          const registeredEvents =
+            myRegistrationsData?.data?.result?.data || [];
+
+          // Check if current event is in the list of registered events
+          const isEventRegistered = registeredEvents.some(
+            event => event.id.toString() === id.toString()
+          );
+          setIsRegistered(isEventRegistered);
+        }
+
+        // Get sessions data
+        const sessionsRes = await apiCall(
+          `${API_BASE_URL}/api/events/${id}/sessions`
+        );
+        if (sessionsRes.ok) {
+          const sessionsData = await sessionsRes.json();
+          setSessions(sessionsData?.data?.result || []);
+        }
+      } catch (err) {
+        console.error('Error checking registration status:', err);
+        // Don't fail the entire fetch if just the registration status check fails
       }
     } catch (err) {
       console.log(err);
@@ -750,7 +785,7 @@ const EventDetails = () => {
                           </p>
                           <p className="text-sm text-gray-600">
                             {isRegistered
-                              ? 'Your spot is confirmed for this event'
+                              ? 'Your spot is confirmed for this event. You can cancel if needed.'
                               : 'Register now to secure your spot'}
                           </p>
                         </div>
@@ -785,11 +820,11 @@ const EventDetails = () => {
                           <>
                             <motion.button
                               whileHover={{ scale: 1.02 }}
-                              className="flex-1 px-6 py-3 bg-green-500 text-white rounded-xl font-semibold cursor-default"
+                              className="flex-1 px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl font-semibold cursor-default shadow-lg"
                             >
-                              <span className="flex items-center gap-2">
-                                <CheckCircle className="w-4 h-4" />
-                                Registered
+                              <span className="flex items-center justify-center gap-2">
+                                <CheckCircle className="w-5 h-5" />
+                                <span>Already Registered</span>
                               </span>
                             </motion.button>
                             <motion.button
@@ -797,9 +832,15 @@ const EventDetails = () => {
                               whileTap={{ scale: 0.95 }}
                               onClick={handleCancelClick}
                               disabled={cancelLoading}
-                              className="px-6 py-3 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-semibold transition-colors"
+                              className={`px-6 py-3 rounded-xl font-semibold transition-colors ${
+                                cancelLoading
+                                  ? 'bg-gray-400 cursor-not-allowed text-white'
+                                  : 'bg-orange-500 hover:bg-orange-600 text-white'
+                              }`}
                             >
-                              Cancel
+                              {cancelLoading
+                                ? 'Cancelling...'
+                                : 'Cancel Registration'}
                             </motion.button>
                           </>
                         )}
