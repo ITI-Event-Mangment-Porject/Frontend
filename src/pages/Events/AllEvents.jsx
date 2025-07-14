@@ -15,11 +15,16 @@ const AllEvents = () => {
 
   // State management
   const [events, setEvents] = useState([]);
+  const [registeredEvents, setRegisteredEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(0);
   const [selectedFilter, setSelectedFilter] = useState('all');
   const eventsPerPage = 8;
+  // eslint-disable-next-line no-unused-vars
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    !!localStorage.getItem('token')
+  );
 
   // Fetch events
   useEffect(() => {
@@ -60,6 +65,12 @@ const AllEvents = () => {
           }
         }
         setEvents(allEvents);
+
+        // Fetch registered events if user is authenticated
+        if (isAuthenticated) {
+          fetchRegisteredEvents();
+        }
+
         setError(null);
       } catch (err) {
         console.error('Error fetching events:', err);
@@ -73,7 +84,20 @@ const AllEvents = () => {
     };
 
     fetchEvents();
-  }, []);
+  }, [isAuthenticated]);
+
+  // Fetch registered events
+  const fetchRegisteredEvents = async () => {
+    try {
+      const response = await eventAPI.getMyRegistrations();
+      if (response?.data?.data?.result?.data) {
+        setRegisteredEvents(response.data.data.result.data);
+      }
+    } catch (err) {
+      console.error('Error fetching registered events:', err);
+      // Don't set error state here to not disrupt the main view
+    }
+  };
 
   // Get gradient colors for event placeholder
   const getEventGradient = index => {
@@ -109,7 +133,11 @@ const AllEvents = () => {
     if (!Array.isArray(events)) return [];
 
     let filtered = events;
-    if (selectedFilter !== 'all') {
+
+    if (selectedFilter === 'registered') {
+      // Return registered events from API
+      return registeredEvents;
+    } else if (selectedFilter !== 'all') {
       filtered = events.filter(
         event => event.type?.toLowerCase() === selectedFilter.toLowerCase()
       );
@@ -164,8 +192,18 @@ const AllEvents = () => {
       <p className="text-gray-500 max-w-md mx-auto">
         {selectedFilter === 'all'
           ? 'There are no events available at the moment. Please check back later for new opportunities.'
-          : `No ${selectedFilter} events found. Try selecting a different filter or check back later.`}
+          : selectedFilter === 'registered'
+            ? "You haven't registered for any events yet. Browse and register for events to see them here."
+            : `No ${selectedFilter} events found. Try selecting a different filter or check back later.`}
       </p>
+      {selectedFilter === 'registered' && (
+        <button
+          onClick={() => handleFilterChange('all')}
+          className="mt-6 px-6 py-3 bg-[var(--primary-500)] text-white rounded-full hover:bg-[var(--primary-600)] transition-all duration-300"
+        >
+          Browse All Events
+        </button>
+      )}
     </div>
   );
 
@@ -223,12 +261,21 @@ const AllEvents = () => {
               </div>
               <div className="text-white/80">Total Events</div>
             </div>
-            <div className="text-center">
-              <div className="text-3xl md:text-4xl font-bold mb-2">
-                {getEventTypes().length}
+            {isAuthenticated ? (
+              <div className="text-center">
+                <div className="text-3xl md:text-4xl font-bold mb-2">
+                  {registeredEvents.length}
+                </div>
+                <div className="text-white/80">My Registered Events</div>
               </div>
-              <div className="text-white/80">Event Types</div>
-            </div>
+            ) : (
+              <div className="text-center">
+                <div className="text-3xl md:text-4xl font-bold mb-2">
+                  {getEventTypes().length}
+                </div>
+                <div className="text-white/80">Event Types</div>
+              </div>
+            )}
             <div className="text-center">
               <div className="text-3xl md:text-4xl font-bold mb-2">24/7</div>
               <div className="text-white/80">Registration</div>
@@ -258,6 +305,34 @@ const AllEvents = () => {
             >
               All Events
             </button>
+
+            {/* My Registered Events button - only show if authenticated */}
+            {isAuthenticated && (
+              <button
+                onClick={() => handleFilterChange('registered')}
+                className={`px-6 py-3 rounded-full font-medium transition-all duration-300 ${
+                  selectedFilter === 'registered'
+                    ? 'bg-[var(--primary-500)] text-white shadow-lg'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                } flex items-center`}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5 mr-2"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M9 12l2 2 4-4"></path>
+                  <path d="M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5c0-1.1.9-2 2-2z"></path>
+                </svg>
+                My Registered Events
+              </button>
+            )}
+
             {getEventTypes().map(type => (
               <button
                 key={type}

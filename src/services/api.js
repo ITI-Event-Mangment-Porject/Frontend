@@ -8,7 +8,6 @@ const api = axios.create({
 
   headers: {
     'Content-Type': 'application/json',
-    
   },
 });
 
@@ -47,8 +46,8 @@ api.interceptors.request.use(
 
     // Add authentication header for protected routes
     if (requiresAuth(config.url)) {
-     const token = localStorage.getItem('token');
-     // const token='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDEvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3NTI0MTg3NTksImV4cCI6MjA1MjQxODc1OSwibmJmIjoxNzUyNDE4NzU5LCJqdGkiOiJpRU9rU3QxTlpub01mdzVZIiwic3ViIjoiMTY5IiwicHJ2IjoiMTNlOGQwMjhiMzkxZjNiN2I2M2YyMTkzM2RiYWQ0NThmZjIxMDcyZSJ9.m2mEUN9XPj7ogX-b-S05E2-oZ2ky7tMHC5lLoXq7Mfo';
+      const token = localStorage.getItem('token');
+      // const token='eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwOi8vMTI3LjAuMC4xOjgwMDEvYXBpL2F1dGgvbG9naW4iLCJpYXQiOjE3NTI0MTg3NTksImV4cCI6MjA1MjQxODc1OSwibmJmIjoxNzUyNDE4NzU5LCJqdGkiOiJpRU9rU3QxTlpub01mdzVZIiwic3ViIjoiMTY5IiwicHJ2IjoiMTNlOGQwMjhiMzkxZjNiN2I2M2YyMTkzM2RiYWQ0NThmZjIxMDcyZSJ9.m2mEUN9XPj7ogX-b-S05E2-oZ2ky7tMHC5lLoXq7Mfo';
       if (token) {
         config.headers['Authorization'] = `Bearer ${token}`;
       }
@@ -131,13 +130,14 @@ export const eventAPI = {
     console.log('eventAPI.archive - Event ID:', id);
     return api.get(`/events/${id}/archive`);
   },
+  getMyRegistrations: params => api.get('/events/my-registrations', { params }),
 };
 
 // Company API endpoints
 export const companyAPI = {
   getAll: params => api.get('/companies', { params }),
   getById: id => api.get(`/companies/${id}`),
-  create: async (formData) => {
+  create: async formData => {
     const token = localStorage.getItem('token');
     return api.post('/companies', formData, {
       headers: {
@@ -145,9 +145,8 @@ export const companyAPI = {
         Authorization: `Bearer ${token}`,
       },
     });
-  }
-  
- ,
+  },
+
   update: (id, companyData) => api.put(`/companies/${id}`, companyData),
   delete: id => api.delete(`/companies/${id}`),
   // Custom actions for companies
@@ -526,32 +525,31 @@ export const jobFairAPI = {
   },
 
   createJobFair: jobFairData => {
-    const token=localStorage.getItem('token');
+    const token = localStorage.getItem('token');
     if (!token) {
       console.error('No token found in localStorage');
       return Promise.reject(new Error('Authentication token missing'));
     }
-  
-    return api.post('/job-fairs', jobFairData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        
-      },
-    }).catch(error => {
-      console.error(
-        'Error creating job fair:',
-        error.response?.status,
-        error.response?.data
-      );
-      return Promise.reject(error);
-    });
+
+    return api
+      .post('/job-fairs', jobFairData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      .catch(error => {
+        console.error(
+          'Error creating job fair:',
+          error.response?.status,
+          error.response?.data
+        );
+        return Promise.reject(error);
+      });
   },
-  
 };
 
 // Attendance API endpoints
 export const attendanceAPI = {
-  
   getReports: () => {
     console.log(
       'attendanceAPI.getReports - Token:',
