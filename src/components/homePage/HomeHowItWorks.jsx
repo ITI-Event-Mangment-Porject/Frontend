@@ -7,19 +7,19 @@ const steps = [
     title: 'Create Your Event',
     description:
       'Define event details, schedule, location, and registration settings through our user-friendly interface.',
-    image: 'public/createEvents.png',
+    image: 'createEvents.png',
   },
   {
     title: 'Manage Registrations',
     description:
       'Monitor attendee sign-ups, view details with exporting attendees data.',
-    image: 'public/attendance.png',
+    image: 'attendance.png',
   },
   {
     title: 'Analyze Performance',
     description:
       'Gain valuable insights into average interview duration and overall event success through comprehensive reports.',
-    image: 'public/analytics.png',
+    image: 'analytics.png',
   },
 ];
 

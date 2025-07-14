@@ -1,0 +1,116 @@
+/* Profile Component Custom Styles */
+.profile-input:focus {
+  border-color: var(--primary-500) !important;
+  box-shadow: 0 0 0 3px rgba(144, 27, 32, 0.1);
+}
+
+.profile-textarea:focus {
+  border-color: var(--primary-500) !important;
+  box-shadow: 0 0 0 3px rgba(144, 27, 32, 0.1);
+}
+
+.social-input:focus {
+  box-shadow: 0 0 0 3px rgba(144, 27, 32, 0.1);
+}
+
+/* Container overflow fixes */
+.profile-container {
+  overflow-x: hidden;
+  width: 100%;
+}
+
+.profile-grid {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.profile-sidebar {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.cv-section {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.cv-item {
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+/* Custom animations for profile elements */
+@keyframes profileFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes profileSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.profile-animation-delay-1 {
+  animation: profileFadeIn 0.6s ease-out 0.1s both;
+}
+
+.profile-animation-delay-2 {
+  animation: profileFadeIn 0.6s ease-out 0.2s both;
+}
+
+.profile-animation-delay-3 {
+  animation: profileFadeIn 0.6s ease-out 0.3s both;
+}
+
+/* Enhance backdrop blur effect */
+.backdrop-blur-custom {
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+/* Gradient background for profile hero */
+.profile-gradient {
+  background: linear-gradient(
+    135deg,
+    var(--primary-500) 0%,
+    var(--secondary-500) 50%,
+    var(--gray-50) 100%
+  );
+}
+
+/* Custom scrollbar for the profile page */
+.profile-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.profile-container::-webkit-scrollbar-track {
+  background: var(--gray-100);
+  border-radius: 4px;
+}
+
+.profile-container::-webkit-scrollbar-thumb {
+  background: var(--primary-400);
+  border-radius: 4px;
+}
+
+.profile-container::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-500);
+}
