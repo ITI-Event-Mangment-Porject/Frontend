@@ -20,7 +20,7 @@ import {
   Mic,
 } from 'lucide-react';
 
-const APP_URL = import.meta.env.VITE_APP_URL || 'http://localhost:8000';
+const APP_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
 
 const EventDetails = () => {
   const { id } = useParams();
@@ -90,7 +90,7 @@ const EventDetails = () => {
     setError(null);
 
     try {
-      const [eventRes, statusRes, sessionsRes] = await Promise.all([
+      const [eventRes] = await Promise.all([
         apiCall(`${APP_URL}/api/events/${id}`),
         apiCall(`${APP_URL}/api/events/${id}/registration-status`).catch(
           () => null
