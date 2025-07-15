@@ -51,6 +51,7 @@ import ParticipatingCompaniesTabEnhanced from './ParticipationCompaniesTab.jsx';
 import JobFairLiveQueue from './job-fair-live-queue';
 
 import EventQRScanner from './EventQRScanner';
+import BrandingDay from './BrandingDay';
 
 const APP_URL = import.meta.env.VITE_API_BASE_URL;
 
@@ -917,6 +918,28 @@ const EventDetailsEnhanced = () => {
                 Participating Companies
               </button>
             )}
+            {event.type === 'Job Fair' &&
+              (event.status === 'published' || event.status === 'draft') && (
+                <button
+                  onClick={() => handleTabChange('branding')}
+                  className={`group py-3 px-1 border-b-2 font-bold text-sm whitespace-nowrap transition-all duration-300 flex items-center gap-2 ${
+                    activeTab === 'branding'
+                      ? 'border-[#901b20] text-[#901b20]'
+                      : 'border-transparent text-gray-500 hover:text-[#901b20] hover:border-[#901b20]/50'
+                  }`}
+                >
+                  <div
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
+                      activeTab === 'branding'
+                        ? 'bg-[#901b20] text-white'
+                        : 'bg-gray-200 text-gray-500 group-hover:bg-[#901b20]/10 group-hover:text-[#901b20]'
+                    }`}
+                  >
+                    <Building2 className="w-4 h-4" />
+                  </div>
+                  Branding Day
+                </button>
+              )}
             {/* Add Live Queue tab for Job Fair events only */}
             {event.type === 'Job Fair' && (
               <button
@@ -959,7 +982,9 @@ const EventDetailsEnhanced = () => {
         {activeTab === 'companies' && (
           <ParticipatingCompaniesTabEnhanced event={event} />
         )}
-
+        {activeTab === 'branding' && event.type === 'Job Fair' && (
+          <BrandingDay event={event} />
+        )}
         {activeTab === 'registrations' && (
           <RegistrationsTabEnhanced event={event} />
         )}
