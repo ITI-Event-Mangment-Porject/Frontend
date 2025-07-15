@@ -40,22 +40,24 @@ import {
   ChevronDown,
   Building2,
   UserCheck,
-} from "lucide-react";
-import { toast } from "react-toastify"
-import { eventAPI, attendanceAPI } from "../../../services/api"
-import { ClipLoader } from "react-spinners"
-import EventForm from "./EventForm.jsx"
-import RegistrationsTabEnhanced from "./RegistrationsTab.jsx"
-import AttendanceTableEnhanced from "./AttendanceTable.jsx"
-import ParticipatingCompaniesTabEnhanced from "./ParticipationCompaniesTab.jsx"
-import JobFairLiveQueue from "./job-fair-live-queue"
+} from 'lucide-react';
+import { toast } from 'react-toastify';
+import { eventAPI, attendanceAPI } from '../../../services/api';
+import { ClipLoader } from 'react-spinners';
+import EventForm from './EventForm.jsx';
+import RegistrationsTabEnhanced from './RegistrationsTab.jsx';
+import AttendanceTableEnhanced from './AttendanceTable.jsx';
+import ParticipatingCompaniesTabEnhanced from './ParticipationCompaniesTab.jsx';
+import JobFairLiveQueue from './job-fair-live-queue';
+
+import EventQRScanner from './EventQRScanner';
 
 const APP_URL = import.meta.env.VITE_API_BASE_URL;
 
 const EventDetailsEnhanced = () => {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Get active tab from URL, default to 'details'
   const activeTab = searchParams.get('tab') || 'details';
@@ -165,7 +167,7 @@ const EventDetailsEnhanced = () => {
     try {
       setFeedbackLoading(true);
       const response = await fetch(
-        `http://localhost:8000/api/feedback/events/${id}/responses?page=${page}`,
+        `${APP_URL}/api/feedback/events/${id}/responses?page=${page}`,
         {
           headers: {
             Authorization: `Bearer ${ADMIN_TOKEN}`,
@@ -218,7 +220,7 @@ const EventDetailsEnhanced = () => {
   const fetchAIAnalytics = async () => {
     try {
       const response = await fetch(
-        `http://localhost:8000/api/ai-insights/events/${id}/detailed`,
+        `${APP_URL}/api/ai-insights/events/${id}/detailed`,
         {
           headers: {
             Authorization: `Bearer ${ADMIN_TOKEN}`,
@@ -252,7 +254,7 @@ const EventDetailsEnhanced = () => {
     try {
       setCreatingFeedbackForm(true);
       const response = await fetch(
-        `http://localhost:8000/api/feedback/events/${id}/forms`,
+        `${APP_URL}/api/feedback/events/${id}/forms`,
         {
           method: 'POST',
           headers: {
@@ -286,7 +288,7 @@ const EventDetailsEnhanced = () => {
     try {
       setGeneratingAnalytics(true);
       const response = await fetch(
-        `http://localhost:8000/api/ai-insights/events/${id}/generate`,
+        `${APP_URL}/api/ai-insights/events/${id}/generate`,
         {
           method: 'POST',
           headers: {
@@ -866,38 +868,48 @@ const EventDetailsEnhanced = () => {
               )}
             </button>
             <button
-              onClick={() => handleTabChange("registrations")}
+              onClick={() => handleTabChange('registrations')}
               className={`group py-3 px-1 border-b-2 font-bold text-sm whitespace-nowrap transition-all duration-300 flex items-center gap-2 ${
-                activeTab === "registrations"
-                  ? "border-[#901b20] text-[#901b20]"
-                  : "border-transparent text-gray-500 hover:text-[#901b20] hover:border-[#901b20]/50"
+                activeTab === 'registrations'
+                  ? 'border-[#901b20] text-[#901b20]'
+                  : 'border-transparent text-gray-500 hover:text-[#901b20] hover:border-[#901b20]/50'
               }`}
             >
               <div
                 className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                  activeTab === "registrations"
-                    ? "bg-[#901b20] text-white"
-                    : "bg-gray-200 text-gray-500 group-hover:bg-[#901b20]/10 group-hover:text-[#901b20]"
+                  activeTab === 'registrations'
+                    ? 'bg-[#901b20] text-white'
+                    : 'bg-gray-200 text-gray-500 group-hover:bg-[#901b20]/10 group-hover:text-[#901b20]'
                 }`}
               >
                 <UserCheck className="w-4 h-4" />
               </div>
               Registrations
             </button>
+            <button
+              onClick={() => handleTabChange('qrscanner')}
+              className={`py-2 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                activeTab === 'qrscanner'
+                  ? 'border-blue-500 text-blue-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              QR Scanner
+            </button>
             {event.type === 'Job Fair' && (
               <button
-                onClick={() => handleTabChange("companies")}
+                onClick={() => handleTabChange('companies')}
                 className={`group py-3 px-1 border-b-2 font-bold text-sm whitespace-nowrap transition-all duration-300 flex items-center gap-2 ${
-                  activeTab === "companies"
-                    ? "border-[#901b20] text-[#901b20]"
-                    : "border-transparent text-gray-500 hover:text-[#901b20] hover:border-[#901b20]/50"
+                  activeTab === 'companies'
+                    ? 'border-[#901b20] text-[#901b20]'
+                    : 'border-transparent text-gray-500 hover:text-[#901b20] hover:border-[#901b20]/50'
                 }`}
               >
                 <div
                   className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                    activeTab === "companies"
-                      ? "bg-[#901b20] text-white"
-                      : "bg-gray-200 text-gray-500 group-hover:bg-[#901b20]/10 group-hover:text-[#901b20]"
+                    activeTab === 'companies'
+                      ? 'bg-[#901b20] text-white'
+                      : 'bg-gray-200 text-gray-500 group-hover:bg-[#901b20]/10 group-hover:text-[#901b20]'
                   }`}
                 >
                   <Building2 className="w-4 h-4" />
@@ -906,20 +918,20 @@ const EventDetailsEnhanced = () => {
               </button>
             )}
             {/* Add Live Queue tab for Job Fair events only */}
-            {event.type === "Job Fair" && (
+            {event.type === 'Job Fair' && (
               <button
-                onClick={() => handleTabChange("live-queue")}
+                onClick={() => handleTabChange('live-queue')}
                 className={`group py-3 px-1 border-b-2 font-bold text-sm whitespace-nowrap transition-all duration-300 flex items-center gap-2 ${
-                  activeTab === "live-queue"
-                    ? "border-[#901b20] text-[#901b20]"
-                    : "border-transparent text-gray-500 hover:text-[#901b20] hover:border-[#901b20]/50"
+                  activeTab === 'live-queue'
+                    ? 'border-[#901b20] text-[#901b20]'
+                    : 'border-transparent text-gray-500 hover:text-[#901b20] hover:border-[#901b20]/50'
                 }`}
               >
                 <div
                   className={`w-8 h-8 rounded-xl flex items-center justify-center transition-all duration-300 ${
-                    activeTab === "live-queue"
-                      ? "bg-[#901b20] text-white"
-                      : "bg-gray-200 text-gray-500 group-hover:bg-[#901b20]/10 group-hover:text-[#901b20]"
+                    activeTab === 'live-queue'
+                      ? 'bg-[#901b20] text-white'
+                      : 'bg-gray-200 text-gray-500 group-hover:bg-[#901b20]/10 group-hover:text-[#901b20]'
                   }`}
                 >
                   <Activity className="w-4 h-4" />
@@ -944,12 +956,19 @@ const EventDetailsEnhanced = () => {
           <AttendanceTab event={event} formatDate={formatDate} />
         )}
 
-        {activeTab === "companies" && <ParticipatingCompaniesTabEnhanced event={event} />}
+        {activeTab === 'companies' && (
+          <ParticipatingCompaniesTabEnhanced event={event} />
+        )}
 
-        {activeTab === "registrations" && <RegistrationsTabEnhanced event={event} />}
+        {activeTab === 'registrations' && (
+          <RegistrationsTabEnhanced event={event} />
+        )}
 
         {/* Add Live Queue Tab Content */}
-        {activeTab === "live-queue" && event.type === "Job Fair" && <JobFairLiveQueue event={event} />}
+        {activeTab === 'live-queue' && event.type === 'Job Fair' && (
+          <JobFairLiveQueue event={event} />
+        )}
+        {activeTab === 'qrscanner' && <EventQRScanner event={event} />}
 
         {/* Add the FeedbacksTab rendering */}
         {activeTab === 'feedbacks' && (
@@ -1236,7 +1255,7 @@ const EventDetailsTab = ({ event, formatDate, formatTime, getStatusColor }) => (
                 src={
                   event.banner_image.startsWith('http')
                     ? event.banner_image
-                    : `http://127.0.0.1:8000${event.banner_image}`
+                    : `${APP_URL}${event.banner_image}`
                 }
                 alt={event.title}
                 className="w-full h-64 object-cover rounded-2xl shadow-lg"
@@ -2488,4 +2507,4 @@ const AIAnalyticsModal = ({ analytics, onClose }) => {
   );
 };
 
-export default EventDetailsEnhanced
+export default EventDetailsEnhanced;
